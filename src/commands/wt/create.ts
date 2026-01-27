@@ -5,6 +5,7 @@ import { getRepoRoot, verifyRef, createWorktree, fetchAll, syncSubmodules, getCu
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { execa } from 'execa';
+import { spawn } from 'child_process';
 
 interface CreateOptions {
     name?: string;
@@ -56,6 +57,17 @@ export async function createCommand(options: CreateOptions) {
                 when: options.bootstrap !== false, // Skip if explicitly disabled via flag
             },
         ]);
+        
+        let shouldEnter = false;
+        if (!options.ref) { 
+             const finalAnswer = await inquirer.prompt([{
+                type: 'confirm',
+                name: 'shouldEnter',
+                message: 'Do you want to enter the new worktree now?',
+                default: true
+            }]);
+            shouldEnter = finalAnswer.shouldEnter;
+        }
 
         const name = options.name || answers.name;
         let ref = options.ref || answers.ref;
@@ -129,7 +141,23 @@ export async function createCommand(options: CreateOptions) {
 
         // 5. Final Output
         log.success('Worktree ready!');
-        log.header(`cd "${wtPath}"`);
+        
+        if (shouldEnter) {
+            log.info(`Spawning sub-shell in ${ui.path(wtPath)}...`);
+            log.dim('Type "exit" to return to the main terminal.');
+            
+            const shell = process.env.SHELL || 'zsh';
+            const child = spawn(shell, [], {
+                cwd: wtPath,
+                stdio: 'inherit',
+            });
+
+            child.on('close', () => {
+                log.info('Exited sub-shell.');
+            });
+        } else {
+            log.header(`cd "${wtPath}"`);
+        }
 
     } catch (error: any) {
         log.error(error.message);

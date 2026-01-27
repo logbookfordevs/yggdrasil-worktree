@@ -33,7 +33,7 @@ export async function createCommand(options: CreateOptions) {
                 type: 'input',
                 name: 'ref',
                 message: 'Existing branch/ref to use:',
-                default: options.ref || currentBranch,
+                default: options.ref || (currentBranch ? `origin/${currentBranch}` : undefined),
                 when: !options.ref,
                 validate: (input) => input.trim().length > 0 || 'Ref is required',
             },

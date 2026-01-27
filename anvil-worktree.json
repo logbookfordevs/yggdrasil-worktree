@@ -1,0 +1,9 @@
+{
+  "setup-worktree": [
+    "npm install",
+    "git submodule sync --recursive",
+    "git submodule update --init --recursive",
+    "echo 'Worktree bootstrapped successfully!'",
+    "echo 'You can now start working on your project.'"
+  ]
+}

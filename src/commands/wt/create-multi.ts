@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { getRepoRoot, verifyRef, fetchAll, syncSubmodules, getCurrentBranch } from '../../lib/git.js';
+import { getRepoRoot, verifyRef, fetchAll, getCurrentBranch } from '../../lib/git.js';
+import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { execa } from 'execa';
@@ -103,29 +104,7 @@ export async function createCommandMulti(options: MultiCreateOptions) {
 
                 // 4. Bootstrap
                 if (shouldBootstrap) {
-                    log.info(`Bootstrapping ${branchName}...`);
-                    
-                    // Check for npm
-                    try {
-                        await execa('npm', ['--version']);
-                        const installSpinner = createSpinner('Running npm install...').start();
-                        try {
-                            await execa('npm', ['install'], { cwd: wtPath });
-                            installSpinner.succeed('Dependencies installed.');
-                        } catch (e: any) {
-                            installSpinner.fail('npm install failed.');
-                        }
-                    } catch {
-                        log.warning('npm not found, skipping install.');
-                    }
-
-                    const subSpinner = createSpinner('Syncing submodules...').start();
-                    try {
-                        await syncSubmodules(wtPath);
-                        subSpinner.succeed('Submodules synced.');
-                    } catch (e: any) {
-                        subSpinner.fail('Submodule sync failed.');
-                    }
+                    await runBootstrap(wtPath, repoRoot);
                 }
             } catch (error: any) {
                 wtSpinner.fail(`Failed to create worktree for ${branchName}.`);

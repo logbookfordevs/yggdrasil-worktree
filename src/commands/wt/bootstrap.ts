@@ -1,10 +1,10 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { listWorktrees, syncSubmodules, getRepoRoot } from '../../lib/git.js';
+import { listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
-import { log, ui, createSpinner } from '../../lib/ui.js';
-import { execa } from 'execa';
+import { log, createSpinner } from '../../lib/ui.js';
+import { runBootstrap } from '../../lib/config.js';
 
 export async function bootstrapCommand() {
     try {
@@ -36,33 +36,9 @@ export async function bootstrapCommand() {
         ]);
 
         const wtPath = selectedPath;
-        log.info(`Bootstrapping ${chalk.bold(path.basename(wtPath))}...`);
-
-        // 2. npm install
-        try {
-            await execa('npm', ['--version']);
-            const installSpinner = createSpinner('Running npm install...').start();
-            try {
-                await execa('npm', ['install'], { cwd: wtPath });
-                installSpinner.succeed('Dependencies installed.');
-            } catch (e: any) {
-                installSpinner.fail('npm install failed.');
-                log.error(e.message);
-            }
-        } catch {
-            log.warning('npm not found, skipping install.');
-        }
-
-        // 3. Submodules
-        const subSpinner = createSpinner('Syncing submodules...').start();
-        try {
-            await syncSubmodules(wtPath);
-            subSpinner.succeed('Submodules synced.');
-        } catch (e: any) {
-            subSpinner.fail('Submodule sync failed.');
-            log.error(e.message);
-            log.warning('Tip: If auth failed, try adding your key to the agent.');
-        }
+        const repoRoot = await getRepoRoot();
+        
+        await runBootstrap(wtPath, repoRoot);
 
         log.success('Bootstrap completed!');
 

@@ -15,7 +15,7 @@ const program = new Command();
 program
     .name('ygg-cli')
     .description('Interactive CLI for managing git worktrees and configs')
-    .version('0.0.1')
+    .version('1.1.0')
     .action(async () => {
         // Interactive Menu if no command is provided
         await welcome();

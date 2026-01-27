@@ -67,7 +67,7 @@ program
                             choices: [
                                 { name: '🌱 Create new worktree', value: 'create' },
                                 { name: '📋 List worktrees', value: 'list' },
-                                { name: '🗑️  Delete worktree', value: 'delete' },
+                                { name: '🗑️ Delete worktree', value: 'delete' },
                                 { name: '🚀 Bootstrap worktree', value: 'bootstrap' },
                                 { name: '🧹 Prune stale worktrees', value: 'prune' },
                                 new inquirer_1.default.Separator(),

@@ -1,11 +1,11 @@
 {
-  "name": "agents-cli",
+  "name": "anvil-cli",
   "version": "0.0.1",
   "description": "Interactive CLI for managing git worktrees and configs",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "agents": "./bin/agents"
+    "anvil": "./bin/anvil"
   },
   "scripts": {
     "build": "tsc",

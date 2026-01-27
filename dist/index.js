@@ -8,7 +8,7 @@ import { bootstrapCommand } from './commands/wt/bootstrap.js';
 import { pruneCommand } from './commands/wt/prune.js';
 const program = new Command();
 program
-    .name('agents')
+    .name('anvil')
     .description('Interactive CLI for managing git worktrees and configs')
     .version('0.0.1')
     .action(async () => {

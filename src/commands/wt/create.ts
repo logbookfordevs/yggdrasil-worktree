@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { getRepoRoot, verifyRef, createWorktree, fetchAll, syncSubmodules } from '../../lib/git.js';
+import { getRepoRoot, verifyRef, createWorktree, fetchAll, syncSubmodules, getCurrentBranch } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { execa } from 'execa';
@@ -18,6 +18,8 @@ export async function createCommand(options: CreateOptions) {
         log.info(`Repo: ${chalk.dim(repoRoot)}`);
 
         // 1. Gather inputs
+        const currentBranch = await getCurrentBranch();
+        
         const answers = await inquirer.prompt([
             {
                 type: 'input',
@@ -31,7 +33,7 @@ export async function createCommand(options: CreateOptions) {
                 type: 'input',
                 name: 'ref',
                 message: 'Existing branch/ref to use:',
-                default: options.ref,
+                default: options.ref || currentBranch,
                 when: !options.ref,
                 validate: (input) => input.trim().length > 0 || 'Ref is required',
             },

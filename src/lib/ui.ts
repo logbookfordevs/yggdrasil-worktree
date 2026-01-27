@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const welcome = async () => {
     console.log('');
-    const title = figlet.textSync('AGENTS CLI', { font: 'Standard' });
+    const title = figlet.textSync('ANVIL CLI', { font: 'Standard' });
     console.log(gradient.pastel.multiline(title));
     console.log(chalk.dim('  v0.0.1 • Managed Worktrees Assistant'));
     console.log('');

@@ -10,6 +10,15 @@ export async function getRepoRoot() {
         throw new Error('Not a git repository');
     }
 }
+export async function getCurrentBranch() {
+    try {
+        const { stdout } = await execa('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+        return stdout.trim();
+    }
+    catch {
+        return '';
+    }
+}
 export async function verifyRef(ref) {
     try {
         await execa('git', ['rev-parse', '--verify', ref]);

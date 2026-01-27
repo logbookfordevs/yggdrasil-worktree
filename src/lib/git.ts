@@ -12,6 +12,15 @@ export async function getRepoRoot(): Promise<string> {
     }
 }
 
+export async function getCurrentBranch(): Promise<string> {
+    try {
+        const { stdout } = await execa('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
+        return stdout.trim();
+    } catch {
+        return '';
+    }
+}
+
 export async function verifyRef(ref: string): Promise<boolean> {
     try {
         await execa('git', ['rev-parse', '--verify', ref]);

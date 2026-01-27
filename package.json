@@ -1,6 +1,6 @@
 {
   "name": "yggtree",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Interactive CLI for managing git worktrees and configs",
   "main": "dist/index.js",
   "type": "module",

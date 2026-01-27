@@ -8,17 +8,16 @@
 
 ### Installation
 
+You can run it directly without installing:
+
 ```bash
-# Clone the repository
-git clone https://github.com/leoreisdias/yggtree.git
-cd yggtree
+npx yggtree
+```
 
-# Install dependencies and build
-npm install
-npm run build
+Or install it globally for convenience:
 
-# Link the CLI globally
-npm link
+```bash
+npm install -g yggtree
 ```
 
 ### Usage
@@ -87,6 +86,23 @@ Yggdrasil looks for setup instructions in your project root:
 | `yggtree wt prune` | Clean up Git's internal data for worktrees. |
 
 ---
+
+## 🛠️ Development
+
+If you'd like to contribute or run the latest development version:
+
+```bash
+# Clone the repository
+git clone https://github.com/leoreisdias/yggdrasil-cli.git
+cd yggdrasil-cli
+
+# Install dependencies and build
+npm install
+npm run build
+
+# Link the CLI locally
+npm link
+```
 
 ## 📄 License
 

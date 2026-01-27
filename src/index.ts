@@ -88,6 +88,7 @@ wt.command('create [branch]')
     .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
     .option('--enter', 'Enter sub-shell after creation')
     .option('--no-enter', 'Skip entering sub-shell')
+    .option('--exec <command>', 'Command to execute after creation')
     .action(async (branch, options) => {
         await createCommandNew({ 
             ...options, 
@@ -98,6 +99,7 @@ wt.command('create [branch]')
 wt.command('create-multi')
     .description('Create multiple worktrees (Smart branch detection)')
     .option('--base <ref>', 'Base ref (e.g. main)')
+    .option('--source <type>', 'Base source (local or remote)')
     .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
     .action(async (options) => {
         await createCommandMulti(options);
@@ -110,6 +112,7 @@ wt.command('create-slug [name] [ref]')
     .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
     .option('--enter', 'Enter sub-shell after creation')
     .option('--no-enter', 'Skip entering sub-shell')
+    .option('--exec <command>', 'Command to execute after creation')
     .action(async (name, ref, options) => {
         await createCommand({ 
             ...options, 

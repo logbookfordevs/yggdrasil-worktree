@@ -11,6 +11,7 @@ import fs from 'fs-extra';
 interface MultiCreateOptions {
     base?: string;
     bootstrap: boolean;
+    source?: 'local' | 'remote';
 }
 
 export async function createCommandMulti(options: MultiCreateOptions) {
@@ -40,7 +41,7 @@ export async function createCommandMulti(options: MultiCreateOptions) {
                     { name: 'Local', value: 'local' },
                 ],
                 default: 'remote',
-                when: !options.base,
+                when: !options.base && !options.source,
             },
             {
                 type: 'input',
@@ -53,17 +54,20 @@ export async function createCommandMulti(options: MultiCreateOptions) {
                 name: 'bootstrap',
                 message: 'Run bootstrap for all worktrees? (npm install + submodules)',
                 default: true,
-                when: options.bootstrap !== false,
-            },
+                when: options.bootstrap !== false && options.bootstrap !== true,
+            }
         ]);
 
-        let baseRef = options.base || answers.base;
-        if (!options.base && answers.source === 'remote' && !baseRef.startsWith('origin/')) {
+        const baseRefRaw = options.base || answers.base;
+        const source = options.source || answers.source;
+
+        let baseRef = baseRefRaw;
+        if (!options.base && source === 'remote' && !baseRef.startsWith('origin/')) {
             baseRef = `origin/${baseRef}`;
         }
 
         const branchNames = answers.branches.split(/\s+/).filter((b: string) => b.length > 0);
-        const shouldBootstrap = options.bootstrap === false ? false : answers.bootstrap;
+        const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
 
         // 2. Validation of base ref
         const spinner = createSpinner('Fetching...').start();

@@ -15,6 +15,7 @@ interface NewCreateOptions {
     bootstrap: boolean;
     enter?: boolean;
     source?: 'local' | 'remote';
+    exec?: string;
 }
 
 export async function createCommandNew(options: NewCreateOptions) {
@@ -67,6 +68,13 @@ export async function createCommandNew(options: NewCreateOptions) {
                 message: 'Do you want to enter the new worktree now?',
                 default: true,
                 when: options.enter === undefined,
+            },
+            {
+                type: 'input',
+                name: 'exec',
+                message: 'Command to run after creation (optional):',
+                default: options.exec,
+                when: options.exec === undefined,
             }
         ]);
 
@@ -75,6 +83,7 @@ export async function createCommandNew(options: NewCreateOptions) {
         const source = options.source || answers.source;
         const shouldEnter = options.enter !== undefined ? options.enter : answers.shouldEnter;
         const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
+        const execCommandStr = options.exec || answers.exec;
         
         // Append origin/ if remote is selected and not already present
         if (!options.base && source === 'remote' && !baseRef.startsWith('origin/')) {
@@ -126,12 +135,25 @@ export async function createCommandNew(options: NewCreateOptions) {
             return;
         }
 
-        // 4. Bootstrap
         if (shouldBootstrap) {
             await runBootstrap(wtPath, repoRoot);
         }
 
-        // 5. Final Output
+        // 5. Exec Command
+        if (execCommandStr && execCommandStr.trim()) {
+            log.info(`Executing: ${execCommandStr} in ${ui.path(wtPath)}`);
+            try {
+                await execa(execCommandStr, {
+                    cwd: wtPath,
+                    stdio: 'inherit',
+                    shell: true
+                });
+            } catch (error: any) {
+                log.error(`Command failed: ${error.message}`);
+            }
+        }
+
+        // 6. Final Output
         log.success('Worktree ready!');
         
         if (shouldEnter) {

@@ -1,6 +1,6 @@
-# 🌳 Yggdrasil CLI (ygg-cli)
+# 🌳 Yggdrasil Worktree (yggtree)
 
-**Yggdrasil** (invoked as `ygg-cli`) is a powerful, interactive CLI designed to streamline your Git worktree workflow. Like the mythical world tree connecting the realms, Yggdrasil connects your branches into isolated, manageable worktrees.
+**Yggdrasil Worktree** (invoked as `yggtree`) is a powerful, interactive CLI designed to streamline your Git worktree workflow. Like the mythical world tree connecting the realms, Yggdrasil connects your branches into isolated, manageable worktrees.
 
 ---
 
@@ -10,8 +10,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/leoreisdias/ygg-cli.git
-cd ygg-cli
+git clone https://github.com/leoreisdias/yggtree.git
+cd yggtree
 
 # Install dependencies and build
 npm install
@@ -23,18 +23,18 @@ npm link
 
 ### Usage
 
-Simply run `ygg-cli` to open the interactive menu:
+Simply run `yggtree` to open the interactive menu:
 
 ```bash
-ygg-cli
+yggtree
 ```
 
 Or use specific commands:
 
 ```bash
-ygg-cli wt create      # Smart branch-based creation
-ygg-cli wt list        # View all managed worktrees
-ygg-cli wt prune       # Clean up stale worktree data
+yggtree wt create      # Smart branch-based creation
+yggtree wt list        # View all managed worktrees
+yggtree wt prune       # Clean up stale worktree data
 ```
 
 ---
@@ -77,14 +77,14 @@ Yggdrasil looks for setup instructions in your project root:
 
 | Command | Description |
 | :--- | :--- |
-| `ygg-cli` | Open the interactive main menu. |
-| `ygg-cli wt create` | Create a worktree by branch name (Recommended). |
-| `ygg-cli wt create-multi` | Create multiple worktrees in a single command. |
-| `ygg-cli wt create-slug` | Manually specify both folder name and branch ref. |
-| `ygg-cli wt list` | List all managed worktrees and their status. |
-| `ygg-cli wt delete` | Interactively select and remove a worktree. |
-| `ygg-cli wt bootstrap` | Re-run the setup commands for an existing worktree. |
-| `ygg-cli wt prune` | Clean up Git's internal data for worktrees. |
+| `yggtree` | Open the interactive main menu. |
+| `yggtree wt create` | Create a worktree by branch name (Recommended). |
+| `yggtree wt create-multi` | Create multiple worktrees in a single command. |
+| `yggtree wt create-slug` | Manually specify both folder name and branch ref. |
+| `yggtree wt list` | List all managed worktrees and their status. |
+| `yggtree wt delete` | Interactively select and remove a worktree. |
+| `yggtree wt bootstrap` | Re-run the setup commands for an existing worktree. |
+| `yggtree wt prune` | Clean up Git's internal data for worktrees. |
 
 ---
 

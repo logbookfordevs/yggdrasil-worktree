@@ -13,9 +13,9 @@ import { pruneCommand } from './commands/wt/prune.js';
 const program = new Command();
 
 program
-    .name('ygg-cli')
+    .name('yggtree')
     .description('Interactive CLI for managing git worktrees and configs')
-    .version('1.1.0')
+    .version('1.0.0')
     .action(async () => {
         // Interactive Menu if no command is provided
         await welcome();

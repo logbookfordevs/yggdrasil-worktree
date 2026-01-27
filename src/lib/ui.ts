@@ -14,7 +14,7 @@ export const welcome = async () => {
     console.log('');
     const title = figlet.textSync('Yggdrasil', { font: 'Standard' });
     console.log(gradient.mind.multiline(title));
-    console.log(chalk.dim('  v1.1.0 • The World Tree Worktree Assistant'));
+    console.log(chalk.dim('  v1.0.0 • The World Tree Worktree Assistant'));
     console.log('');
 };
 

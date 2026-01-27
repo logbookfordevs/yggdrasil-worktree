@@ -1,11 +1,11 @@
 {
-  "name": "ygg-cli",
-  "version": "1.1.0",
+  "name": "yggtree",
+  "version": "1.0.0",
   "description": "Interactive CLI for managing git worktrees and configs",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "ygg-cli": "./bin/ygg-cli"
+    "yggtree": "./bin/yggtree"
   },
   "files": [
     "dist",

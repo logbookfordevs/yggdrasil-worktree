@@ -26,33 +26,47 @@ export async function deleteCommand() {
             };
         });
 
-        const { selectedPath } = await inquirer.prompt([
+        const { selectedPaths } = await inquirer.prompt([
             {
-                type: 'list',
-                name: 'selectedPath',
-                message: 'Select worktree to delete:',
+                type: 'checkbox',
+                name: 'selectedPaths',
+                message: 'Select worktrees to delete:',
                 choices: choices,
             },
         ]);
 
-        const worktreeName = path.relative(WORKTREES_ROOT, selectedPath);
+        if (!selectedPaths || selectedPaths.length === 0) {
+            log.info('No worktrees selected.');
+            return;
+        }
+
+        const count = selectedPaths.length;
+        const names = selectedPaths.map((p: string) => path.relative(WORKTREES_ROOT, p));
 
         const { confirm } = await inquirer.prompt([
             {
-                type: 'input',
+                type: 'confirm',
                 name: 'confirm',
-                message: `Type "${chalk.bold(worktreeName)}" to confirm deletion:`,
-                validate: (input) => input === worktreeName || 'Incorrect name, deletion aborted.',
+                message: `Are you sure you want to delete ${count > 1 ? `${count} worktrees` : `"${names[0]}"`}?`,
+                default: false,
             },
         ]);
 
-        const spinner = createSpinner(`Deleting ${worktreeName}...`).start();
-        try {
-            await removeWorktree(selectedPath);
-            spinner.succeed(`Deleted worktree: ${worktreeName}`);
-        } catch (e: any) {
-            spinner.fail(`Failed to delete ${worktreeName}`);
-            log.error(e.message);
+        if (!confirm) {
+            log.info('Deletion aborted.');
+            return;
+        }
+
+        for (const wtPath of selectedPaths) {
+            const worktreeName = path.relative(WORKTREES_ROOT, wtPath);
+            const spinner = createSpinner(`Deleting ${worktreeName}...`).start();
+            try {
+                await removeWorktree(wtPath);
+                spinner.succeed(`Deleted worktree: ${worktreeName}`);
+            } catch (e: any) {
+                spinner.fail(`Failed to delete ${worktreeName}`);
+                log.error(e.message);
+            }
         }
 
     } catch (error: any) {

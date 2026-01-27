@@ -11,13 +11,14 @@ import { bootstrapCommand } from './commands/wt/bootstrap.js';
 import { pruneCommand } from './commands/wt/prune.js';
 import { execCommand } from './commands/wt/exec.js';
 import { enterCommand } from './commands/wt/enter.js';
+import { getVersion } from './lib/version.js';
 
 const program = new Command();
 
 program
     .name('yggtree')
     .description('Interactive CLI for managing git worktrees and configs')
-    .version('1.0.0')
+    .version(getVersion())
     .action(async () => {
         // Interactive Menu if no command is provided
         await welcome();

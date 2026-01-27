@@ -6,6 +6,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import { getVersion } from './version.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // --- Personality & Branding ---
@@ -14,7 +16,8 @@ export const welcome = async () => {
     console.log('');
     const title = figlet.textSync('Yggdrasil', { font: 'Standard' });
     console.log(gradient.mind.multiline(title));
-    console.log(chalk.dim('  v1.0.0 • The World Tree Worktree Assistant'));
+    const version = getVersion();
+    console.log(chalk.dim(`  v${version} • The World Tree Worktree Assistant`));
     console.log('');
 };
 

@@ -43,6 +43,7 @@ export async function createCommandNew(options: NewCreateOptions) {
                 type: 'list',
                 name: 'source',
                 message: 'Base on:',
+                loop: false,
                 choices: [
                     { name: 'Remote (origin)', value: 'remote' },
                     { name: 'Local', value: 'local' },

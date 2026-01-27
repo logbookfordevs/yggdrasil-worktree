@@ -24,6 +24,7 @@ program
                 type: 'list',
                 name: 'action',
                 message: 'What would you like to do?',
+                loop: false,
                 choices: [
                     { name: '🌿 Create new worktree (Smart Branch)', value: 'create-smart' },
                     { name: '🌱 Create new worktree (Manual Slug)', value: 'create-slug' },

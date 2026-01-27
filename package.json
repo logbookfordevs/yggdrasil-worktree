@@ -1,11 +1,11 @@
 {
-  "name": "anvil-cli",
-  "version": "0.0.1",
+  "name": "ygg-cli",
+  "version": "0.2.0",
   "description": "Interactive CLI for managing git worktrees and configs",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
-    "anvil": "./bin/anvil"
+    "ygg-cli": "./bin/ygg-cli"
   },
   "files": [
     "dist",

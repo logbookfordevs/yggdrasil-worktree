@@ -12,6 +12,11 @@ export async function getRepoRoot(): Promise<string> {
     }
 }
 
+export async function getRepoName(): Promise<string> {
+    const root = await getRepoRoot();
+    return path.basename(root);
+}
+
 export async function getCurrentBranch(): Promise<string> {
     try {
         const { stdout } = await execa('git', ['rev-parse', '--abbrev-ref', 'HEAD']);

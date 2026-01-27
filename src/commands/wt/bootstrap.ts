@@ -21,10 +21,13 @@ export async function bootstrapCommand() {
             return;
         }
 
-        const choices = managedWts.map(wt => ({
-            name: `${chalk.bold(path.basename(wt.path))} (${chalk.dim(wt.branch || wt.HEAD)})`,
-            value: wt.path,
-        }));
+        const choices = managedWts.map(wt => {
+            const relative = path.relative(WORKTREES_ROOT, wt.path);
+            return {
+                name: `${chalk.bold(relative)} (${chalk.dim(wt.branch || wt.HEAD)})`,
+                value: wt.path,
+            };
+        });
 
         const { selectedPath } = await inquirer.prompt([
             {

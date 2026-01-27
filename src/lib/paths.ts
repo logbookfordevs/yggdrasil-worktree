@@ -1,5 +1,5 @@
 import os from 'os';
 import path from 'path';
 
-export const ANVIL_ROOT = path.join(os.homedir(), '.yggdrasil');
-export const WORKTREES_ROOT = path.join(ANVIL_ROOT, 'worktrees');
+export const YGG_ROOT = path.join(os.homedir(), '.yggtree');
+export const WORKTREES_ROOT = YGG_ROOT;

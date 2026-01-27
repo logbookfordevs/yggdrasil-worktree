@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { getRepoRoot, verifyRef, createWorktree, fetchAll, getCurrentBranch } from '../../lib/git.js';
+import { getRepoRoot, getRepoName, verifyRef, createWorktree, fetchAll, getCurrentBranch } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
@@ -83,7 +83,8 @@ export async function createCommand(options: CreateOptions) {
         const shouldBootstrap = options.bootstrap === false ? false : answers.bootstrap;
         
         const slug = name.replace(/\s+/g, '-');
-        const wtPath = path.join(WORKTREES_ROOT, slug);
+        const repoName = await getRepoName();
+        const wtPath = path.join(WORKTREES_ROOT, repoName, slug);
 
         // 2. Validation
         if (!slug) throw new Error('Invalid name');

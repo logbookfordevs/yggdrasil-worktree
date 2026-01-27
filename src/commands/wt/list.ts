@@ -26,7 +26,12 @@ export async function listCommand() {
             const type = isManaged ? chalk.green('MANAGED') : chalk.blue('MAIN   ');
             
             const branchName = wt.branch || wt.HEAD || 'detached';
-            const displayPath = wt.path.replace(process.env.HOME || '', '~');
+            let displayPath = wt.path.replace(process.env.HOME || '', '~');
+            
+            if (isManaged) {
+                displayPath = path.relative(WORKTREES_ROOT, wt.path);
+            }
+            
             const colorPath = isManaged ? chalk.cyan(displayPath) : chalk.dim(displayPath);
 
             console.log(`  ${type}  ${chalk.yellow(branchName.padEnd(18))} ${colorPath}`);

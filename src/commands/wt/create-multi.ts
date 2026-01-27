@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { getRepoRoot, verifyRef, fetchAll, getCurrentBranch } from '../../lib/git.js';
+import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
@@ -80,9 +80,10 @@ export async function createCommandMulti(options: MultiCreateOptions) {
         const createdWorktrees: string[] = [];
 
         // 3. Execution for each branch
+        const repoName = await getRepoName();
         for (const branchName of branchNames) {
             const slug = branchName.replace(/[\/\\]/g, '-').replace(/\s+/g, '-');
-            const wtPath = path.join(WORKTREES_ROOT, slug);
+            const wtPath = path.join(WORKTREES_ROOT, repoName, slug);
 
             log.header(`Processing: ${branchName}`);
             const wtSpinner = createSpinner(`Creating worktree at ${ui.path(wtPath)}...`).start();

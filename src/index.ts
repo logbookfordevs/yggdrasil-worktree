@@ -9,6 +9,7 @@ import { createCommandMulti } from './commands/wt/create-multi.js';
 import { deleteCommand } from './commands/wt/delete.js';
 import { bootstrapCommand } from './commands/wt/bootstrap.js';
 import { pruneCommand } from './commands/wt/prune.js';
+import { execCommand } from './commands/wt/exec.js';
 
 const program = new Command();
 
@@ -31,9 +32,10 @@ program
                     { name: '🌳 Create multiple worktrees', value: 'create-multi' },
                     { name: '🌱 Create new worktree (Manual Slug)', value: 'create-slug' },
                     { name: '📋 List worktrees', value: 'list' },
-                    { name: '🗑️ Delete worktree', value: 'delete' },
-                    { name: '🚀 Bootstrap worktree', value: 'bootstrap' },
+                    { name: '🗑️  Delete worktree', value: 'delete' },
+                     { name: '🚀 Bootstrap worktree', value: 'bootstrap' },
                     { name: '🧹 Prune stale worktrees', value: 'prune' },
+                    { name: '🐚 Exec command', value: 'exec' },
                     new inquirer.Separator(),
                     { name: '🚪 Exit', value: 'exit' },
                 ],
@@ -61,6 +63,9 @@ program
                 break;
             case 'prune':
                 await pruneCommand();
+                break;
+            case 'exec':
+                await execCommand();
                 break;
             case 'exit':
                 log.info('Bye! 👋');
@@ -112,5 +117,13 @@ wt.command('bootstrap')
 wt.command('prune')
     .description('Prune stale worktree information')
     .action(pruneCommand);
+
+wt.command('exec')
+    .description('Execute a command in a worktree')
+    .argument('[worktree]', 'Worktree name or path')
+    .argument('[command...]', 'Command and arguments to execute')
+    .action(async (worktree, command) => {
+        await execCommand(worktree, command);
+    });
 
 program.parse(process.argv);

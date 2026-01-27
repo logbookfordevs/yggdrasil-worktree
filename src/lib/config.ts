@@ -3,17 +3,17 @@ import fs from 'fs-extra';
 import { execa } from 'execa';
 import { log, createSpinner } from './ui.js';
 
-export interface AnvilConfig {
+export interface YggtreeConfig {
     'setup-worktree'?: string[];
 }
 
 export async function getBootstrapCommands(repoRoot: string): Promise<string[] | null> {
-    const configPath = path.join(repoRoot, 'anvil-worktree.json');
+    const configPath = path.join(repoRoot, 'yggtree-worktree.json');
     const cursorConfigPath = path.join(repoRoot, '.cursor', 'worktrees.json');
 
     if (await fs.pathExists(configPath)) {
         try {
-            const config: AnvilConfig = await fs.readJSON(configPath);
+            const config: YggtreeConfig = await fs.readJSON(configPath);
             if (config['setup-worktree'] && Array.isArray(config['setup-worktree'])) {
                 return config['setup-worktree'];
             }
@@ -24,7 +24,7 @@ export async function getBootstrapCommands(repoRoot: string): Promise<string[] |
 
     if (await fs.pathExists(cursorConfigPath)) {
         try {
-            const config: AnvilConfig = await fs.readJSON(cursorConfigPath);
+            const config: YggtreeConfig = await fs.readJSON(cursorConfigPath);
             if (config['setup-worktree'] && Array.isArray(config['setup-worktree'])) {
                 return config['setup-worktree'];
             }

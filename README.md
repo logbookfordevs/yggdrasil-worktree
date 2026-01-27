@@ -53,7 +53,7 @@ The primary way to start working. Instead of worrying about folder names, just t
 Need to spin up multiple features? Provide branch names separated by spaces, and Yggdrasil will provision all of them in one go.
 
 ### 🚀 Custom Bootstrapping
-Configure your environment automatically using an `anvil-worktree.json` (also compatible with `.cursor/worktrees.json`) file in your project root.
+Configure your environment automatically using a `yggtree-worktree.json` (also compatible with `.cursor/worktrees.json`) file in your project root.
 
 ---
 

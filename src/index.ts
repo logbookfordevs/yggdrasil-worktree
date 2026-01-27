@@ -80,13 +80,19 @@ wt.command('list')
     .description('List all worktrees')
     .action(listCommand);
 
-wt.command('create')
+wt.command('create [branch]')
     .description('Create a new worktree (Smart branch detection)')
     .option('-b, --branch <name>', 'Branch name (e.g. feat/new-ui)')
     .option('--base <ref>', 'Base ref (e.g. main)')
+    .option('--source <type>', 'Base source (local or remote)')
     .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-    .action(async (options) => {
-        await createCommandNew(options);
+    .option('--enter', 'Enter sub-shell after creation')
+    .option('--no-enter', 'Skip entering sub-shell')
+    .action(async (branch, options) => {
+        await createCommandNew({ 
+            ...options, 
+            branch: branch || options.branch 
+        });
     });
 
 wt.command('create-multi')
@@ -97,13 +103,19 @@ wt.command('create-multi')
         await createCommandMulti(options);
     });
 
-wt.command('create-slug')
+wt.command('create-slug [name] [ref]')
     .description('Create a new worktree (Manual slug/ref)')
     .option('-n, --name <slug>', 'Worktree name (slug)')
     .option('-r, --ref <ref>', 'Existing branch or ref')
     .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-    .action(async (options) => {
-        await createCommand(options);
+    .option('--enter', 'Enter sub-shell after creation')
+    .option('--no-enter', 'Skip entering sub-shell')
+    .action(async (name, ref, options) => {
+        await createCommand({ 
+            ...options, 
+            name: name || options.name,
+            ref: ref || options.ref
+        });
     });
 
 wt.command('delete')

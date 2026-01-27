@@ -13,6 +13,8 @@ interface CreateOptions {
     name?: string;
     ref?: string;
     bootstrap: boolean;
+    enter?: boolean;
+    source?: 'local' | 'remote';
 }
 
 export async function createCommand(options: CreateOptions) {
@@ -50,37 +52,34 @@ export async function createCommand(options: CreateOptions) {
                     { name: 'Local', value: 'local' },
                 ],
                 default: 'remote',
-                when: !options.ref,
+                when: !options.ref && !options.source,
             },
             {
                 type: 'confirm',
                 name: 'bootstrap',
                 message: 'Run bootstrap? (npm install + submodules)',
                 default: true,
-                when: options.bootstrap !== false,
+                when: options.bootstrap !== false && options.bootstrap !== true,
             },
-        ]);
-
-        let shouldEnter = false;
-        if (!options.ref) { 
-             const finalAnswer = await inquirer.prompt([{
+            {
                 type: 'confirm',
                 name: 'shouldEnter',
                 message: 'Do you want to enter the new worktree now?',
-                default: true
-            }]);
-            shouldEnter = finalAnswer.shouldEnter;
-        }
+                default: true,
+                when: options.enter === undefined,
+            }
+        ]);
 
         const name = options.name || answers.name;
         let ref = options.ref || answers.ref;
-        
+        const source = options.source || answers.source;
+        const shouldEnter = options.enter !== undefined ? options.enter : answers.shouldEnter;
+        const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
+
         // Append origin/ if remote is selected and not already present
-        if (!options.ref && answers.source === 'remote' && !ref.startsWith('origin/')) {
+        if (!options.ref && source === 'remote' && !ref.startsWith('origin/')) {
             ref = `origin/${ref}`;
         }
-
-        const shouldBootstrap = options.bootstrap === false ? false : answers.bootstrap;
         
         const slug = name.replace(/\s+/g, '-');
         const repoName = await getRepoName();

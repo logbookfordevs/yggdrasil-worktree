@@ -13,6 +13,8 @@ interface NewCreateOptions {
     branch?: string;
     base?: string;
     bootstrap: boolean;
+    enter?: boolean;
+    source?: 'local' | 'remote';
 }
 
 export async function createCommandNew(options: NewCreateOptions) {
@@ -50,37 +52,34 @@ export async function createCommandNew(options: NewCreateOptions) {
                     { name: 'Local', value: 'local' },
                 ],
                 default: 'remote',
-                when: !options.base,
+                when: !options.base && !options.source,
             },
             {
                 type: 'confirm',
                 name: 'bootstrap',
                 message: 'Run bootstrap? (npm install + submodules)',
                 default: true,
-                when: options.bootstrap !== false,
+                when: options.bootstrap !== false && options.bootstrap !== true,
             },
-        ]);
-
-        let shouldEnter = false;
-        if (!options.branch) { 
-             const finalAnswer = await inquirer.prompt([{
+            {
                 type: 'confirm',
                 name: 'shouldEnter',
                 message: 'Do you want to enter the new worktree now?',
-                default: true
-            }]);
-            shouldEnter = finalAnswer.shouldEnter;
-        }
+                default: true,
+                when: options.enter === undefined,
+            }
+        ]);
 
         const branchName = options.branch || answers.branch;
         let baseRef = options.base || answers.base;
+        const source = options.source || answers.source;
+        const shouldEnter = options.enter !== undefined ? options.enter : answers.shouldEnter;
+        const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
         
         // Append origin/ if remote is selected and not already present
-        if (!options.base && answers.source === 'remote' && !baseRef.startsWith('origin/')) {
+        if (!options.base && source === 'remote' && !baseRef.startsWith('origin/')) {
             baseRef = `origin/${baseRef}`;
         }
-
-        const shouldBootstrap = options.bootstrap === false ? false : answers.bootstrap;
         
         // Convert branch name to slug (friendly folder name)
         // e.g. feat/eng-2222-new-button -> feat-eng-2222-new-button

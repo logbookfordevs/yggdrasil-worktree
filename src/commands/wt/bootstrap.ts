@@ -3,7 +3,7 @@ import inquirer from 'inquirer';
 import path from 'path';
 import { listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
-import { log, createSpinner } from '../../lib/ui.js';
+import { log } from '../../lib/ui.js';
 import { runBootstrap } from '../../lib/config.js';
 
 export async function bootstrapCommand() {

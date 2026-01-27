@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import path from 'path';
 import { listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
-import { log, ui } from '../../lib/ui.js';
+import { log } from '../../lib/ui.js';
 
 export async function listCommand() {
     try {

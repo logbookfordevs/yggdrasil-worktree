@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { getRepoRoot, getRepoName, verifyRef, createWorktree, fetchAll, getCurrentBranch } from '../../lib/git.js';
+import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';

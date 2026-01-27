@@ -10,7 +10,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/anvil-cli.git
+git clone https://github.com/leoreisdias/anvil-cli.git
 cd anvil-cli
 
 # Install dependencies and build

@@ -90,4 +90,4 @@ Yggdrasil looks for setup instructions in your project root:
 
 ## 📄 License
 
-ISC License.
+MIT License.

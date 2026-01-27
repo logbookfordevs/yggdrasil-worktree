@@ -24,8 +24,8 @@
     "worktree",
     "productivity"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "Leonardo Dias",
+  "license": "MIT",
   "dependencies": {
     "chalk": "^5.3.0",
     "commander": "^12.0.0",

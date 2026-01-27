@@ -1,5 +1,8 @@
 # 🌳 Yggdrasil Worktree (yggtree)
 
+[![npm version](https://img.shields.io/npm/v/yggtree.svg)](https://www.npmjs.com/package/yggtree)
+[![license](https://img.shields.io/npm/l/yggtree.svg)](https://www.npmjs.com/package/yggtree)
+
 **Yggdrasil Worktree** (invoked as `yggtree`) is a powerful, interactive CLI designed to streamline your Git worktree workflow. Like the mythical world tree connecting the realms, Yggdrasil connects your branches into isolated, manageable worktrees.
 
 ---

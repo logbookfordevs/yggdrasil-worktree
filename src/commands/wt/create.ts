@@ -32,10 +32,21 @@ export async function createCommand(options: CreateOptions) {
             {
                 type: 'input',
                 name: 'ref',
-                message: 'Existing branch/ref to use:',
-                default: options.ref || (currentBranch ? `origin/${currentBranch}` : undefined),
+                message: 'Base branch name:',
+                default: options.ref || currentBranch,
                 when: !options.ref,
                 validate: (input) => input.trim().length > 0 || 'Ref is required',
+            },
+            {
+                type: 'list',
+                name: 'source',
+                message: 'Base on:',
+                choices: [
+                    { name: 'Remote (origin)', value: 'remote' },
+                    { name: 'Local', value: 'local' },
+                ],
+                default: 'remote',
+                when: !options.ref,
             },
             {
                 type: 'confirm',
@@ -47,7 +58,12 @@ export async function createCommand(options: CreateOptions) {
         ]);
 
         const name = options.name || answers.name;
-        const ref = options.ref || answers.ref;
+        let ref = options.ref || answers.ref;
+        
+        // Append origin/ if remote is selected and not already present
+        if (!options.ref && answers.source === 'remote' && !ref.startsWith('origin/')) {
+            ref = `origin/${ref}`;
+        }
         // If flag is false, prompt is skipped and we use false. 
         // If flag is true (default), we use prompt answer.
         const shouldBootstrap = options.bootstrap === false ? false : answers.bootstrap;

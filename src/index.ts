@@ -5,6 +5,7 @@ import { welcome, log } from './lib/ui.js';
 import { listCommand } from './commands/wt/list.js';
 import { createCommand } from './commands/wt/create.js';
 import { createCommandNew } from './commands/wt/create-branch.js';
+import { createCommandMulti } from './commands/wt/create-multi.js';
 import { deleteCommand } from './commands/wt/delete.js';
 import { bootstrapCommand } from './commands/wt/bootstrap.js';
 import { pruneCommand } from './commands/wt/prune.js';
@@ -27,6 +28,7 @@ program
                 loop: false,
                 choices: [
                     { name: '🌿 Create new worktree (Smart Branch)', value: 'create-smart' },
+                    { name: '🌳 Create multiple worktrees', value: 'create-multi' },
                     { name: '🌱 Create new worktree (Manual Slug)', value: 'create-slug' },
                     { name: '📋 List worktrees', value: 'list' },
                     { name: '🗑️  Delete worktree', value: 'delete' },
@@ -41,6 +43,9 @@ program
         switch (action) {
             case 'create-smart':
                 await createCommandNew({ bootstrap: true });
+                break;
+            case 'create-multi':
+                await createCommandMulti({ bootstrap: true });
                 break;
             case 'create-slug':
                 await createCommand({ bootstrap: true });
@@ -77,6 +82,14 @@ wt.command('create')
     .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
     .action(async (options) => {
         await createCommandNew(options);
+    });
+
+wt.command('create-multi')
+    .description('Create multiple worktrees (Smart branch detection)')
+    .option('--base <ref>', 'Base ref (e.g. main)')
+    .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+    .action(async (options) => {
+        await createCommandMulti(options);
     });
 
 wt.command('create-slug')

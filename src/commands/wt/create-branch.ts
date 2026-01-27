@@ -8,13 +8,13 @@ import { execa } from 'execa';
 import { spawn } from 'child_process';
 import fs from 'fs-extra';
 
-interface CreateOptions {
-    name?: string;
-    ref?: string;
+interface NewCreateOptions {
+    branch?: string;
+    base?: string;
     bootstrap: boolean;
 }
 
-export async function createCommand(options: CreateOptions) {
+export async function createCommandNew(options: NewCreateOptions) {
     try {
         const repoRoot = await getRepoRoot();
         log.info(`Repo: ${chalk.dim(repoRoot)}`);
@@ -25,19 +25,19 @@ export async function createCommand(options: CreateOptions) {
         const answers = await inquirer.prompt([
             {
                 type: 'input',
-                name: 'name',
-                message: 'Worktree name (slug):',
-                default: options.name,
-                when: !options.name,
-                validate: (input) => input.trim().length > 0 || 'Name is required',
+                name: 'branch',
+                message: 'Branch name (e.g. feat/new-thing):',
+                default: options.branch,
+                when: !options.branch,
+                validate: (input) => input.trim().length > 0 || 'Branch name is required',
             },
             {
                 type: 'input',
-                name: 'ref',
+                name: 'base',
                 message: 'Base branch name:',
-                default: options.ref || currentBranch,
-                when: !options.ref,
-                validate: (input) => input.trim().length > 0 || 'Ref is required',
+                default: options.base || currentBranch,
+                when: !options.base,
+                validate: (input) => input.trim().length > 0 || 'Base ref is required',
             },
             {
                 type: 'list',
@@ -48,7 +48,7 @@ export async function createCommand(options: CreateOptions) {
                     { name: 'Local', value: 'local' },
                 ],
                 default: 'remote',
-                when: !options.ref,
+                when: !options.base,
             },
             {
                 type: 'confirm',
@@ -60,7 +60,7 @@ export async function createCommand(options: CreateOptions) {
         ]);
 
         let shouldEnter = false;
-        if (!options.ref) { 
+        if (!options.branch) { 
              const finalAnswer = await inquirer.prompt([{
                 type: 'confirm',
                 name: 'shouldEnter',
@@ -70,39 +70,53 @@ export async function createCommand(options: CreateOptions) {
             shouldEnter = finalAnswer.shouldEnter;
         }
 
-        const name = options.name || answers.name;
-        let ref = options.ref || answers.ref;
+        const branchName = options.branch || answers.branch;
+        let baseRef = options.base || answers.base;
         
         // Append origin/ if remote is selected and not already present
-        if (!options.ref && answers.source === 'remote' && !ref.startsWith('origin/')) {
-            ref = `origin/${ref}`;
+        if (!options.base && answers.source === 'remote' && !baseRef.startsWith('origin/')) {
+            baseRef = `origin/${baseRef}`;
         }
 
         const shouldBootstrap = options.bootstrap === false ? false : answers.bootstrap;
         
-        const slug = name.replace(/\s+/g, '-');
+        // Convert branch name to slug (friendly folder name)
+        // e.g. feat/eng-2222-new-button -> feat-eng-2222-new-button
+        const slug = branchName.replace(/[\/\\]/g, '-').replace(/\s+/g, '-');
         const wtPath = path.join(WORKTREES_ROOT, slug);
 
         // 2. Validation
         if (!slug) throw new Error('Invalid name');
-        if (!ref) throw new Error('Invalid ref');
+        if (!baseRef) throw new Error('Invalid base ref');
 
         // 3. Execution
         const spinner = createSpinner('Fetching...').start();
         await fetchAll();
-        spinner.text = 'Verifying ref...';
+        spinner.text = 'Verifying base ref...';
 
-        const exists = await verifyRef(ref);
-        if (!exists) {
-            spinner.fail(`Ref not found: ${ref}`);
-            log.warning(`Tip: try 'origin/${ref}' or check if the branch exists.`);
+        const baseExists = await verifyRef(baseRef);
+        if (!baseExists) {
+            spinner.fail(`Base ref not found: ${baseRef}`);
+            log.warning(`Tip: try checking if the branch exists on remote.`);
             return;
         }
 
         spinner.text = `Creating worktree at ${ui.path(wtPath)}...`;
+        
+        // Check if target branch already exists
+        const targetBranchExists = await verifyRef(branchName);
+        // If branch doesn't exist, we create it from base
+        // If it does exist, we just check it out
+        const createBranchFlag = targetBranchExists ? '' : `-b ${branchName}`;
+        
         try {
             await fs.ensureDir(path.dirname(wtPath));
-            await createWorktree(wtPath, ref);
+            // slightly different logic for creating new branch vs existing
+            if (targetBranchExists) {
+                 await execa('git', ['worktree', 'add', wtPath, branchName]);
+            } else {
+                 await execa('git', ['worktree', 'add', '-b', branchName, wtPath, baseRef]);
+            }
             spinner.succeed('Worktree created.');
         } catch (e: any) {
             spinner.fail('Failed to create worktree.');

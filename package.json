@@ -1,0 +1,43 @@
+{
+  "name": "agents-cli",
+  "version": "0.0.1",
+  "description": "Interactive CLI for managing git worktrees and configs",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "agents": "./bin/agents"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "cli",
+    "git",
+    "worktree",
+    "productivity"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "execa": "^8.0.1",
+    "figlet": "^1.7.0",
+    "fs-extra": "^11.2.0",
+    "gradient-string": "^2.0.2",
+    "inquirer": "^9.2.14",
+    "ora": "^8.0.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/figlet": "^1.5.8",
+    "@types/fs-extra": "^11.0.4",
+    "@types/gradient-string": "^1.1.6",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^20.11.19",
+    "typescript": "^5.3.3"
+  }
+}

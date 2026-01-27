@@ -4,9 +4,9 @@ import { execa } from 'execa';
 import path from 'path';
 import { listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
-import { log } from '../../lib/ui.js';
+import { log, ui } from '../../lib/ui.js';
 
-export async function execCommand(wtName?: string, commandArgs?: string[]) {
+export async function enterCommand(wtName?: string, options: { exec?: string } = {}) {
     try {
         await getRepoRoot();
         const worktrees = await listWorktrees();
@@ -53,7 +53,7 @@ export async function execCommand(wtName?: string, commandArgs?: string[]) {
                 {
                     type: 'list',
                     name: 'selectedWt',
-                    message: 'Select a worktree:',
+                    message: 'Select a worktree to enter:',
                     choices,
                     loop: false
                 }
@@ -61,41 +61,60 @@ export async function execCommand(wtName?: string, commandArgs?: string[]) {
 
             targetWt = selectedWt;
         }
+        const { execCommandStr } = await inquirer.prompt([
+            {
+                type: 'input',
+                name: 'execCommandStr',
+                message: 'Command to run before entering (optional):',
+                default: options.exec,
+                when: options.exec === undefined,
+            }
+        ]);
 
-        let command: string;
-        let args: string[] = [];
+        const finalExec = options.exec || execCommandStr;
 
-        if (commandArgs && commandArgs.length > 0) {
-            command = commandArgs[0];
-            args = commandArgs.slice(1);
-        } else {
-            const { inputCommand } = await inquirer.prompt([
-                {
-                    type: 'input',
-                    name: 'inputCommand',
-                    message: `Enter command to run in ${targetWt?.path}:`,
-                    validate: (input) => input.trim().length > 0 || 'Command cannot be empty'
-                }
-            ]);
-            
-            // Basic shell-like parsing for the interactive input
-            const parts = inputCommand.trim().split(/\s+/);
-            command = parts[0];
-            args = parts.slice(1);
+        if (finalExec && finalExec.trim()) {
+            log.info(`Executing: ${finalExec} in ${ui.path(targetWt?.path || '')}`);
+            try {
+                await execa(finalExec, {
+                    cwd: targetWt?.path,
+                    stdio: 'inherit',
+                    shell: true
+                });
+            } catch (error: any) {
+                log.error(`Command failed: ${error.message}`);
+                // Ask if still want to enter?
+                const { stillEnter } = await inquirer.prompt([{
+                    type: 'confirm',
+                    name: 'stillEnter',
+                    message: 'Command failed. Do you still want to enter the sub-shell?',
+                    default: true
+                }]);
+                if (!stillEnter) return;
+            }
         }
 
-        log.info(`Executing: ${command} ${args.join(' ')} in ${targetWt?.path}`);
-        await execa(command, args, {
+        log.info(`Spawning sub-shell in ${ui.path(targetWt?.path || '')}...`);
+        log.dim('Type "exit" to return to the main terminal.');
+
+        const shell = process.env.SHELL || 'zsh';
+        const child = spawn(shell, [], {
             cwd: targetWt?.path,
             stdio: 'inherit',
-            shell: false
+            env: {
+                ...process.env,
+                YGGTREE_SHELL: 'true'
+            }
+        });
+
+        child.on('exit', (code) => {
+            if (code !== 0 && code !== null) {
+                // Command failed with non-zero exit code
+            }
+            log.info('Exited sub-shell.');
         });
 
     } catch (error: any) {
-        if (error.exitCode !== undefined) {
-             // Command failed, but it already printed its error to inherited stdio
-             return;
-        }
         log.error(error.message);
     }
 }

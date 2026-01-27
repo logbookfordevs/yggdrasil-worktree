@@ -35,8 +35,11 @@ Or use specific commands:
 
 ```bash
 yggtree wt create      # Smart branch-based creation
-yggtree wt list        # View all managed worktrees
-yggtree wt prune       # Clean up stale worktree data
+yggtree wt list                  # View all managed worktrees
+yggtree wt prune                 # Clean up stale worktree data
+yggtree wt enter [wt]            # Start a sub-shell (type 'exit' to return)
+yggtree wt enter [wt] --exec "ls"# Execute command and then enter sub-shell
+yggtree wt exec [wt] -- ls -la   # Execute command without entering
 ```
 
 ---
@@ -221,6 +224,8 @@ Yggdrasil looks for setup instructions in your project root:
 | `yggtree wt delete` | Interactively select and remove a worktree. |
 | `yggtree wt bootstrap` | Re-run the setup commands for an existing worktree. |
 | `yggtree wt prune` | Clean up Git's internal data for worktrees. |
+| `yggtree wt enter` | Enter a worktree sub-shell (supports `--exec`). |
+| `yggtree wt exec` | Execute a command in a worktree without entering. |
 
 ---
 

@@ -10,6 +10,7 @@ import { deleteCommand } from './commands/wt/delete.js';
 import { bootstrapCommand } from './commands/wt/bootstrap.js';
 import { pruneCommand } from './commands/wt/prune.js';
 import { execCommand } from './commands/wt/exec.js';
+import { enterCommand } from './commands/wt/enter.js';
 
 const program = new Command();
 
@@ -36,6 +37,7 @@ program
                      { name: '🚀 Bootstrap worktree', value: 'bootstrap' },
                     { name: '🧹 Prune stale worktrees', value: 'prune' },
                     { name: '🐚 Exec command', value: 'exec' },
+                    { name: '🚪 Enter worktree', value: 'enter' },
                     new inquirer.Separator(),
                     { name: '🚪 Exit', value: 'exit' },
                 ],
@@ -66,6 +68,9 @@ program
                 break;
             case 'exec':
                 await execCommand();
+                break;
+            case 'enter':
+                await enterCommand();
                 break;
             case 'exit':
                 log.info('Bye! 👋');
@@ -139,6 +144,14 @@ wt.command('exec')
     .argument('[command...]', 'Command and arguments to execute')
     .action(async (worktree, command) => {
         await execCommand(worktree, command);
+    });
+
+wt.command('enter')
+    .description('Enter a worktree sub-shell')
+    .argument('[worktree]', 'Worktree name or path')
+    .option('--exec <command>', 'Command to execute before entering')
+    .action(async (worktree, options) => {
+        await enterCommand(worktree, options);
     });
 
 program.parse(process.argv);

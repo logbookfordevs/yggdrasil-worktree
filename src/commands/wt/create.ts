@@ -117,7 +117,12 @@ export async function createCommand(options: CreateOptions) {
             spinner.succeed('Worktree created.');
         } catch (e: any) {
             spinner.fail('Failed to create worktree.');
-            log.error(e.message);
+            log.actionableError(e.message, `git worktree add ${wtPath} ${ref}`, wtPath, [
+                'Check if the folder already exists: ls ' + wtPath,
+                'Check if the branch is already used: git worktree list',
+                'Try pruning stale worktrees: yggtree wt prune',
+                `Run manually: git worktree add ${wtPath} ${ref}`
+            ]);
             return;
         }
 
@@ -135,7 +140,10 @@ export async function createCommand(options: CreateOptions) {
                     shell: true
                 });
             } catch (error: any) {
-                log.error(`Command failed: ${error.message}`);
+                log.actionableError(error.message, execCommandStr, wtPath, [
+                    `cd ${wtPath} && ${execCommandStr}`,
+                    'Check your command syntax and environment variables'
+                ]);
             }
         }
 
@@ -160,7 +168,7 @@ export async function createCommand(options: CreateOptions) {
         }
 
     } catch (error: any) {
-        log.error(error.message);
+        log.actionableError(error.message, 'yggtree wt create');
         process.exit(1);
     }
 }

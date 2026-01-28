@@ -11,7 +11,10 @@ export async function pruneCommand() {
             spinner.succeed('Worktrees pruned.');
         } catch (e: any) {
             spinner.fail('Failed to prune worktrees.');
-            log.error(e.message);
+            log.actionableError(e.message, 'git worktree prune', undefined, [
+                'Try running manually: git worktree prune',
+                'Check if any worktree folders were deleted manually without using git'
+            ]);
         }
     } catch (error: any) {
         log.error(error.message);

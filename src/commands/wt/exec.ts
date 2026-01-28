@@ -6,6 +6,10 @@ import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log } from '../../lib/ui.js';
 
 export async function execCommand(wtName?: string, commandArgs?: string[]) {
+    let targetWt: { path: string; branch?: string; HEAD: string } | undefined;
+    let command = '';
+    let args: string[] = [];
+
     try {
         await getRepoRoot();
         const worktrees = await listWorktrees();
@@ -14,8 +18,6 @@ export async function execCommand(wtName?: string, commandArgs?: string[]) {
             log.info('No worktrees found.');
             return;
         }
-
-        let targetWt: { path: string; branch?: string; HEAD: string } | undefined;
 
         if (wtName) {
             // Find worktree by name (branch name, relative path, or slug/basename)
@@ -61,9 +63,6 @@ export async function execCommand(wtName?: string, commandArgs?: string[]) {
             targetWt = selectedWt;
         }
 
-        let command: string;
-        let args: string[] = [];
-
         if (commandArgs && commandArgs.length > 0) {
             command = commandArgs[0];
             args = commandArgs.slice(1);
@@ -95,6 +94,9 @@ export async function execCommand(wtName?: string, commandArgs?: string[]) {
              // Command failed, but it already printed its error to inherited stdio
              return;
         }
-        log.error(error.message);
+        log.actionableError(error.message, `${command} ${args.join(' ')}`, targetWt?.path, [
+            `cd ${targetWt?.path} && ${command} ${args.join(' ')}`,
+            'Check if the command exists and is in your PATH'
+        ]);
     }
 }

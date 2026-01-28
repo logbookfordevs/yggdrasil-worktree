@@ -92,10 +92,10 @@ export async function createCommandMulti(options: MultiCreateOptions) {
             log.header(`Processing: ${branchName}`);
             const wtSpinner = createSpinner(`Creating worktree at ${ui.path(wtPath)}...`).start();
 
+            // Check if target branch already exists
+            const targetBranchExists = await verifyRef(branchName);
+
             try {
-                // Check if target branch already exists
-                const targetBranchExists = await verifyRef(branchName);
-                
                 await fs.ensureDir(path.dirname(wtPath));
                 
                 if (targetBranchExists) {
@@ -113,7 +113,15 @@ export async function createCommandMulti(options: MultiCreateOptions) {
                 }
             } catch (error: any) {
                 wtSpinner.fail(`Failed to create worktree for ${branchName}.`);
-                log.error(error.message);
+                const cmd = targetBranchExists 
+                    ? `git worktree add ${wtPath} ${branchName}`
+                    : `git worktree add -b ${branchName} ${wtPath} ${baseRef}`;
+                log.actionableError(error.message, cmd, wtPath, [
+                    'Check if the folder already exists: ls ' + wtPath,
+                    'Check if the branch is already used: git worktree list',
+                    'Try pruning stale worktrees: yggtree wt prune',
+                    `Run manually: ${cmd}`
+                ]);
             }
         }
 
@@ -127,7 +135,7 @@ export async function createCommandMulti(options: MultiCreateOptions) {
         }
 
     } catch (error: any) {
-        log.error(error.message);
+        log.actionableError(error.message, 'yggtree wt create-multi');
         process.exit(1);
     }
 }

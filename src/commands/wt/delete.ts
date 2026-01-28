@@ -65,7 +65,11 @@ export async function deleteCommand() {
                 spinner.succeed(`Deleted worktree: ${worktreeName}`);
             } catch (e: any) {
                 spinner.fail(`Failed to delete ${worktreeName}`);
-                log.error(e.message);
+                log.actionableError(e.message, `git worktree remove ${wtPath} --force`, wtPath, [
+                    `Try running manually: git worktree remove ${wtPath} --force`,
+                    'Check if any files in the worktree are open or locked',
+                    'Try running yggtree wt prune to clean up git metadata'
+                ]);
             }
         }
 

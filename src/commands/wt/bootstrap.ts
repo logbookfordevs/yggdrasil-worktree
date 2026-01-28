@@ -46,7 +46,7 @@ export async function bootstrapCommand() {
         log.success('Bootstrap completed!');
 
     } catch (error: any) {
-        log.error(error.message);
+        log.actionableError(error.message, 'yggtree wt bootstrap');
         process.exit(1);
     }
 }

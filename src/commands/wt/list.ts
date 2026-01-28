@@ -38,7 +38,7 @@ export async function listCommand() {
         }
         console.log('');
     } catch (error: any) {
-        log.error(error.message);
+        log.actionableError(error.message, 'yggtree wt list');
         process.exit(1);
     }
 }

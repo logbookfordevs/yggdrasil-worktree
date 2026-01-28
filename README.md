@@ -3,7 +3,9 @@
 [![npm version](https://img.shields.io/npm/v/yggtree.svg)](https://www.npmjs.com/package/yggtree)
 [![license](https://img.shields.io/npm/l/yggtree.svg)](https://www.npmjs.com/package/yggtree)
 
-**Yggdrasil Worktree** (invoked as `yggtree`) is a powerful, interactive CLI designed to streamline your Git worktree workflow. Like the mythical world tree connecting the realms, Yggdrasil connects your branches into isolated, manageable worktrees.
+**Yggdrasil Worktree** (invoked as `yggtree`) is an interactive CLI designed to turn Git worktrees into a first‑class workflow.
+
+Like the mythical world tree connecting realms, Yggdrasil lets you grow isolated, parallel environments where ideas can evolve independently without colliding.
 
 ---
 
@@ -11,88 +13,106 @@
 
 ### Installation
 
-You can run it directly without installing:
+Run without installing:
 
 ```bash
 npx yggtree
 ```
 
-Or install it globally for convenience:
+Or install globally:
 
 ```bash
 npm install -g yggtree
 ```
 
-### Usage
+### Basic Usage
 
-Simply run `yggtree` to open the interactive menu:
+Run with no arguments to open the interactive menu:
 
 ```bash
 yggtree
 ```
 
-Or use specific commands:
+Or use commands directly:
 
 ```bash
-yggtree wt create      # Smart branch-based creation
-yggtree wt list                  # View all managed worktrees
-yggtree wt prune                 # Clean up stale worktree data
-yggtree wt enter [wt]            # Start a sub-shell (type 'exit' to return)
-yggtree wt enter [wt] --exec "ls"# Execute command and then enter sub-shell
-yggtree wt path [wt]             # Show 'cd' command for a worktree
-yggtree wt exec [wt] -- ls -la   # Execute command without entering
+yggtree wt create
+yggtree wt list
+yggtree wt enter my-feature
 ```
 
 ---
 
-## ✨ Key Features
+## 🧠 Mental Model
 
-### 🌿 Smart Branch Creation (`wt create`)
-The primary way to start working. Instead of worrying about folder names, just tell Yggdrasil which branch you want to work on.
-- **Auto-Slug**: Converts `feat/eng-123-ui` to a clean folder name like `feat-eng-123-ui`.
-- **Auto-Branching**: If the branch doesn't exist, Yggdrasil creates it for you from a base branch.
-- **Remote Awareness**: Seamlessly base your work on `origin/main` or local refs.
+Yggdrasil is built around a few core ideas:
 
-### 🌳 Batch Creation (`wt create-multi`)
-Need to spin up multiple features? Provide branch names separated by spaces, and Yggdrasil will provision all of them in one go.
+* **Branches are ideas**
+* **Worktrees are realities**
+* **Each task deserves its own realm**
 
-### 🚀 Custom Bootstrapping
-Configure your environment automatically using a `yggtree-worktree.json` (also compatible with `.cursor/worktrees.json`) file in your project root.
+Instead of constantly switching branches in one working directory, Yggdrasil creates **isolated worktrees**, each mapped to a branch, living outside your main repo.
+
+All managed worktrees live under:
+
+```
+~/.yggtree/<repo-name>/<worktree-slug>
+```
+
+This keeps your main repository clean while enabling true parallelism.
 
 ---
 
 ## 🤔 Why Yggdrasil Worktree?
 
-Git worktrees are incredibly powerful, but they are also **painfully manual** once you go beyond a single task.
+Git worktrees are powerful, but once you start doing **parallel work**, they become tedious to manage manually.
 
-Modern development isn’t sequential anymore. You’re constantly switching contexts, juggling experiments, fixes, reviews, and now **AI agents running in parallel**.
+Modern development looks like this:
 
-Yggdrasil exists to solve three modern problems at once:
+* Fixing a bug
+* Reviewing a PR
+* Prototyping a feature
+* Letting AI agents explore refactors
+* Running tests in isolation
 
-1. **Parallel work without context collision**
-2. **Fast environment setup per task**
-3. **Agent-friendly isolation for AI workflows**
+All at the same time.
 
-Instead of juggling branches, folders, and bootstrap scripts by hand, Yggdrasil gives you a repeatable, intentional workflow.
-Each worktree becomes its own **small realm** — isolated, focused, and safe to explore.
+Yggdrasil exists to solve three problems together:
+
+1. Parallel work without context collision
+2. Fast, repeatable environment setup
+3. Agent‑friendly isolation for AI workflows
+
+Each worktree becomes its own **small realm**, safe to explore and easy to discard.
+
+---
+
+## ✨ Key Features
+
+🌳 **First-class worktree workflow**
+Create, manage, and navigate Git worktrees as a primary workflow, not an afterthought.
+
+🧠 **Parallel development by default**
+Work on multiple branches at the same time, each in its own isolated environment.
+
+🤖 **AI-friendly isolation**
+One worktree per agent, per experiment, per idea. No shared state, no collisions.
+
+⚡ **Automatic bootstrapping**
+Run installs, submodules, and setup scripts automatically for each worktree.
+
+🚪 **Enter, exec, and exit with ease**
+Enter worktrees, execute commands, or run tasks without changing directories.
+
+📍 **Predictable structure**
+All managed worktrees live under `~/.yggtree`, keeping your repository clean.
+
+🧭 **Interactive or scriptable**
+Use the interactive UI or drive everything through commands and flags.
 
 ---
 
 ## 🧠 Parallel Development, Done Right
-
-Traditional branching assumes *sequential* work.
-
-Reality looks more like this:
-
-* You’re fixing a bug
-* Reviewing a PR
-* Prototyping a feature
-* Letting an AI agent explore refactors
-* Letting another agent generate tests
-
-All at the same time.
-
-Yggdrasil lets each task live in its **own isolated worktree** — a separate realm where ideas can evolve without colliding.
 
 ```bash
 yggtree wt create feat/eng-2581-state-selection
@@ -100,74 +120,184 @@ yggtree wt create fix/eng-2610-validation
 yggtree wt create chore/cleanup-api
 ```
 
-Each command spins up:
+Each command creates:
 
 * A clean folder
 * A dedicated branch
-* A fully bootstrapped environment
+* A bootstrapped environment
 
-No context bleeding.
 No stash juggling.
-No “what branch am I on?” moments.
+No branch confusion.
+No shared state accidents.
 
 ---
 
-## 🤖 Built for AI-Assisted Workflows
+## 🤖 Built for AI‑Assisted Workflows
 
-Yggdrasil shines when combined with AI agents.
+Yggdrasil shines when paired with AI agents.
 
-Instead of running agents against the same working directory, you can:
-
-* Assign one worktree per agent
-* Let each agent explore independently
-* Compare results safely
-* Merge only what makes sense
-
-Example workflow:
+Instead of running agents against the same directory, you can assign **one worktree per agent**.
 
 ```bash
-# Prepare isolated worktrees
-yggtree wt create feat/ai-refactor-a
-yggtree wt create feat/ai-refactor-b
+yggtree wt create feat/ai-refactor-a --exec "cursor ."
+yggtree wt create feat/ai-refactor-b --exec "codex"
 ```
 
-Each agent operates in its own realm, free to experiment without side effects.
-
-This enables patterns like:
+Each agent operates in its own realm:
 
 * Model A refactors architecture
 * Model B focuses on tests
-* Model C explores performance improvements
+* Model C explores performance
 
-All in parallel.
-All reviewable.
-All under your control.
+All in parallel. All reviewable. All isolated.
 
 ---
 
-## ⚡ Zero-Friction Bootstrapping
+## ⚡ Bootstrapping & Configuration
 
-Every worktree can auto-configure itself.
+Yggdrasil automatically prepares each worktree.
 
-Yggdrasil reads your project’s setup file and prepares the realm immediately:
+Resolution order:
+
+1. `yggtree-worktree.json` inside the worktree
+2. `yggtree-worktree.json` in the repo root
+3. `.cursor/worktrees.json`
+4. Fallback: `npm install` + submodules
+
+### Example configuration
 
 ```json
 {
   "setup-worktree": [
     "npm install",
     "git submodule sync --recursive",
-    "git submodule update --init --recursive"
+    "git submodule update --init --recursive",
+    "echo \"🌳 Realm ready\""
   ]
 }
 ```
 
-That means:
+---
 
-* No manual installs
-* No forgotten submodules
-* No “works on main but not here” surprises
+## 🛠️ Command Reference
 
-You enter a worktree and it’s ready to work.
+### `yggtree`
+
+Open the interactive menu.
+
+---
+
+### `yggtree wt create [branch]`
+
+Create a worktree from a branch.
+
+Options:
+
+* `--base <ref>`
+* `--source local|remote`
+* `--no-bootstrap`
+* `--enter / --no-enter`
+* `--exec "<command>"`
+
+<details>
+<summary>Example</summary>
+
+```bash
+yggtree wt create feat/new-ui --base main --exec "cursor ."
+```
+
+</details>
+
+---
+
+### `yggtree wt create-multi`
+
+Create multiple worktrees at once.
+
+<details>
+<summary>Example</summary>
+
+```bash
+yggtree wt create-multi --base main
+```
+
+</details>
+
+---
+
+### `yggtree wt list`
+
+List all worktrees with state.
+
+Columns:
+
+* TYPE (MAIN / MANAGED)
+* STATE (clean / dirty)
+* BRANCH
+* PATH
+
+---
+
+### `yggtree wt enter [worktree]`
+
+Enter a worktree using a sub‑shell.
+
+* Uses your default shell
+* Type `exit` to return
+
+Optional:
+
+* `--exec "<command>"`
+
+<details>
+<summary>Example</summary>
+
+```bash
+yggtree wt enter feat/new-ui --exec "npm test"
+```
+
+</details>
+
+---
+
+### `yggtree wt exec [worktree] -- <command>`
+
+Run a command inside a worktree **without entering**.
+
+<details>
+<summary>Example</summary>
+
+```bash
+yggtree wt exec feat/new-ui -- npm test
+```
+
+</details>
+
+---
+
+### `yggtree wt path [worktree]`
+
+Print a `cd` command for a worktree.
+
+Useful for scripting and shell aliases.
+
+---
+
+### `yggtree wt bootstrap`
+
+Re‑run bootstrap commands for a worktree.
+
+---
+
+### `yggtree wt delete`
+
+Interactively delete managed worktrees.
+
+---
+
+### `yggtree wt prune`
+
+Clean up stale git worktree metadata.
 
 ---
 
@@ -176,12 +306,125 @@ You enter a worktree and it’s ready to work.
 Yggdrasil is ideal when:
 
 * You work on multiple tasks in parallel
-* You use AI agents for exploration or execution
+* You use AI agents for exploration
 * You want isolation without duplication
-* You value repeatable, scripted setup
-* You’re tired of fighting your own repo
+* You value scripted, repeatable setups
+* `git checkout` no longer scales
 
-If your workflow has outgrown `git checkout`, Yggdrasil is the missing layer.
+---
+
+## 📝 Practical Examples
+
+<details>
+<summary>Create a worktree and enter it immediately</summary>
+
+**Command:**
+
+```
+yggtree wt create feat/login-flow
+```
+
+**What happens:**
+
+* Creates a new branch if it doesn’t exist
+* Creates a dedicated worktree
+* Runs bootstrap if enabled
+* Drops you into a sub-shell inside the worktree
+
+</details>
+---
+
+<details>
+<summary>Create a worktree without bootstrap and without entering</summary>
+
+**Command:**
+
+```
+yggtree wt create feat/cleanup-api --no-bootstrap --no-enter
+```
+
+**When to use:**
+
+* You just want the folder ready
+* You’ll enter it later
+* You don’t want installs running automatically
+
+</details>
+---
+
+<details>
+<summary>Create a worktree and open it in your IDE</summary>
+
+**Command:**
+
+```
+yggtree wt create feat/ui-refactor --exec "cursor ."
+```
+
+Works with:
+
+* `cursor .`
+* `code .`
+* `codex`
+* Any custom command available in your shell
+
+</details>
+---
+
+<details>
+<summary>Execute a command inside an existing worktree (no shell)</summary>
+
+**Command:**
+
+```
+yggtree wt exec test -- npm test
+```
+
+**What this does:**
+
+* Runs the command inside the selected worktree
+* Does not enter a sub-shell
+* Ideal for CI-like checks, scripts, or quick validations
+
+</details>
+---
+
+<details>
+<summary>Enter a worktree and run a command before entering</summary>
+
+**Command:**
+
+```
+yggtree wt enter test --exec "codex"
+```
+
+**What happens:**
+
+* Executes the command inside the worktree
+* Then drops you into a sub-shell
+* Type `exit` to return to your original directory
+
+</details>
+---
+
+<details>
+<summary>Get the path to a worktree</summary>
+
+**Command:**
+
+```
+yggtree wt path test
+```
+
+**Output:**
+
+```
+cd ~/.yggtree/your-repo-name/test
+```
+
+Useful when you want to manually navigate or copy the path into scripts.
+
+</details>
 
 ---
 
@@ -190,63 +433,9 @@ If your workflow has outgrown `git checkout`, Yggdrasil is the missing layer.
 Branches are ideas.
 Worktrees are realities.
 
-Yggdrasil helps you keep each idea grounded in its own world — until you decide which ones deserve to merge.
-
-
----
-
-## ⚙️ Configuration
-
-Yggdrasil looks for setup instructions in your project root:
-
-```json
-{
-  "setup-worktree": [
-    "npm install",
-    "git submodule sync --recursive",
-    "git submodule update --init --recursive",
-    "npm run build",
-    "echo '🌳 The realm is ready!'"
-  ]
-}
-```
+Yggdrasil helps you grow many worlds and decide later which ones deserve to merge.
 
 ---
-
-## 🛠️ Commands Reference
-
-| Command | Description |
-| :--- | :--- |
-| `yggtree` | Open the interactive main menu. |
-| `yggtree wt create` | Create a worktree by branch name (Recommended). |
-| `yggtree wt create-multi` | Create multiple worktrees in a single command. |
-| `yggtree wt create-slug` | Manually specify both folder name and branch ref. |
-| `yggtree wt list` | List all managed worktrees and their status. |
-| `yggtree wt delete` | Interactively select and remove a worktree. |
-| `yggtree wt bootstrap` | Re-run the setup commands for an existing worktree. |
-| `yggtree wt prune` | Clean up Git's internal data for worktrees. |
-| `yggtree wt enter` | Enter a worktree sub-shell (supports `--exec`). |
-| `yggtree wt path` | Show the `cd` command for a specific worktree. |
-| `yggtree wt exec` | Execute a command in a worktree without entering. |
-
----
-
-## 🛠️ Development
-
-If you'd like to contribute or run the latest development version:
-
-```bash
-# Clone the repository
-git clone https://github.com/leoreisdias/yggdrasil-cli.git
-cd yggdrasil-cli
-
-# Install dependencies and build
-npm install
-npm run build
-
-# Link the CLI locally
-npm link
-```
 
 ## 📄 License
 

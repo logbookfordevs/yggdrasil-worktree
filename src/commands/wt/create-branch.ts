@@ -128,12 +128,6 @@ export async function createCommandNew(options: NewCreateOptions) {
             } else {
                  await execa('git', ['worktree', 'add', '-b', branchName, wtPath, baseRef]);
             }
-            
-            // Strong Safety Mode: Ensure upstream is origin/<branchName> and publish
-            spinner.text = 'Safely publishing branch...';
-            await ensureCorrectUpstream(wtPath, branchName);
-            
-            spinner.succeed('Worktree created and branch published.');
         } catch (e: any) {
             spinner.fail('Failed to create worktree.');
             const cmd = targetBranchExists 
@@ -146,6 +140,21 @@ export async function createCommandNew(options: NewCreateOptions) {
                 `Run manually: ${cmd}`
             ]);
             return;
+        }
+
+        try {
+            // Strong Safety Mode: Ensure upstream is origin/<branchName> and publish
+            spinner.text = 'Safely publishing branch...';
+            await ensureCorrectUpstream(wtPath, branchName);
+            spinner.succeed('Worktree created and branch published.');
+        } catch (e: any) {
+            spinner.fail('Worktree created, but branch publication failed.');
+            log.actionableError(e.message, 'git push -u origin HEAD', wtPath, [
+                `cd ${wtPath}`,
+                'Attempt to push manually: git push -u origin HEAD',
+                'Check if the remote branch already exists or if you have push permissions'
+            ]);
+            // We don't return here because the worktree IS created, we just failed to publish
         }
 
         if (shouldBootstrap) {

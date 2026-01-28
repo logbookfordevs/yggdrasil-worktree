@@ -103,18 +103,6 @@ export async function createCommandMulti(options: MultiCreateOptions) {
                 } else {
                     await execa('git', ['worktree', 'add', '-b', branchName, wtPath, baseRef]);
                 }
-                
-                // Strong Safety Mode: Ensure upstream is origin/<branchName> and publish
-                wtSpinner.text = `Safely publishing branch ${branchName}...`;
-                await ensureCorrectUpstream(wtPath, branchName);
-                
-                wtSpinner.succeed(`Worktree for ${chalk.cyan(branchName)} created and published.`);
-                createdWorktrees.push(wtPath);
-
-                // 4. Bootstrap
-                if (shouldBootstrap) {
-                    await runBootstrap(wtPath, repoRoot);
-                }
             } catch (error: any) {
                 wtSpinner.fail(`Failed to create worktree for ${branchName}.`);
                 const cmd = targetBranchExists 
@@ -126,6 +114,29 @@ export async function createCommandMulti(options: MultiCreateOptions) {
                     'Try pruning stale worktrees: yggtree wt prune',
                     `Run manually: ${cmd}`
                 ]);
+                continue;
+            }
+
+            try {
+                // Strong Safety Mode: Ensure upstream is origin/<branchName> and publish
+                wtSpinner.text = `Safely publishing branch ${branchName}...`;
+                await ensureCorrectUpstream(wtPath, branchName);
+                
+                wtSpinner.succeed(`Worktree for ${chalk.cyan(branchName)} created and published.`);
+                createdWorktrees.push(wtPath);
+            } catch (error: any) {
+                wtSpinner.fail(`Worktree for ${branchName} created, but publication failed.`);
+                log.actionableError(error.message, 'git push -u origin HEAD', wtPath, [
+                    `cd ${wtPath}`,
+                    'Attempt to push manually: git push -u origin HEAD',
+                    'Check if the remote branch already exists or if you have push permissions'
+                ]);
+                createdWorktrees.push(wtPath); // Still added to list since wt exists
+            }
+
+            // 4. Bootstrap
+            if (shouldBootstrap) {
+                await runBootstrap(wtPath, repoRoot);
             }
         }
 

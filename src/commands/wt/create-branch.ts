@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch } from '../../lib/git.js';
+import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch, ensureCorrectUpstream } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
@@ -128,7 +128,12 @@ export async function createCommandNew(options: NewCreateOptions) {
             } else {
                  await execa('git', ['worktree', 'add', '-b', branchName, wtPath, baseRef]);
             }
-            spinner.succeed('Worktree created.');
+            
+            // Strong Safety Mode: Ensure upstream is origin/<branchName> and publish
+            spinner.text = 'Safely publishing branch...';
+            await ensureCorrectUpstream(wtPath, branchName);
+            
+            spinner.succeed('Worktree created and branch published.');
         } catch (e: any) {
             spinner.fail('Failed to create worktree.');
             const cmd = targetBranchExists 

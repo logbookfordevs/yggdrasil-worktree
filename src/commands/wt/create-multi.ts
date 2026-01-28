@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch } from '../../lib/git.js';
+import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch, ensureCorrectUpstream } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
@@ -104,7 +104,11 @@ export async function createCommandMulti(options: MultiCreateOptions) {
                     await execa('git', ['worktree', 'add', '-b', branchName, wtPath, baseRef]);
                 }
                 
-                wtSpinner.succeed(`Worktree for ${chalk.cyan(branchName)} created.`);
+                // Strong Safety Mode: Ensure upstream is origin/<branchName> and publish
+                wtSpinner.text = `Safely publishing branch ${branchName}...`;
+                await ensureCorrectUpstream(wtPath, branchName);
+                
+                wtSpinner.succeed(`Worktree for ${chalk.cyan(branchName)} created and published.`);
                 createdWorktrees.push(wtPath);
 
                 // 4. Bootstrap

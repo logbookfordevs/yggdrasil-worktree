@@ -83,3 +83,11 @@ export async function syncSubmodules(cwd: string): Promise<void> {
     await execa('git', ['submodule', 'sync', '--recursive'], { cwd });
     await execa('git', ['submodule', 'update', '--init', '--recursive'], { cwd });
 }
+export async function isGitClean(cwd: string): Promise<boolean> {
+    try {
+        const { stdout } = await execa('git', ['status', '--porcelain'], { cwd });
+        return stdout.trim().length === 0;
+    } catch {
+        return false;
+    }
+}

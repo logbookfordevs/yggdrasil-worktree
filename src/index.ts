@@ -35,7 +35,7 @@ program
                     { name: '🌳 Create multiple worktrees', value: 'create-multi' },
                     { name: '🌱 Create new worktree (Manual Slug)', value: 'create-slug' },
                     { name: '📋 List worktrees', value: 'list' },
-                    { name: '🗑️  Delete worktree', value: 'delete' },
+                    { name: '🗑️ Delete worktree', value: 'delete' },
                      { name: '🚀 Bootstrap worktree', value: 'bootstrap' },
                     { name: '🧹 Prune stale worktrees', value: 'prune' },
                     { name: '🐚 Exec command', value: 'exec' },

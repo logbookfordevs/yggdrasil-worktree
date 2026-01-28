@@ -1,11 +1,10 @@
 import inquirer from 'inquirer';
-import { execa } from 'execa';
 import path from 'path';
 import { listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log } from '../../lib/ui.js';
 
-export async function execCommand(wtName?: string, commandArgs?: string[]) {
+export async function pathCommand(wtName?: string) {
     try {
         await getRepoRoot();
         const worktrees = await listWorktrees();
@@ -52,7 +51,7 @@ export async function execCommand(wtName?: string, commandArgs?: string[]) {
                 {
                     type: 'list',
                     name: 'selectedWt',
-                    message: 'Select a worktree:',
+                    message: 'Select a worktree to get path:',
                     choices,
                     loop: false
                 }
@@ -61,40 +60,11 @@ export async function execCommand(wtName?: string, commandArgs?: string[]) {
             targetWt = selectedWt;
         }
 
-        let command: string;
-        let args: string[] = [];
-
-        if (commandArgs && commandArgs.length > 0) {
-            command = commandArgs[0];
-            args = commandArgs.slice(1);
-        } else {
-            const { inputCommand } = await inquirer.prompt([
-                {
-                    type: 'input',
-                    name: 'inputCommand',
-                    message: `Enter command to run in ${targetWt?.path}:`,
-                    validate: (input) => input.trim().length > 0 || 'Command cannot be empty'
-                }
-            ]);
-            
-            // Basic shell-like parsing for the interactive input
-            const parts = inputCommand.trim().split(/\s+/);
-            command = parts[0];
-            args = parts.slice(1);
+        if (targetWt) {
+            console.log(`cd "${targetWt.path}"`);
         }
-
-        log.info(`Executing: ${command} ${args.join(' ')} in ${targetWt?.path}`);
-        await execa(command, args, {
-            cwd: targetWt?.path,
-            stdio: 'inherit',
-            shell: false
-        });
 
     } catch (error: any) {
-        if (error.exitCode !== undefined) {
-             // Command failed, but it already printed its error to inherited stdio
-             return;
-        }
         log.error(error.message);
     }
 }

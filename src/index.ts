@@ -11,6 +11,7 @@ import { bootstrapCommand } from './commands/wt/bootstrap.js';
 import { pruneCommand } from './commands/wt/prune.js';
 import { execCommand } from './commands/wt/exec.js';
 import { enterCommand } from './commands/wt/enter.js';
+import { pathCommand } from './commands/wt/path.js';
 import { getVersion } from './lib/version.js';
 
 const program = new Command();
@@ -39,6 +40,7 @@ program
                     { name: '🧹 Prune stale worktrees', value: 'prune' },
                     { name: '🐚 Exec command', value: 'exec' },
                     { name: '🚪 Enter worktree', value: 'enter' },
+                    { name: '📍 Get worktree path', value: 'path' },
                     new inquirer.Separator(),
                     { name: '🚪 Exit', value: 'exit' },
                 ],
@@ -72,6 +74,9 @@ program
                 break;
             case 'enter':
                 await enterCommand();
+                break;
+            case 'path':
+                await pathCommand();
                 break;
             case 'exit':
                 log.info('Bye! 👋');
@@ -153,6 +158,12 @@ wt.command('enter')
     .option('--exec <command>', 'Command to execute before entering')
     .action(async (worktree, options) => {
         await enterCommand(worktree, options);
+    });
+
+wt.command('path [worktree]')
+    .description('Show the cd command for a specific worktree')
+    .action(async (worktree) => {
+        await pathCommand(worktree);
     });
 
 program.parse(process.argv);

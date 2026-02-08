@@ -6,12 +6,15 @@ import { listCommand } from './commands/wt/list.js';
 import { createCommand } from './commands/wt/create.js';
 import { createCommandNew } from './commands/wt/create-branch.js';
 import { createCommandMulti } from './commands/wt/create-multi.js';
+import { createSandboxCommand } from './commands/wt/create-sandbox.js';
 import { deleteCommand } from './commands/wt/delete.js';
 import { bootstrapCommand } from './commands/wt/bootstrap.js';
 import { pruneCommand } from './commands/wt/prune.js';
 import { execCommand } from './commands/wt/exec.js';
 import { enterCommand } from './commands/wt/enter.js';
 import { pathCommand } from './commands/wt/path.js';
+import { applyCommand } from './commands/wt/apply.js';
+import { unapplyCommand } from './commands/wt/unapply.js';
 import { getVersion } from './lib/version.js';
 
 const program = new Command();
@@ -33,6 +36,7 @@ program
                 choices: [
                     { name: '🌿 Create new worktree (Smart Branch)', value: 'create-smart' },
                     { name: '🌳 Create multiple worktrees', value: 'create-multi' },
+                    { name: '🧪 Create sandbox worktree', value: 'create-sandbox' },
                     // { name: '🌱 Create new worktree (Manual Slug)', value: 'create-slug' },
                     { name: '📋 List worktrees', value: 'list' },
                     { name: '🪓 Delete worktree', value: 'delete' },
@@ -41,6 +45,9 @@ program
                     { name: '🐚 Exec command', value: 'exec' },
                     { name: '🚪 Enter worktree', value: 'enter' },
                     { name: '📍 Get worktree path', value: 'path' },
+                    new inquirer.Separator(),
+                    { name: '✅ Apply sandbox changes', value: 'apply' },
+                    { name: '↩️  Unapply sandbox changes', value: 'unapply' },
                     new inquirer.Separator(),
                     { name: '🚪 Exit', value: 'exit' },
                 ],
@@ -77,6 +84,15 @@ program
                 break;
             case 'path':
                 await pathCommand();
+                break;
+            case 'apply':
+                await applyCommand();
+                break;
+            case 'unapply':
+                await unapplyCommand();
+                break;
+            case 'create-sandbox':
+                await createSandboxCommand({ bootstrap: true });
                 break;
             case 'exit':
                 log.info('Bye! 👋');
@@ -166,4 +182,23 @@ wt.command('path [worktree]')
         await pathCommand(worktree);
     });
 
+wt.command('create-sandbox')
+    .description('Create a sandbox worktree from current branch')
+    .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+    .option('--enter', 'Enter sub-shell after creation')
+    .option('--no-enter', 'Skip entering sub-shell')
+    .option('--exec <command>', 'Command to execute after creation')
+    .action(async (options) => {
+        await createSandboxCommand(options);
+    });
+
+wt.command('apply')
+    .description('Apply sandbox changes to origin directory')
+    .action(applyCommand);
+
+wt.command('unapply')
+    .description('Undo applied sandbox changes in origin')
+    .action(unapplyCommand);
+
 program.parse(process.argv);
+

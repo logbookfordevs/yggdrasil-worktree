@@ -91,7 +91,7 @@ export async function createCommandNew(options: NewCreateOptions) {
         }
         
         // Convert branch name to slug (friendly folder name)
-        // e.g. feat/eng-2222-new-button -> feat-eng-2222-new-button
+        // e.g. feat/new-button -> feat-new-button
         const slug = branchName.replace(/[\/\\]/g, '-').replace(/\s+/g, '-');
         const repoName = await getRepoName();
         const wtPath = path.join(WORKTREES_ROOT, repoName, slug);

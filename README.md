@@ -118,8 +118,8 @@ Use the interactive UI or drive everything through commands and flags.
 ## 🧠 Parallel Development, Done Right
 
 ```bash
-yggtree wt create feat/eng-2581-state-selection
-yggtree wt create fix/eng-2610-validation
+yggtree wt create feat/city-selection
+yggtree wt create fix/validation
 yggtree wt create chore/cleanup-api
 ```
 

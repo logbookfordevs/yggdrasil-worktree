@@ -95,6 +95,9 @@ Create, manage, and navigate Git worktrees as a primary workflow, not an afterth
 🧠 **Parallel development by default**
 Work on multiple branches at the same time, each in its own isolated environment.
 
+🧪 **Sandbox worktrees for experimentation**
+Prototyping something risky? Create a sandbox with a random name, try different strategies, and apply the winner back to your origin branch.
+
 🤖 **AI-friendly isolation**
 One worktree per agent, per experiment, per idea. No shared state, no collisions.
 
@@ -153,6 +156,21 @@ All in parallel. All reviewable. All isolated.
 
 ---
 
+## 🧪 Sandbox Worktrees
+
+Sometimes you don't want to "commit to a branch" yet. You just want to try something out—or perhaps try three different ways of solving the same problem.
+
+**Sandboxes** are temporary, local-only worktrees designed for this:
+
+1.  **Create**: `yggtree wt create-sandbox` (creates `branch_qes2`).
+2.  **Experiment**: Change files, run tests, try that risky refactor.
+3.  **Apply**: `yggtree wt apply` to "push" those file changes back to your origin directory.
+4.  **Unapply**: Don't like it? `yggtree wt unapply` restores your origin to exactly how it was before.
+
+Sandboxes are **not pushed to remote** and their names are randomly generated because they are meant to be temporary playgrounds.
+
+---
+
 ## ⚡ Bootstrapping & Configuration
 
 Yggdrasil automatically prepares each worktree.
@@ -207,6 +225,35 @@ yggtree wt create feat/new-ui --base main --exec "cursor ."
 ```
 
 </details>
+
+---
+
+### `yggtree wt create-sandbox`
+
+Create a temporary sandbox from your current local branch.
+
+Options:
+
+*   `--carry / --no-carry`: Bring uncommitted changes (staged/unstaged/untracked) with you.
+*   `--no-bootstrap`
+*   `--enter / --no-enter`
+*   `--exec "<command>"`
+
+---
+
+### `yggtree wt apply`
+
+Apply changes from the current sandbox back to the origin repository. 
+*   **Backs up** origin files before overwriting.
+*   **Offers to delete** the sandbox after applying.
+
+---
+
+### `yggtree wt unapply`
+
+Undo a previous `apply` operation.
+*   Restores origin files from the sandbox's backup.
+*   *Note: Only works if the sandbox worktree still exists.*
 
 ---
 
@@ -423,6 +470,27 @@ cd ~/.yggtree/your-repo-name/test
 ```
 
 Useful when you want to manually navigate or copy the path into scripts.
+
+</details>
+
+---
+
+<details>
+<summary>Try a risky refactor in a Sandbox</summary>
+
+**Command:**
+
+```bash
+yggtree wt create-sandbox --carry
+```
+
+**Scenario:**
+
+1.  You have 5 files changed in your main repo but aren't sure about the direction.
+2.  Run `create-sandbox --carry` to move those changes into an isolated `current-branch_a1b2` folder.
+3.  Experiment freely.
+4.  If it works: `yggtree wt apply`.
+5.  If it fails: Just delete the sandbox or `unapply`.
 
 </details>
 

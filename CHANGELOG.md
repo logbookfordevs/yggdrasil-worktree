@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-02-08
+
+### Added
+- **🧪 Sandbox Worktrees**: A new workflow for local experimentation and prototyping.
+- `wt create-sandbox`: Create a temporary worktree with a random name from the current local branch.
+- `wt apply`: Apply differences from a sandbox worktree back to the origin directory with automatic backups.
+- `wt unapply`: Revert changes applied to the origin using the sandbox's history.
+- **Carry Support**: Option to carry over uncommitted (staged, unstaged, and untracked) changes when creating a sandbox.
+
 ## [1.1.1] - 2026-01-28
 
 ### Added

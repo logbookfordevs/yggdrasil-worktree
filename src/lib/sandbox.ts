@@ -14,7 +14,7 @@ export interface AppliedFileBackup {
     originalContent: string | null; // null means file didn't exist
 }
 
-const SANDBOX_META_FILE = '.sandbox-meta.json';
+export const SANDBOX_META_FILE = '.sandbox-meta.json';
 
 /**
  * Generate a sandbox worktree name: <branch>_<4-char-hash>

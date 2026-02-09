@@ -28,17 +28,19 @@ export async function applyCommand() {
         log.info(`Sandbox: ${chalk.cyan(path.basename(sandboxRoot))}`);
         log.info(`Origin: ${chalk.dim(meta.originPath)} (${chalk.yellow(meta.originBranch)})`);
 
-        // 3. Get list of changed files
+        // 3. Get list of changed files (including untracked)
         const spinner = createSpinner('Detecting changes...').start();
         
         let changedFiles: string[] = [];
         try {
-            const { stdout } = await execa('git', ['diff', '--name-only', 'HEAD'], { cwd: sandboxRoot });
-            const stagedResult = await execa('git', ['diff', '--name-only', '--cached'], { cwd: sandboxRoot });
+            const { stdout: diffFiles } = await execa('git', ['diff', '--name-only', 'HEAD'], { cwd: sandboxRoot });
+            const { stdout: stagedFiles } = await execa('git', ['diff', '--name-only', '--cached'], { cwd: sandboxRoot });
+            const { stdout: untrackedFiles } = await execa('git', ['ls-files', '--others', '--exclude-standard'], { cwd: sandboxRoot });
             
             const allChanges = new Set([
-                ...stdout.split('\n').filter(Boolean),
-                ...stagedResult.stdout.split('\n').filter(Boolean)
+                ...diffFiles.split('\n').filter(Boolean),
+                ...stagedFiles.split('\n').filter(Boolean),
+                ...untrackedFiles.split('\n').filter(Boolean)
             ]);
             changedFiles = [...allChanges];
         } catch (e: any) {
@@ -84,10 +86,22 @@ export async function applyCommand() {
             const originFile = path.join(meta.originPath, relativePath);
             const sandboxFile = path.join(sandboxRoot, relativePath);
 
+            // Skip if sandbox file doesn't exist or is a directory
+            if (!await fs.pathExists(sandboxFile)) {
+                continue;
+            }
+            const sandboxStat = await fs.stat(sandboxFile);
+            if (sandboxStat.isDirectory()) {
+                continue; // Skip directories (e.g., submodules)
+            }
+
             // Backup original content (or null if didn't exist)
             let originalContent: string | null = null;
             if (await fs.pathExists(originFile)) {
-                originalContent = await fs.readFile(originFile, 'utf-8');
+                const originStat = await fs.stat(originFile);
+                if (originStat.isFile()) {
+                    originalContent = await fs.readFile(originFile, 'utf-8');
+                }
             }
             backups.push({ relativePath, originalContent });
 

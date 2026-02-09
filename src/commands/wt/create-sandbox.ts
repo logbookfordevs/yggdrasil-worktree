@@ -74,8 +74,21 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
 
         // 4. Detect uncommitted changes before creating worktree
         let changedFiles: string[] = [];
+        let submodulePaths: string[] = [];
+        
         if (shouldCarry) {
             try {
+                // Get list of submodules to exclude from carry
+                try {
+                    const { stdout: submodules } = await execa('git', ['config', '--file', '.gitmodules', '--get-regexp', 'path'], { cwd: repoRoot });
+                    submodulePaths = submodules.split('\n')
+                        .filter(Boolean)
+                        .map(line => line.split(' ')[1])
+                        .filter(Boolean);
+                } catch {
+                    // No submodules or .gitmodules doesn't exist
+                }
+
                 const { stdout: unstaged } = await execa('git', ['diff', '--name-only'], { cwd: repoRoot });
                 const { stdout: staged } = await execa('git', ['diff', '--name-only', '--cached'], { cwd: repoRoot });
                 const { stdout: untracked } = await execa('git', ['ls-files', '--others', '--exclude-standard'], { cwd: repoRoot });
@@ -85,7 +98,11 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
                     ...staged.split('\n').filter(Boolean),
                     ...untracked.split('\n').filter(Boolean)
                 ]);
-                changedFiles = [...allChanges];
+                
+                // Filter out files inside submodule directories
+                changedFiles = [...allChanges].filter(file => {
+                    return !submodulePaths.some(subPath => file === subPath || file.startsWith(subPath + '/'));
+                });
             } catch {
                 // Ignore errors, proceed without carrying
             }
@@ -111,7 +128,7 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
             return;
         }
 
-        // 6. Carry over uncommitted changes
+        // 6. Carry over uncommitted changes (excluding submodules)
         if (shouldCarry && changedFiles.length > 0) {
             spinner.text = `Carrying ${changedFiles.length} uncommitted file(s)...`;
             for (const file of changedFiles) {
@@ -127,6 +144,9 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
                 }
             }
             log.info(`Carried ${changedFiles.length} uncommitted file(s) to sandbox.`);
+            if (submodulePaths.length > 0) {
+                log.dim(`Submodules excluded (will be initialized by bootstrap): ${submodulePaths.join(', ')}`);
+            }
         }
 
         // 7. Write sandbox metadata (NO remote push for sandbox!)

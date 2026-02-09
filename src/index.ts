@@ -184,6 +184,8 @@ wt.command('path [worktree]')
 
 wt.command('create-sandbox')
     .description('Create a sandbox worktree from current branch')
+    .option('--carry', 'Carry uncommitted changes to sandbox')
+    .option('--no-carry', 'Do not carry uncommitted changes')
     .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
     .option('--enter', 'Enter sub-shell after creation')
     .option('--no-enter', 'Skip entering sub-shell')

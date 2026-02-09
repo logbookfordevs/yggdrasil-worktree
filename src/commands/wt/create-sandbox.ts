@@ -14,6 +14,7 @@ interface SandboxCreateOptions {
     bootstrap?: boolean;
     enter?: boolean;
     exec?: string;
+    carry?: boolean;
 }
 
 export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
@@ -38,6 +39,13 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
         const answers = await inquirer.prompt([
             {
                 type: 'confirm',
+                name: 'carry',
+                message: 'Carry uncommitted changes to sandbox?',
+                default: true,
+                when: options.carry === undefined,
+            },
+            {
+                type: 'confirm',
                 name: 'bootstrap',
                 message: 'Run bootstrap? (npm install + submodules)',
                 default: true,
@@ -59,11 +67,31 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
             }
         ]);
 
+        const shouldCarry = options.carry !== undefined ? options.carry : answers.carry;
         const shouldEnter = options.enter !== undefined ? options.enter : answers.shouldEnter;
         const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
         const execCommandStr = options.exec || answers.exec;
 
-        // 4. Create worktree
+        // 4. Detect uncommitted changes before creating worktree
+        let changedFiles: string[] = [];
+        if (shouldCarry) {
+            try {
+                const { stdout: unstaged } = await execa('git', ['diff', '--name-only'], { cwd: repoRoot });
+                const { stdout: staged } = await execa('git', ['diff', '--name-only', '--cached'], { cwd: repoRoot });
+                const { stdout: untracked } = await execa('git', ['ls-files', '--others', '--exclude-standard'], { cwd: repoRoot });
+                
+                const allChanges = new Set([
+                    ...unstaged.split('\n').filter(Boolean),
+                    ...staged.split('\n').filter(Boolean),
+                    ...untracked.split('\n').filter(Boolean)
+                ]);
+                changedFiles = [...allChanges];
+            } catch {
+                // Ignore errors, proceed without carrying
+            }
+        }
+
+        // 5. Create worktree
         const repoName = await getRepoName();
         const wtPath = path.join(WORKTREES_ROOT, repoName, sandboxName);
 
@@ -83,7 +111,25 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
             return;
         }
 
-        // 5. Write sandbox metadata (NO remote push for sandbox!)
+        // 6. Carry over uncommitted changes
+        if (shouldCarry && changedFiles.length > 0) {
+            spinner.text = `Carrying ${changedFiles.length} uncommitted file(s)...`;
+            for (const file of changedFiles) {
+                const srcFile = path.join(repoRoot, file);
+                const destFile = path.join(wtPath, file);
+                try {
+                    if (await fs.pathExists(srcFile)) {
+                        await fs.ensureDir(path.dirname(destFile));
+                        await fs.copy(srcFile, destFile);
+                    }
+                } catch {
+                    // Skip files that can't be copied
+                }
+            }
+            log.info(`Carried ${changedFiles.length} uncommitted file(s) to sandbox.`);
+        }
+
+        // 7. Write sandbox metadata (NO remote push for sandbox!)
         await writeSandboxMeta(wtPath, {
             originPath: repoRoot,
             originBranch: currentBranch,
@@ -93,12 +139,12 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
         spinner.succeed(`Sandbox created: ${chalk.cyan(sandboxName)}`);
         log.dim('This is a local sandbox - no remote branch will be pushed.');
 
-        // 6. Bootstrap
+        // 8. Bootstrap
         if (shouldBootstrap) {
             await runBootstrap(wtPath, repoRoot);
         }
 
-        // 7. Exec command
+        // 9. Exec command
         if (execCommandStr && execCommandStr.trim()) {
             log.info(`Executing: ${execCommandStr} in ${ui.path(wtPath)}`);
             try {
@@ -115,7 +161,7 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
             }
         }
 
-        // 8. Final output
+        // 10. Final output
         log.success('Sandbox ready!');
         log.info(`Use ${chalk.cyan('yggtree wt apply')} to apply changes to origin.`);
         log.info(`Use ${chalk.cyan('yggtree wt unapply')} to undo applied changes.`);

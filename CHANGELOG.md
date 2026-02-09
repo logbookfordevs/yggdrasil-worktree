@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-02-08
+
+### Fixed
+- Excluded `.sandbox-meta.json` from being applied to origin directory (internal metadata file should not be copied).
+
 ## [1.2.0] - 2026-02-08
 
 ### Added

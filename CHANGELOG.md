@@ -9,8 +9,9 @@ All notable changes to this project will be documented in this file.
 - Parallelized fetching for worktree states and activity in the `list` command for improved performance.
 
 ### Changed
-- Prefixed generated sandbox branch names with `sandbox-` for better visibility (e.g., `sandbox-feature_a3f2`).
+- Prefixed generated sandbox branch names with `sandbox-<hash>_` for better sorting and visibility (e.g., `sandbox-a3f2_feature`).
 - Simplified `wt list` by removing the `PATH` column, as it typically duplicates the branch name in managed worktrees.
+- Improved `wt delete` interactive selection by showing branch names and activity timestamps in a cleaner, standardized format.
 
 ## [1.2.1] - 2026-02-08
 

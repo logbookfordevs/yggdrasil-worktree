@@ -22,7 +22,7 @@ export const SANDBOX_META_FILE = '.sandbox-meta.json';
 export function generateSandboxName(branch: string): string {
     const hash = crypto.randomBytes(2).toString('hex'); // 4 hex chars
     const safeBranch = branch.replace(/[\\/]/g, '-');
-    return `sandbox-${safeBranch}_${hash}`;
+    return `sandbox-${hash}_${safeBranch}`;
 }
 
 /**

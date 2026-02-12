@@ -1,9 +1,9 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { listWorktrees, removeWorktree, getRepoRoot } from '../../lib/git.js';
+import { listWorktrees, removeWorktree, getRepoRoot, getLastActivity } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
-import { log, ui, createSpinner } from '../../lib/ui.js';
+import { log, ui, createSpinner, timeAgo } from '../../lib/ui.js';
 
 export async function deleteCommand() {
     try {
@@ -18,10 +18,16 @@ export async function deleteCommand() {
             return;
         }
 
-        const choices = managedWts.map(wt => {
-            const relative = path.relative(WORKTREES_ROOT, wt.path);
+        // Pre-fetch activity for all managed worktrees in parallel
+        const activities = await Promise.all(
+            managedWts.map(wt => getLastActivity(wt.path))
+        );
+
+        const choices = managedWts.map((wt, i) => {
+            const branchName = wt.branch || wt.HEAD || 'detached';
+            const active = activities[i] ? chalk.magenta(timeAgo(activities[i])) : chalk.dim('—');
             return {
-                name: `${chalk.bold(relative)} (${chalk.dim(wt.branch || wt.HEAD)})`,
+                name: `${chalk.bold.yellow(branchName)} ${chalk.dim('·')} ${active}`,
                 value: wt.path,
             };
         });

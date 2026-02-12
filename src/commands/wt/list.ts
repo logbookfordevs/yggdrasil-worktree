@@ -1,8 +1,7 @@
 import chalk from 'chalk';
-import path from 'path';
-import { listWorktrees, getRepoRoot, isGitClean } from '../../lib/git.js';
+import { listWorktrees, getRepoRoot, isGitClean, getLastActivity } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
-import { log } from '../../lib/ui.js';
+import { log, timeAgo } from '../../lib/ui.js';
 
 export async function listCommand() {
     try {
@@ -17,27 +16,28 @@ export async function listCommand() {
         console.log(chalk.bold('\n  Active Worktrees:\n'));
 
         // Header
-        console.log(`  ${chalk.dim('TYPE')}    ${chalk.dim('STATE')}    ${chalk.dim('BRANCH')}             ${chalk.dim('PATH')}`);
-        console.log(chalk.dim('  ' + '-'.repeat(75)));
+        console.log(`  ${chalk.dim('TYPE')}    ${chalk.dim('STATE')}    ${chalk.dim('LAST ACTIVE')}    ${chalk.dim('BRANCH')}`);
+        console.log(chalk.dim('  ' + '-'.repeat(70)));
 
         for (const wt of worktrees) {
             const isManaged = wt.path.startsWith(WORKTREES_ROOT);
             const type = isManaged ? chalk.green('MANAGED') : chalk.blue('MAIN   ');
             
             const branchName = wt.branch || wt.HEAD || 'detached';
-            let displayPath = wt.path.replace(process.env.HOME || '', '~');
-            
-            if (isManaged) {
-                displayPath = path.relative(WORKTREES_ROOT, wt.path);
-            }
-            
-            const colorPath = isManaged ? chalk.cyan(displayPath) : chalk.dim(displayPath);
 
-            const isClean = await isGitClean(wt.path);
+            // Fetch state and activity in parallel
+            const [isClean, lastActive] = await Promise.all([
+                isGitClean(wt.path),
+                getLastActivity(wt.path),
+            ]);
+
             const stateLabel = (isClean ? 'clean' : 'dirty').padEnd(8);
             const stateText = isClean ? chalk.green(stateLabel) : chalk.yellow(stateLabel);
 
-            console.log(`  ${type}  ${stateText} ${chalk.yellow(branchName.padEnd(18))} ${colorPath}`);
+            const activeLabel = lastActive ? timeAgo(lastActive) : '—';
+            const activeText = chalk.magenta(activeLabel.padEnd(14));
+
+            console.log(`  ${type}  ${stateText} ${activeText} ${chalk.yellow(branchName)}`);
         }
         console.log('');
     } catch (error: any) {

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - (Next Release)
+
+### Added
+- **Activity Tracking**: Added a `LAST ACTIVE` column to `wt list` showing relative time (e.g., "2 hours ago") based on last commit and git index activity.
+- Parallelized fetching for worktree states and activity in the `list` command for improved performance.
+
+### Changed
+- Prefixed generated sandbox branch names with `sandbox-` for better visibility (e.g., `sandbox-feature_a3f2`).
+- Simplified `wt list` by removing the `PATH` column, as it typically duplicates the branch name in managed worktrees.
+
 ## [1.2.1] - 2026-02-08
 
 ### Fixed

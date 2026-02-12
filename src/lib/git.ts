@@ -128,3 +128,41 @@ export async function ensureCorrectUpstream(wtPath: string, branchName: string):
     log.info(`Publishing branch ${chalk.cyan(branchName)} to ${chalk.cyan(desiredUpstream)}...`);
     await execa('git', ['push', '-u', 'origin', 'HEAD'], { cwd: wtPath });
 }
+
+/**
+ * Returns the most recent activity date for a worktree by checking two signals:
+ * 1. Last commit time (captures committed work)
+ * 2. Git index mtime (captures staging, checkouts, uncommitted work)
+ *
+ * The most recent of the two wins. Returns null if both fail.
+ */
+export async function getLastActivity(wtPath: string): Promise<Date | null> {
+    const dates: Date[] = [];
+
+    // Signal 1 — last commit epoch
+    try {
+        const { stdout } = await execa('git', ['log', '-1', '--format=%ct'], { cwd: wtPath });
+        const epoch = parseInt(stdout.trim(), 10);
+        if (!isNaN(epoch)) {
+            dates.push(new Date(epoch * 1000));
+        }
+    } catch {
+        // no commits reachable — skip
+    }
+
+    // Signal 2 — git index file mtime
+    try {
+        const { stdout: gitDir } = await execa('git', ['rev-parse', '--git-dir'], { cwd: wtPath });
+        const gitDirPath = gitDir.trim();
+        const resolvedGitDir = path.isAbsolute(gitDirPath) ? gitDirPath : path.join(wtPath, gitDirPath);
+        const indexPath = path.join(resolvedGitDir, 'index');
+        const stat = await fs.stat(indexPath);
+        dates.push(stat.mtime);
+    } catch {
+        // index not found — skip
+    }
+
+    if (dates.length === 0) return null;
+    return new Date(Math.max(...dates.map(d => d.getTime())));
+}
+

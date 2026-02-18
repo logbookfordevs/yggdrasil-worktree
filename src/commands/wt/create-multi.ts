@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch, ensureCorrectUpstream } from '../../lib/git.js';
+import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch, ensureCorrectUpstream, publishBranch } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
@@ -101,13 +101,15 @@ export async function createCommandMulti(options: MultiCreateOptions) {
                 if (targetBranchExists) {
                     await execa('git', ['worktree', 'add', wtPath, branchName]);
                 } else {
-                    await execa('git', ['worktree', 'add', '-b', branchName, wtPath, baseRef]);
+                    // Create branch WITHOUT tracking the base, then attach worktree
+                    await execa('git', ['branch', '--no-track', branchName, baseRef]);
+                    await execa('git', ['worktree', 'add', wtPath, branchName]);
                 }
             } catch (error: any) {
                 wtSpinner.fail(`Failed to create worktree for ${branchName}.`);
                 const cmd = targetBranchExists 
                     ? `git worktree add ${wtPath} ${branchName}`
-                    : `git worktree add -b ${branchName} ${wtPath} ${baseRef}`;
+                    : `git branch --no-track ${branchName} ${baseRef} && git worktree add ${wtPath} ${branchName}`;
                 log.actionableError(error.message, cmd, wtPath, [
                     'Check if the folder already exists: ls ' + wtPath,
                     'Check if the branch is already used: git worktree list',
@@ -117,22 +119,23 @@ export async function createCommandMulti(options: MultiCreateOptions) {
                 continue;
             }
 
+            // Safety net: ensure no incorrect upstream was inherited
+            wtSpinner.text = `Verifying upstream safety for ${branchName}...`;
+            await ensureCorrectUpstream(wtPath, branchName);
+
+            // Auto-publish: push to origin and set correct tracking
             try {
-                // Strong Safety Mode: Ensure upstream is origin/<branchName> and publish
-                wtSpinner.text = `Safely publishing branch ${branchName}...`;
-                await ensureCorrectUpstream(wtPath, branchName);
-                
+                wtSpinner.text = `Publishing branch ${branchName}...`;
+                await publishBranch(wtPath, branchName);
                 wtSpinner.succeed(`Worktree for ${chalk.cyan(branchName)} created and published.`);
-                createdWorktrees.push(wtPath);
             } catch (error: any) {
-                wtSpinner.fail(`Worktree for ${branchName} created, but publication failed.`);
+                wtSpinner.succeed(`Worktree for ${chalk.cyan(branchName)} created (publish failed — push manually later).`);
                 log.actionableError(error.message, 'git push -u origin HEAD', wtPath, [
                     `cd ${wtPath}`,
                     'Attempt to push manually: git push -u origin HEAD',
-                    'Check if the remote branch already exists or if you have push permissions'
                 ]);
-                createdWorktrees.push(wtPath); // Still added to list since wt exists
             }
+            createdWorktrees.push(wtPath);
 
             // 4. Bootstrap
             if (shouldBootstrap) {

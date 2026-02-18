@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Prefixed generated sandbox branch names with `sandbox-<hash>_` for better sorting and visibility (e.g., `sandbox-a3f2_feature`).
 - Simplified `wt list` by removing the `PATH` column, as it typically duplicates the branch name in managed worktrees.
 - Improved `wt delete` interactive selection by showing branch names and activity timestamps in a cleaner, standardized format.
+- **Safer branch creation** (`wt create` / `wt create-multi`): Branches are now created with `git branch --no-track` before attaching the worktree, preventing Git from auto-tracking the base branch (e.g. `origin/main`). The branch is then auto-published to `origin` with correct upstream tracking. This fixes the root cause of accidental pushes to base branches while keeping the same convenient DX.
 
 ## [1.2.1] - 2026-02-08
 
@@ -31,7 +32,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **Strong Safety Mode**: New logic for worktree creation that prevents accidental pushes to base branches (like `main` or `development`).
-- Automatic publishing: Newly created branches are now automatically published to `origin` and set to track `origin/<branch-name>` instead of the base remote branch.
+- Automatic publishing: Newly created branches were automatically published to `origin` and set to track `origin/<branch-name>` instead of the base remote branch. *(In [Unreleased], branch creation was updated to use `--no-track` first, then publish explicitly to keep tracking safe.)*
 - Upstream auditing: The tool now checks and unsets incorrect upstreams (e.g. tracking `origin/main` when it should track its own remote) upon creation.
 
 ### Changed

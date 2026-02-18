@@ -373,10 +373,11 @@ yggtree wt create feat/login-flow
 
 **What happens:**
 
-* Creates a new branch if it doesn’t exist
+* Creates a new branch if it doesn’t exist (without inheriting base tracking), then publishes it to `origin` when possible
 * Creates a dedicated worktree
 * Runs bootstrap if enabled
 * Drops you into a sub-shell inside the worktree
+
 
 </details>
 ---

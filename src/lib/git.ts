@@ -94,9 +94,12 @@ export async function isGitClean(cwd: string): Promise<boolean> {
 }
 
 /**
- * Ensures the branch in the given worktree path tracks origin/<branchName>.
- * If it tracks a different base branch (e.g. origin/main), it unsets it and publishes to origin.
- * Fails if origin/<branchName> already exists on remote and is not already the upstream.
+ * Safety net: ensures the branch does NOT track an incorrect upstream
+ * (e.g. origin/main when the branch is feat/new-thing).
+ *
+ * - Correct tracking (origin/<branchName>) → no-op
+ * - No tracking at all → no-op
+ * - Wrong tracking → unsets it
  */
 export async function ensureCorrectUpstream(wtPath: string, branchName: string): Promise<void> {
     const desiredUpstream = `origin/${branchName}`;
@@ -106,26 +109,37 @@ export async function ensureCorrectUpstream(wtPath: string, branchName: string):
         const { stdout } = await execa('git', ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'], { cwd: wtPath });
         currentUpstream = stdout.trim();
     } catch {
-        // No upstream set
+        // No upstream set — safe
+        return;
     }
 
     if (currentUpstream === desiredUpstream) {
         return; // Already correct
     }
 
-    // If it's set to something else, unset it
-    if (currentUpstream) {
-        log.info(`Incorrect upstream detected: ${currentUpstream}. Unsetting...`);
-        await execa('git', ['branch', '--unset-upstream'], { cwd: wtPath });
+    // Wrong tracking — kill it
+    log.warning(`Incorrect upstream detected: ${chalk.red(currentUpstream)} (expected ${chalk.cyan(desiredUpstream)}). Unsetting...`);
+    await execa('git', ['branch', '--unset-upstream'], { cwd: wtPath });
+}
+
+/**
+ * Publishes a local branch to origin and sets upstream tracking.
+ * Skips if the branch is already published (origin/<branchName> exists and is tracked).
+ */
+export async function publishBranch(wtPath: string, branchName: string): Promise<void> {
+    const desiredUpstream = `origin/${branchName}`;
+
+    // Check if already tracking the correct remote
+    try {
+        const { stdout } = await execa('git', ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'], { cwd: wtPath });
+        if (stdout.trim() === desiredUpstream) {
+            return; // Already published and tracked
+        }
+    } catch {
+        // No upstream — expected for new branches
     }
 
-    // Check if remote branch already exists
-    const remoteExists = await verifyRef(desiredUpstream);
-    if (remoteExists) {
-        throw new Error(`Remote branch '${desiredUpstream}' already exists. Cannot publish safely without more info. Use 'git push -u origin HEAD' manually if you want to link them.`);
-    }
-
-    log.info(`Publishing branch ${chalk.cyan(branchName)} to ${chalk.cyan(desiredUpstream)}...`);
+    log.info(`Publishing ${chalk.cyan(branchName)} → ${chalk.cyan(desiredUpstream)}...`);
     await execa('git', ['push', '-u', 'origin', 'HEAD'], { cwd: wtPath });
 }
 

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch, ensureCorrectUpstream } from '../../lib/git.js';
+import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch, ensureCorrectUpstream, publishBranch } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
@@ -116,23 +116,23 @@ export async function createCommandNew(options: NewCreateOptions) {
         
         // Check if target branch already exists
         const targetBranchExists = await verifyRef(branchName);
-        // If branch doesn't exist, we create it from base
-        // If it does exist, we just check it out
-        const createBranchFlag = targetBranchExists ? '' : `-b ${branchName}`;
         
         try {
             await fs.ensureDir(path.dirname(wtPath));
-            // slightly different logic for creating new branch vs existing
+
             if (targetBranchExists) {
-                 await execa('git', ['worktree', 'add', wtPath, branchName]);
+                // Branch exists — just attach the worktree
+                await execa('git', ['worktree', 'add', wtPath, branchName]);
             } else {
-                 await execa('git', ['worktree', 'add', '-b', branchName, wtPath, baseRef]);
+                // Create branch WITHOUT tracking the base, then attach worktree
+                await execa('git', ['branch', '--no-track', branchName, baseRef]);
+                await execa('git', ['worktree', 'add', wtPath, branchName]);
             }
         } catch (e: any) {
             spinner.fail('Failed to create worktree.');
             const cmd = targetBranchExists 
                 ? `git worktree add ${wtPath} ${branchName}`
-                : `git worktree add -b ${branchName} ${wtPath} ${baseRef}`;
+                : `git branch --no-track ${branchName} ${baseRef} && git worktree add ${wtPath} ${branchName}`;
             log.actionableError(e.message, cmd, wtPath, [
                 'Check if the folder already exists: ls ' + wtPath,
                 'Check if the branch is already used: git worktree list',
@@ -142,19 +142,21 @@ export async function createCommandNew(options: NewCreateOptions) {
             return;
         }
 
+        // Safety net: ensure no incorrect upstream was inherited
+        spinner.text = 'Verifying upstream safety...';
+        await ensureCorrectUpstream(wtPath, branchName);
+
+        // Auto-publish: push to origin and set correct tracking
         try {
-            // Strong Safety Mode: Ensure upstream is origin/<branchName> and publish
-            spinner.text = 'Safely publishing branch...';
-            await ensureCorrectUpstream(wtPath, branchName);
+            spinner.text = 'Publishing branch...';
+            await publishBranch(wtPath, branchName);
             spinner.succeed('Worktree created and branch published.');
         } catch (e: any) {
-            spinner.fail('Worktree created, but branch publication failed.');
+            spinner.succeed('Worktree created (publish failed — push manually later).');
             log.actionableError(e.message, 'git push -u origin HEAD', wtPath, [
                 `cd ${wtPath}`,
                 'Attempt to push manually: git push -u origin HEAD',
-                'Check if the remote branch already exists or if you have push permissions'
             ]);
-            // We don't return here because the worktree IS created, we just failed to publish
         }
 
         if (shouldBootstrap) {

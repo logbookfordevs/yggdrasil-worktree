@@ -7,12 +7,18 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **Activity Tracking**: Added a `LAST ACTIVE` column to `wt list` showing relative time (e.g., "2 hours ago") based on last commit and git index activity.
 - Parallelized fetching for worktree states and activity in the `list` command for improved performance.
+- **`.yggtree/` config directory**: Bootstrap configuration is now read from `.yggtree/worktree-setup.json` (same `setup-worktree` schema). Legacy `yggtree-worktree.json` and `.cursor/worktrees.json` remain supported as fallbacks.
+- **Sandbox metadata moved**: `.sandbox-meta.json` is now stored inside `.yggtree/sandbox-meta.json`. The `.yggtree/` directory is auto-created on first write.
 
 ### Changed
 - Prefixed generated sandbox branch names with `sandbox-<hash>_` for better sorting and visibility (e.g., `sandbox-a3f2_feature`).
 - Simplified `wt list` by removing the `PATH` column, as it typically duplicates the branch name in managed worktrees.
 - Improved `wt delete` interactive selection by showing branch names and activity timestamps in a cleaner, standardized format.
 - **Safer branch creation** (`wt create` / `wt create-multi`): Branches are now created with `git branch --no-track` before attaching the worktree, preventing Git from auto-tracking the base branch (e.g. `origin/main`). The branch is then auto-published to `origin` with correct upstream tracking. This fixes the root cause of accidental pushes to base branches while keeping the same convenient DX.
+- **Config search order**: `repoRoot` is now checked before `wtPath` when resolving bootstrap config. This means edits to `.yggtree/worktree-setup.json` in your main repo take effect immediately on new worktrees, without needing to commit first. A worktree can still override by having its own `.yggtree/worktree-setup.json`.
+
+### Fixed
+- `wt apply` now excludes the entire `.yggtree/` directory from the changeset (previously only `.sandbox-meta.json` was excluded), preventing config and metadata files from leaking into the origin during sandbox apply.
 
 ## [1.2.1] - 2026-02-08
 

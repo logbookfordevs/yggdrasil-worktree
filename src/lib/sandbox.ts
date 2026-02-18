@@ -14,7 +14,8 @@ export interface AppliedFileBackup {
     originalContent: string | null; // null means file didn't exist
 }
 
-export const SANDBOX_META_FILE = '.sandbox-meta.json';
+export const YGGTREE_DIR = '.yggtree';
+export const SANDBOX_META_FILE = 'sandbox-meta.json';
 
 /**
  * Generate a sandbox worktree name: <branch>_<4-char-hash>
@@ -29,7 +30,7 @@ export function generateSandboxName(branch: string): string {
  * Get the path to the sandbox metadata file
  */
 export function getSandboxMetaPath(wtPath: string): string {
-    return path.join(wtPath, SANDBOX_META_FILE);
+    return path.join(wtPath, YGGTREE_DIR, SANDBOX_META_FILE);
 }
 
 /**
@@ -37,6 +38,7 @@ export function getSandboxMetaPath(wtPath: string): string {
  */
 export async function writeSandboxMeta(wtPath: string, meta: SandboxMeta): Promise<void> {
     const metaPath = getSandboxMetaPath(wtPath);
+    await fs.ensureDir(path.dirname(metaPath));
     await fs.writeJSON(metaPath, meta, { spaces: 2 });
 }
 

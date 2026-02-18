@@ -8,13 +8,26 @@ export interface YggtreeConfig {
 }
 
 export async function getBootstrapCommands(repoRoot: string, wtPath?: string): Promise<string[] | null> {
-    const searchPaths = [];
-    if (wtPath) searchPaths.push(wtPath);
-    searchPaths.push(repoRoot);
+    // repoRoot first (source of truth — where yggtree is run from)
+    // wtPath second (per-worktree override if needed)
+    const searchPaths = [repoRoot];
+    if (wtPath && wtPath !== repoRoot) searchPaths.push(wtPath);
 
     for (const searchPath of searchPaths) {
+        const yggtreeConfigPath = path.join(searchPath, '.yggtree', 'worktree-setup.json');
         const configPath = path.join(searchPath, 'yggtree-worktree.json');
         const cursorConfigPath = path.join(searchPath, '.cursor', 'worktrees.json');
+
+        if (await fs.pathExists(yggtreeConfigPath)) {
+            try {
+                const config: YggtreeConfig = await fs.readJSON(yggtreeConfigPath);
+                if (config['setup-worktree'] && Array.isArray(config['setup-worktree'])) {
+                    return config['setup-worktree'];
+                }
+            } catch (e) {
+                log.warning(`Failed to parse ${yggtreeConfigPath}.`);
+            }
+        }
 
         if (await fs.pathExists(configPath)) {
             try {
@@ -57,7 +70,7 @@ export async function runBootstrap(wtPath: string, repoRoot: string) {
                 spinner.fail(`Failed: ${cmd}`);
                 log.actionableError(e.message, cmd, wtPath, [
                     `Try running the command manually: cd ${wtPath} && ${cmd}`,
-                    'Check your configuration in yggtree-worktree.json'
+                    'Check your configuration in .yggtree/worktree-setup.json or yggtree-worktree.json'
                 ]);
             }
         }

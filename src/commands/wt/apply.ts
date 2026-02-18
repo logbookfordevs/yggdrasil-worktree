@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { execa } from 'execa';
 import { log, ui, createSpinner } from '../../lib/ui.js';
-import { findSandboxRoot, readSandboxMeta, writeSandboxMeta, AppliedFileBackup, SANDBOX_META_FILE } from '../../lib/sandbox.js';
+import { findSandboxRoot, readSandboxMeta, writeSandboxMeta, AppliedFileBackup, YGGTREE_DIR } from '../../lib/sandbox.js';
 
 export async function applyCommand() {
     try {
@@ -42,8 +42,12 @@ export async function applyCommand() {
                 ...stagedFiles.split('\n').filter(Boolean),
                 ...untrackedFiles.split('\n').filter(Boolean)
             ]);
-            // Exclude internal sandbox metadata file
-            allChanges.delete(SANDBOX_META_FILE);
+            // Exclude internal .yggtree/ directory (config, sandbox metadata, etc.)
+            for (const file of allChanges) {
+                if (file.startsWith(`${YGGTREE_DIR}/`)) {
+                    allChanges.delete(file);
+                }
+            }
             changedFiles = [...allChanges];
         } catch (e: any) {
             spinner.fail('Failed to detect changes.');

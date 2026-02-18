@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - (Next Release)
+## [1.3.0] - 2026-02-18
 
 ### Added
 - **Activity Tracking**: Added a `LAST ACTIVE` column to `wt list` showing relative time (e.g., "2 hours ago") based on last commit and git index activity.
@@ -38,7 +38,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **Strong Safety Mode**: New logic for worktree creation that prevents accidental pushes to base branches (like `main` or `development`).
-- Automatic publishing: Newly created branches were automatically published to `origin` and set to track `origin/<branch-name>` instead of the base remote branch. *(In [Unreleased], branch creation was updated to use `--no-track` first, then publish explicitly to keep tracking safe.)*
+- Automatic publishing: Newly created branches were automatically published to `origin` and set to track `origin/<branch-name>` instead of the base remote branch. *(In [1.3.0], branch creation was updated to use `--no-track` first, then publish explicitly to keep tracking safe.)*
 - Upstream auditing: The tool now checks and unsets incorrect upstreams (e.g. tracking `origin/main` when it should track its own remote) upon creation.
 
 ### Changed

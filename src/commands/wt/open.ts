@@ -7,27 +7,33 @@ import { execa } from 'execa';
 import { listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui } from '../../lib/ui.js';
+import { enterCommand } from './enter.js';
 
 interface OpenOptions {
-    ide?: string;
+    tool?: string;
 }
 
-interface IdeOption {
+export interface OpenToolOption {
     id: string;
     name: string;
     command: string;
+    kind: 'ide' | 'agent';
     aliases?: string[];
 }
 
-const IDE_CANDIDATES: IdeOption[] = [
-    { id: 'cursor', name: 'Cursor', command: 'cursor', aliases: ['cursor'] },
-    { id: 'code', name: 'VS Code', command: 'code', aliases: ['vscode', 'code'] },
-    { id: 'windsurf', name: 'Windsurf', command: 'windsurf', aliases: ['windsurf'] },
-    { id: 'zed', name: 'Zed', command: 'zed', aliases: ['zed'] },
-    { id: 'agy', name: 'Agy', command: 'agy', aliases: ['agy'] },
-    { id: 'idea', name: 'IntelliJ IDEA', command: 'idea', aliases: ['idea', 'intellij'] },
-    { id: 'webstorm', name: 'WebStorm', command: 'webstorm', aliases: ['webstorm'] },
-    { id: 'subl', name: 'Sublime Text', command: 'subl', aliases: ['subl', 'sublime'] },
+const OPEN_TOOL_CANDIDATES: OpenToolOption[] = [
+    { id: 'cursor', name: 'Cursor', command: 'cursor', kind: 'ide', aliases: ['cursor'] },
+    { id: 'code', name: 'VS Code', command: 'code', kind: 'ide', aliases: ['vscode', 'code'] },
+    { id: 'windsurf', name: 'Windsurf', command: 'windsurf', kind: 'ide', aliases: ['windsurf'] },
+    { id: 'zed', name: 'Zed', command: 'zed', kind: 'ide', aliases: ['zed'] },
+    { id: 'agy', name: 'Agy', command: 'agy', kind: 'ide', aliases: ['agy'] },
+    { id: 'idea', name: 'IntelliJ IDEA', command: 'idea', kind: 'ide', aliases: ['idea', 'intellij'] },
+    { id: 'webstorm', name: 'WebStorm', command: 'webstorm', kind: 'ide', aliases: ['webstorm'] },
+    { id: 'subl', name: 'Sublime Text', command: 'subl', kind: 'ide', aliases: ['subl', 'sublime'] },
+    { id: 'claude', name: 'Claude Code', command: 'claude', kind: 'agent', aliases: ['claude', 'claude-code'] },
+    { id: 'codex', name: 'Codex', command: 'codex', kind: 'agent', aliases: ['codex'] },
+    { id: 'gemini', name: 'Gemini CLI', command: 'gemini', kind: 'agent', aliases: ['gemini'] },
+    { id: 'opencode', name: 'OpenCode', command: 'opencode', kind: 'agent', aliases: ['opencode'] },
 ];
 
 type Worktree = { path: string; branch?: string; HEAD: string };
@@ -56,7 +62,7 @@ function formatWorktreeChoiceLabel(branchName: string, displayPath: string, term
     return `${chalk.yellow(branchText)} ${chalk.cyan(pathText)}`;
 }
 
-async function commandExists(command: string): Promise<boolean> {
+export async function commandExists(command: string): Promise<boolean> {
     if (!command) return false;
 
     const isWindows = process.platform === 'win32';
@@ -89,17 +95,17 @@ async function commandExists(command: string): Promise<boolean> {
     return false;
 }
 
-async function detectInstalledIdes(): Promise<IdeOption[]> {
+export async function detectInstalledOpenTools(): Promise<OpenToolOption[]> {
     const checks = await Promise.all(
-        IDE_CANDIDATES.map(async ide => ({
-            ide,
-            exists: await commandExists(ide.command),
+        OPEN_TOOL_CANDIDATES.map(async tool => ({
+            tool,
+            exists: await commandExists(tool.command),
         }))
     );
 
     return checks
         .filter(check => check.exists)
-        .map(check => check.ide);
+        .map(check => check.tool);
 }
 
 function resolveWorktreeByName(worktrees: Worktree[], wtName: string): Worktree | undefined {
@@ -114,13 +120,76 @@ function resolveWorktreeByName(worktrees: Worktree[], wtName: string): Worktree 
     });
 }
 
-function resolveIdeOption(input: string, installed: IdeOption[]): IdeOption | undefined {
+export function resolveOpenToolOption(input: string, installed: OpenToolOption[]): OpenToolOption | undefined {
     const normalized = input.trim().toLowerCase();
-    return installed.find(ide =>
-        ide.id === normalized ||
-        ide.command.toLowerCase() === normalized ||
-        ide.aliases?.some(alias => alias.toLowerCase() === normalized)
+    return installed.find(tool =>
+        tool.id === normalized ||
+        tool.command.toLowerCase() === normalized ||
+        tool.aliases?.some(alias => alias.toLowerCase() === normalized)
     );
+}
+
+export function isAgentTool(tool: OpenToolOption): boolean {
+    return tool.kind === 'agent';
+}
+
+export function buildAgentExecCommand(tool: OpenToolOption): string {
+    return tool.command;
+}
+
+export async function promptOpenToolSelection(
+    installedTools: OpenToolOption[],
+    message = 'Select tool to open:'
+): Promise<OpenToolOption> {
+    const ideChoices = installedTools
+        .filter(tool => tool.kind === 'ide')
+        .map(tool => ({
+            name: `${tool.name} ${chalk.dim(`(${tool.command})`)}`,
+            value: tool,
+        }));
+
+    const agentChoices = installedTools
+        .filter(tool => tool.kind === 'agent')
+        .map(tool => ({
+            name: `${tool.name} ${chalk.dim(`(${tool.command})`)}`,
+            value: tool,
+        }));
+
+    const choices: any[] = [];
+    if (ideChoices.length > 0) {
+        choices.push(new inquirer.Separator(chalk.dim('── IDEs ──')));
+        choices.push(...ideChoices);
+    }
+    if (agentChoices.length > 0) {
+        if (choices.length > 0) choices.push(new inquirer.Separator(" "));
+        choices.push(new inquirer.Separator(chalk.dim('── Agent CLIs ──')));
+        choices.push(...agentChoices);
+    }
+
+    const { selectedTool } = await inquirer.prompt<{ selectedTool: OpenToolOption }>([
+        {
+            type: 'list',
+            name: 'selectedTool',
+            message,
+            choices,
+            loop: false,
+            pageSize: 10,
+        },
+    ]);
+
+    return selectedTool;
+}
+
+export async function launchOpenTool(tool: OpenToolOption, wtPath: string): Promise<void> {
+    if (isAgentTool(tool)) {
+        await enterCommand(wtPath, { exec: buildAgentExecCommand(tool) });
+        return;
+    }
+
+    await execa(tool.command, [wtPath], {
+        cwd: wtPath,
+        stdio: 'ignore',
+    });
 }
 
 export async function openCommand(wtName?: string, options: OpenOptions = {}) {
@@ -174,55 +243,41 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
             return;
         }
 
-        const installedIdes = await detectInstalledIdes();
+        const installedTools = await detectInstalledOpenTools();
 
-        let chosenIde: IdeOption | undefined;
-        if (options.ide) {
-            chosenIde = resolveIdeOption(options.ide, installedIdes);
-            if (!chosenIde && await commandExists(options.ide)) {
-                chosenIde = {
+        let chosenTool: OpenToolOption | undefined;
+        const requestedTool = options.tool;
+
+        if (requestedTool) {
+            chosenTool = resolveOpenToolOption(requestedTool, installedTools);
+            if (!chosenTool && await commandExists(requestedTool)) {
+                chosenTool = {
                     id: 'custom',
-                    name: options.ide,
-                    command: options.ide,
+                    name: requestedTool,
+                    command: requestedTool,
+                    kind: 'ide',
                 };
             }
 
-            if (!chosenIde) {
-                const available = installedIdes.map(ide => ide.command).join(', ') || 'none detected';
-                log.error(`IDE "${options.ide}" not found.`);
-                log.dim(`Detected IDE commands: ${available}`);
+            if (!chosenTool) {
+                const available = installedTools.map(tool => tool.command).join(', ') || 'none detected';
+                log.error(`Tool "${requestedTool}" not found.`);
+                log.dim(`Detected tool commands: ${available}`);
                 return;
             }
         } else {
-            if (installedIdes.length === 0) {
-                log.error('No supported IDE command was detected in PATH.');
-                log.dim('Try: yggtree wt open --ide <command> (e.g. --ide cursor, --ide code)');
+            if (installedTools.length === 0) {
+                log.error('No supported open tool command was detected in PATH.');
+                log.dim('Try: yggtree wt open --tool <command> (e.g. --tool cursor, --tool claude)');
                 return;
             }
 
-            const { selectedIde } = await inquirer.prompt<{ selectedIde: IdeOption }>([
-                {
-                    type: 'list',
-                    name: 'selectedIde',
-                    message: 'Select IDE to open:',
-                    choices: installedIdes.map(ide => ({
-                        name: `${ide.name} ${chalk.dim(`(${ide.command})`)}`,
-                        value: ide,
-                    })),
-                    loop: false,
-                    pageSize: 10,
-                },
-            ]);
-
-            chosenIde = selectedIde;
+            chosenTool = await promptOpenToolSelection(installedTools);
         }
 
-        log.info(`Opening ${ui.path(targetWt.path)} in ${chalk.cyan(chosenIde.name)}...`);
-        await execa(chosenIde.command, [targetWt.path], {
-            cwd: targetWt.path,
-            stdio: 'ignore',
-        });
-        log.success('IDE launched.');
+        log.info(`Opening ${ui.path(targetWt.path)} in ${chalk.cyan(chosenTool.name)}...`);
+        await launchOpenTool(chosenTool, targetWt.path);
+        log.success(isAgentTool(chosenTool) ? 'Agent launched.' : 'IDE launched.');
     } catch (error: any) {
         log.error(error.message);
     }

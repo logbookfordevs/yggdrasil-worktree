@@ -6,6 +6,13 @@ import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { generateSandboxName, writeSandboxMeta } from '../../lib/sandbox.js';
+import {
+    buildAgentExecCommand,
+    detectInstalledOpenTools,
+    isAgentTool,
+    launchOpenTool,
+    promptOpenToolSelection,
+} from './open.js';
 import { execa } from 'execa';
 import { spawn } from 'child_process';
 import fs from 'fs-extra';
@@ -59,18 +66,28 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
                 when: options.enter === undefined,
             },
             {
-                type: 'input',
-                name: 'exec',
-                message: 'Command to run after creation (optional):',
-                default: options.exec,
+                type: 'confirm',
+                name: 'shouldOpenTool',
+                message: 'Open a tool after creation? (IDE or agent CLI)',
+                default: false,
                 when: options.exec === undefined,
-            }
+            },
         ]);
 
         const shouldCarry = options.carry !== undefined ? options.carry : answers.carry;
         const shouldEnter = options.enter !== undefined ? options.enter : answers.shouldEnter;
         const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
-        const execCommandStr = options.exec || answers.exec;
+        let selectedTool: Awaited<ReturnType<typeof promptOpenToolSelection>> | undefined;
+        if (options.exec === undefined && answers.shouldOpenTool) {
+            const installedTools = await detectInstalledOpenTools();
+            if (installedTools.length === 0) {
+                log.warning('No IDE/agent tool detected in PATH. Skipping open step.');
+            } else {
+                selectedTool = await promptOpenToolSelection(installedTools, 'Select tool to open:');
+            }
+        }
+
+        const execCommandStr = options.exec || (selectedTool && isAgentTool(selectedTool) ? buildAgentExecCommand(selectedTool) : undefined);
 
         // 4. Detect uncommitted changes before creating worktree
         let changedFiles: string[] = [];
@@ -178,6 +195,15 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
                     `cd ${wtPath} && ${execCommandStr}`,
                     'Check your command syntax and environment variables'
                 ]);
+            }
+        }
+
+        if (selectedTool && !isAgentTool(selectedTool)) {
+            try {
+                log.info(`Opening ${ui.path(wtPath)} in ${chalk.cyan(selectedTool.name)}...`);
+                await launchOpenTool(selectedTool, wtPath);
+            } catch (error: any) {
+                log.warning(`Could not open ${selectedTool.name}: ${error.message}`);
             }
         }
 

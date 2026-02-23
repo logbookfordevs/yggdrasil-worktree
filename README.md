@@ -221,6 +221,11 @@ Options:
 * `--enter / --no-enter`
 * `--exec "<command>"`
 
+Interactive flow:
+
+* Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
+* `--exec` remains available as an advanced explicit override.
+
 <details>
 <summary>Example</summary>
 
@@ -251,6 +256,11 @@ Options:
 * `--enter / --no-enter`
 * `--exec "<command>"`
 
+Interactive flow:
+
+* Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
+* `--exec` remains available as an advanced explicit override.
+
 <details>
 <summary>Example</summary>
 
@@ -272,6 +282,11 @@ Options:
 *   `--no-bootstrap`
 *   `--enter / --no-enter`
 *   `--exec "<command>"`
+
+Interactive flow:
+
+* Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
+* `--exec` remains available as an advanced explicit override.
 
 ---
 
@@ -328,7 +343,7 @@ Notes:
 * Entries are grouped by `TYPE`.
 * `SANDBOX` and `MANAGED` are worktrees inside `~/.yggtree`.
 * External worktrees are labeled `LINKED`.
-* Use `--open` to switch this flow into "pick and open in IDE" mode.
+* Use `--open` to switch this flow into "pick and open in tool" mode.
 
 ---
 
@@ -356,24 +371,26 @@ yggtree wt enter feat/new-ui --exec "npm test"
 
 ### `yggtree wt open [worktree]`
 
-Open a worktree in your IDE (without entering a sub-shell).
+Open a worktree in an IDE or agent CLI.
 
 Behavior:
 
 * If `[worktree]` is omitted, you can pick from the worktree list.
-* Detects available IDE commands in your `PATH` (for example: `cursor`, `code`, `zed`, `windsurf`).
-* Lets you choose one interactively, or pass `--ide`.
+* Detects available tool commands in your `PATH` (for example: IDEs like `cursor`, `code`, `zed`; agents like `claude`, `codex`, `gemini`, `opencode`).
+* Lets you choose one interactively, or pass `--tool`.
+* If an agent CLI is selected, yggtree opens a sub-shell and launches it there.
 
 Options:
 
-* `--ide <command>`
+* `--tool <command>`
 
 <details>
 <summary>Examples</summary>
 
 ```bash
 yggtree wt open
-yggtree wt open feat/new-ui --ide cursor
+yggtree wt open feat/new-ui --tool cursor
+yggtree wt open feat/new-ui --tool claude
 yggtree wt list --open
 ```
 

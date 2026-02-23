@@ -37,7 +37,7 @@ program
             { name: `🌳 Grow Many Realms ${chalk.dim('(create multiple worktrees)')}`, value: 'create-multi' },
             { name: `🧪 Forge Sandbox Realm ${chalk.dim('(create sandbox worktree)')}`, value: 'create-sandbox' },
             { name: `🗺️ Survey Realms ${chalk.dim('(list worktrees)')}`, value: 'list' },
-            { name: `🧭 Open Realm in IDE ${chalk.dim('(open worktree in editor)')}`, value: 'open' },
+            { name: `🧭 Open Realm in Tool ${chalk.dim('(open worktree in IDE/agent)')}`, value: 'open' },
             { name: `🪓 Fell a Realm ${chalk.dim('(delete worktree)')}`, value: 'delete' },
             { name: `🚀 Bless Realm Setup ${chalk.dim('(bootstrap worktree)')}`, value: 'bootstrap' },
             { name: `🧹 Prune Withered Realms ${chalk.dim('(prune stale worktrees)')}`, value: 'prune' },
@@ -132,7 +132,7 @@ const wt = program.command('wt').description('Manage git worktrees');
 
 wt.command('list')
     .description('List all repo-linked worktrees')
-    .option('--open', 'Open a worktree in an IDE instead of listing')
+    .option('--open', 'Open a worktree in an IDE/agent tool instead of listing')
     .action(async (options) => {
         if (options.open) {
             await openCommand();
@@ -190,8 +190,8 @@ wt.command('delete')
     });
 
 wt.command('open [worktree]')
-    .description('Open a worktree in an IDE')
-    .option('--ide <command>', 'IDE command to use (e.g. cursor, code, zed)')
+    .description('Open a worktree in an IDE or agent CLI')
+    .option('--tool <command>', 'Tool command to use (e.g. cursor, code, claude, codex)')
     .action(async (worktree, options) => {
         await openCommand(worktree, options);
     });

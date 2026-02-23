@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - `wt worktree-checkout`: checkout-style flow with searchable branch selection and branch-attached worktree creation (including remote-only branches).
-- `wt open`: open a selected worktree directly in an IDE, with installed-IDE detection and interactive IDE selection.
+- `wt open`: open a selected worktree in an IDE or agent CLI, with tool detection and interactive selection.
 
 ### Changed
 - Improved `wt enter` interactive menu readability by color-coding branch names and folder paths separately.
@@ -18,7 +18,8 @@ All notable changes to this project will be documented in this file.
 - `wt worktree-checkout` now falls back to `wt enter` when the selected branch already has an active managed yggtree worktree.
 - Improved `wt enter` list readability in narrow terminals by truncating branch/path labels to avoid line wrapping noise.
 - Core interactive menu now prioritizes `apply`/`unapply` when running inside a sandbox worktree.
-- `wt list` now supports `--open` as a shortcut to the worktree IDE-open flow.
+- `wt list` now supports `--open` as a shortcut to the worktree tool-open flow.
+- Interactive create flows (`wt create`, `wt worktree-checkout`, `wt create-sandbox`) now ask whether to open a tool after creation instead of asking for a free-form `exec` command by default.
 
 ## [1.3.0] - 2026-02-18
 

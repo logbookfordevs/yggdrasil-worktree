@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Increased `wt delete` menu pagination to show more options per page for better scanning.
 - `wt worktree-checkout` now falls back to `wt enter` when the selected branch already has an active managed yggtree worktree.
 - Improved `wt enter` list readability in narrow terminals by truncating branch/path labels to avoid line wrapping noise.
+- Core interactive menu now prioritizes `apply`/`unapply` when running inside a sandbox worktree.
 
 ## [1.3.0] - 2026-02-18
 

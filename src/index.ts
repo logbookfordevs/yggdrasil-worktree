@@ -17,6 +17,7 @@ import { pathCommand } from './commands/wt/path.js';
 import { applyCommand } from './commands/wt/apply.js';
 import { unapplyCommand } from './commands/wt/unapply.js';
 import { getVersion } from './lib/version.js';
+import { findSandboxRoot } from './lib/sandbox.js';
 
 const program = new Command();
 
@@ -27,6 +28,42 @@ program
     .action(async () => {
         // Interactive Menu if no command is provided
         await welcome();
+        const isInSandbox = Boolean(await findSandboxRoot(process.cwd()));
+
+        const realmChoices = [
+            { name: `🌿 Grow New Realm ${chalk.dim('(create worktree)')}`, value: 'create-smart' },
+            { name: `🔀 Traverse to Another Realm ${chalk.dim('(checkout existing branch in new worktree)')}`, value: 'worktree-checkout' },
+            { name: `🌳 Grow Many Realms ${chalk.dim('(create multiple worktrees)')}`, value: 'create-multi' },
+            { name: `🧪 Forge Sandbox Realm ${chalk.dim('(create sandbox worktree)')}`, value: 'create-sandbox' },
+            { name: `🗺️ Survey Realms ${chalk.dim('(list worktrees)')}`, value: 'list' },
+            { name: `🪓 Fell a Realm ${chalk.dim('(delete worktree)')}`, value: 'delete' },
+            { name: `🚀 Bless Realm Setup ${chalk.dim('(bootstrap worktree)')}`, value: 'bootstrap' },
+            { name: `🧹 Prune Withered Realms ${chalk.dim('(prune stale worktrees)')}`, value: 'prune' },
+            { name: `🐚 Cast a Command ${chalk.dim('(exec command in worktree)')}`, value: 'exec' },
+            { name: `🚪 Enter Realm Shell ${chalk.dim('(enter worktree)')}`, value: 'enter' },
+            { name: `📍 Reveal Realm Path ${chalk.dim('(show worktree path)')}`, value: 'path' },
+        ];
+
+        const sandboxChoices = [
+            { name: `✅ Graft Sandbox Changes ${chalk.dim('(apply sandbox changes)')}`, value: 'apply' },
+            { name: `↩️ Undo Sandbox Graft ${chalk.dim('(unapply sandbox changes)')}`, value: 'unapply' },
+        ];
+
+        const choices = isInSandbox
+            ? [
+                ...sandboxChoices,
+                new inquirer.Separator(),
+                ...realmChoices,
+                new inquirer.Separator(),
+                { name: `🚪 Leave Yggdrasil ${chalk.dim('(exit)')}`, value: 'exit' },
+            ]
+            : [
+                ...realmChoices,
+                new inquirer.Separator(),
+                ...sandboxChoices,
+                new inquirer.Separator(),
+                { name: `🚪 Leave Yggdrasil ${chalk.dim('(exit)')}`, value: 'exit' },
+            ];
         
         const { action } = await inquirer.prompt([
             {
@@ -35,24 +72,7 @@ program
                 message: 'What would you like to do?',
                 loop: false,
                 pageSize: 12,
-                choices: [
-                    { name: `🌿 Grow New Realm ${chalk.dim('(create worktree)')}`, value: 'create-smart' },
-                    { name: `🔀 Traverse to Another Realm ${chalk.dim('(checkout existing branch in new worktree)')}`, value: 'worktree-checkout' },
-                    { name: `🌳 Grow Many Realms ${chalk.dim('(create multiple worktrees)')}`, value: 'create-multi' },
-                    { name: `🧪 Forge Sandbox Realm ${chalk.dim('(create sandbox worktree)')}`, value: 'create-sandbox' },
-                    { name: `🗺️ Survey Realms ${chalk.dim('(list worktrees)')}`, value: 'list' },
-                    { name: `🪓 Fell a Realm ${chalk.dim('(delete worktree)')}`, value: 'delete' },
-                    { name: `🚀 Bless Realm Setup ${chalk.dim('(bootstrap worktree)')}`, value: 'bootstrap' },
-                    { name: `🧹 Prune Withered Realms ${chalk.dim('(prune stale worktrees)')}`, value: 'prune' },
-                    { name: `🐚 Cast a Command ${chalk.dim('(exec command in worktree)')}`, value: 'exec' },
-                    { name: `🚪 Enter Realm Shell ${chalk.dim('(enter worktree)')}`, value: 'enter' },
-                    { name: `📍 Reveal Realm Path ${chalk.dim('(show worktree path)')}`, value: 'path' },
-                    new inquirer.Separator(),
-                    { name: `✅ Graft Sandbox Changes ${chalk.dim('(apply sandbox changes)')}`, value: 'apply' },
-                    { name: `↩️  Undo Sandbox Graft ${chalk.dim('(unapply sandbox changes)')}`, value: 'unapply' },
-                    new inquirer.Separator(),
-                    { name: `🚪 Leave Yggdrasil ${chalk.dim('(exit)')}`, value: 'exit' },
-                ],
+                choices,
             },
         ]);
 

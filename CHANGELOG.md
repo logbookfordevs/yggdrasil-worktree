@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- Improved `wt enter` interactive menu readability by color-coding branch names and folder paths separately.
+
 ## [1.3.0] - 2026-02-18
 
 ### Added

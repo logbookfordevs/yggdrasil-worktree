@@ -1,6 +1,7 @@
 import inquirer from 'inquirer';
 import { spawn } from 'child_process';
 import { execa } from 'execa';
+import chalk from 'chalk';
 import path from 'path';
 import { listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
@@ -44,7 +45,7 @@ export async function enterCommand(wtName?: string, options: { exec?: string } =
                     : wt.path.replace(process.env.HOME || '', '~');
                 
                 return {
-                    name: `${branchName.padEnd(20)} ${displayPath}`,
+                    name: `${chalk.yellow(branchName.padEnd(20))} ${chalk.cyan(displayPath)}`,
                     value: wt
                 };
             });

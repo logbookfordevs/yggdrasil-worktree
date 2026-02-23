@@ -162,7 +162,7 @@ Sometimes you don't want to "commit to a branch" yet. You just want to try somet
 
 **Sandboxes** are temporary, local-only worktrees designed for this:
 
-1.  **Create**: `yggtree wt create-sandbox` (creates `branch_qes2`).
+1.  **Create**: `yggtree wt create-sandbox` (creates something like `sandbox-a3f2_feature-branch`).
 2.  **Experiment**: Change files, run tests, try that risky refactor.
 3.  **Apply**: `yggtree wt apply` to "push" those file changes back to your origin directory.
 4.  **Unapply**: Don't like it? `yggtree wt unapply` restores your origin to exactly how it was before.
@@ -177,10 +177,13 @@ Yggdrasil automatically prepares each worktree.
 
 Resolution order:
 
-1. `yggtree-worktree.json` inside the worktree
-2. `yggtree-worktree.json` in the repo root
-3. `.cursor/worktrees.json`
-4. Fallback: `npm install` + submodules
+1. `.yggtree/worktree-setup.json` in the repo root
+2. `yggtree-worktree.json` in the repo root (legacy fallback)
+3. `.cursor/worktrees.json` in the repo root (legacy fallback)
+4. `.yggtree/worktree-setup.json` inside the worktree (per-worktree fallback)
+5. `yggtree-worktree.json` inside the worktree (legacy fallback)
+6. `.cursor/worktrees.json` inside the worktree (legacy fallback)
+7. Fallback: `npm install` + submodules
 
 ### Example configuration
 
@@ -211,6 +214,7 @@ Create a worktree from a branch.
 
 Options:
 
+* `-b, --branch <name>`
 * `--base <ref>`
 * `--source local|remote`
 * `--no-bootstrap`
@@ -222,6 +226,29 @@ Options:
 
 ```bash
 yggtree wt create feat/new-ui --base main --exec "cursor ."
+```
+
+</details>
+
+---
+
+### `yggtree wt create-slug [name] [ref]`
+
+Create a worktree using manual slug/ref mode.
+
+Options:
+
+* `-n, --name <slug>`
+* `-r, --ref <ref>`
+* `--no-bootstrap`
+* `--enter / --no-enter`
+* `--exec "<command>"`
+
+<details>
+<summary>Example</summary>
+
+```bash
+yggtree wt create-slug -n hotfix-auth -r main --no-enter
 ```
 
 </details>
@@ -261,6 +288,12 @@ Undo a previous `apply` operation.
 
 Create multiple worktrees at once.
 
+Options:
+
+* `--base <ref>`
+* `--source local|remote`
+* `--no-bootstrap`
+
 <details>
 <summary>Example</summary>
 
@@ -282,6 +315,12 @@ Columns:
 * STATE (clean / dirty)
 * LAST ACTIVE
 * BRANCH
+
+Notes:
+
+* Entries are grouped by `TYPE`.
+* `SANDBOX` and `MANAGED` are worktrees inside `~/.yggtree`.
+* External worktrees are labeled `LINKED`.
 
 ---
 
@@ -338,7 +377,14 @@ Re‑run bootstrap commands for a worktree.
 
 ### `yggtree wt delete`
 
-Interactively delete managed worktrees.
+Interactively delete worktrees.
+
+Behavior:
+
+* Default flow targets managed worktrees.
+* In interactive mode, yggtree asks whether to include external linked worktrees.
+* In direct CLI usage, `--all` includes external linked worktrees (main/current are still excluded for safety).
+* The delete selector shows 6 items per page.
 
 Optional:
 
@@ -492,7 +538,7 @@ yggtree wt create-sandbox --carry
 **Scenario:**
 
 1.  You have 5 files changed in your main repo but aren't sure about the direction.
-2.  Run `create-sandbox --carry` to move those changes into an isolated `current-branch_a1b2` folder.
+2.  Run `create-sandbox --carry` to move those changes into an isolated `sandbox-a3f2_feature-branch` folder.
 3.  Experiment freely.
 4.  If it works: `yggtree wt apply`.
 5.  If it fails: Just delete the sandbox or `unapply`.

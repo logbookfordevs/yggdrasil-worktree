@@ -14,6 +14,7 @@ import { pruneCommand } from './commands/wt/prune.js';
 import { execCommand } from './commands/wt/exec.js';
 import { enterCommand } from './commands/wt/enter.js';
 import { pathCommand } from './commands/wt/path.js';
+import { openCommand } from './commands/wt/open.js';
 import { applyCommand } from './commands/wt/apply.js';
 import { unapplyCommand } from './commands/wt/unapply.js';
 import { getVersion } from './lib/version.js';
@@ -36,6 +37,7 @@ program
             { name: `🌳 Grow Many Realms ${chalk.dim('(create multiple worktrees)')}`, value: 'create-multi' },
             { name: `🧪 Forge Sandbox Realm ${chalk.dim('(create sandbox worktree)')}`, value: 'create-sandbox' },
             { name: `🗺️ Survey Realms ${chalk.dim('(list worktrees)')}`, value: 'list' },
+            { name: `🧭 Open Realm in IDE ${chalk.dim('(open worktree in editor)')}`, value: 'open' },
             { name: `🪓 Fell a Realm ${chalk.dim('(delete worktree)')}`, value: 'delete' },
             { name: `🚀 Bless Realm Setup ${chalk.dim('(bootstrap worktree)')}`, value: 'bootstrap' },
             { name: `🧹 Prune Withered Realms ${chalk.dim('(prune stale worktrees)')}`, value: 'prune' },
@@ -89,6 +91,9 @@ program
             case 'list':
                 await listCommand();
                 break;
+            case 'open':
+                await openCommand();
+                break;
             case 'delete':
                 await deleteCommand();
                 break;
@@ -127,7 +132,14 @@ const wt = program.command('wt').description('Manage git worktrees');
 
 wt.command('list')
     .description('List all repo-linked worktrees')
-    .action(listCommand);
+    .option('--open', 'Open a worktree in an IDE instead of listing')
+    .action(async (options) => {
+        if (options.open) {
+            await openCommand();
+            return;
+        }
+        await listCommand();
+    });
 
 wt.command('create [branch]')
     .description('Create a new worktree (Smart branch detection)')
@@ -175,6 +187,13 @@ wt.command('delete')
     .option('-a, --all', 'Include repo-linked worktrees outside ~/.yggtree (except main/current)')
     .action(async (options) => {
         await deleteCommand(options);
+    });
+
+wt.command('open [worktree]')
+    .description('Open a worktree in an IDE')
+    .option('--ide <command>', 'IDE command to use (e.g. cursor, code, zed)')
+    .action(async (worktree, options) => {
+        await openCommand(worktree, options);
     });
 
 wt.command('bootstrap')

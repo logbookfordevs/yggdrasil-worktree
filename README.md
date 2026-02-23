@@ -328,6 +328,7 @@ Notes:
 * Entries are grouped by `TYPE`.
 * `SANDBOX` and `MANAGED` are worktrees inside `~/.yggtree`.
 * External worktrees are labeled `LINKED`.
+* Use `--open` to switch this flow into "pick and open in IDE" mode.
 
 ---
 
@@ -347,6 +348,33 @@ Optional:
 
 ```bash
 yggtree wt enter feat/new-ui --exec "npm test"
+```
+
+</details>
+
+---
+
+### `yggtree wt open [worktree]`
+
+Open a worktree in your IDE (without entering a sub-shell).
+
+Behavior:
+
+* If `[worktree]` is omitted, you can pick from the worktree list.
+* Detects available IDE commands in your `PATH` (for example: `cursor`, `code`, `zed`, `windsurf`).
+* Lets you choose one interactively, or pass `--ide`.
+
+Options:
+
+* `--ide <command>`
+
+<details>
+<summary>Examples</summary>
+
+```bash
+yggtree wt open
+yggtree wt open feat/new-ui --ide cursor
+yggtree wt list --open
 ```
 
 </details>

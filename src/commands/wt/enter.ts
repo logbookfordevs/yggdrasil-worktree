@@ -82,7 +82,8 @@ export async function enterCommand(wtName?: string, options: { exec?: string } =
                     name: 'selectedWt',
                     message: 'Select a worktree to enter:',
                     choices,
-                    loop: false
+                    loop: false,
+                    pageSize: 10,
                 }
             ]);
 

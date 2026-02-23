@@ -1,10 +1,12 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
+import autocompletePrompt from 'inquirer-autocomplete-prompt';
 import path from 'path';
-import { getRepoRoot, getRepoName, verifyRef, createWorktree, fetchAll, getCurrentBranch } from '../../lib/git.js';
+import { getRepoRoot, getRepoName, createWorktree, fetchAll, listWorktrees } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
+import { enterCommand } from './enter.js';
 import { execa } from 'execa';
 import { spawn } from 'child_process';
 import fs from 'fs-extra';
@@ -12,10 +14,86 @@ import fs from 'fs-extra';
 interface CreateOptions {
     name?: string;
     ref?: string;
-    bootstrap: boolean;
+    bootstrap?: boolean;
     enter?: boolean;
-    source?: 'local' | 'remote';
     exec?: string;
+}
+
+interface BranchCandidate {
+    branchName: string;
+    checkoutRef: string;
+    createLocalBranch: boolean;
+    source: 'local' | 'remote';
+}
+
+let autocompleteRegistered = false;
+
+function ensureAutocompletePrompt() {
+    if (!autocompleteRegistered) {
+        inquirer.registerPrompt('autocomplete', autocompletePrompt as any);
+        autocompleteRegistered = true;
+    }
+}
+
+function toSlug(value: string): string {
+    return value
+        .trim()
+        .replace(/[\/\\]/g, '-')
+        .replace(/\s+/g, '-');
+}
+
+async function listBranchCandidates(): Promise<BranchCandidate[]> {
+    const [localRefs, remoteRefs] = await Promise.all([
+        execa('git', ['for-each-ref', '--format=%(refname:short)', 'refs/heads']),
+        execa('git', ['for-each-ref', '--format=%(refname:short)', 'refs/remotes/origin']),
+    ]);
+
+    const localBranches = localRefs.stdout
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean);
+
+    const remoteBranches = remoteRefs.stdout
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .filter(ref => ref !== 'origin/HEAD' && !ref.endsWith('/HEAD'))
+        .map(ref => ref.replace(/^origin\//, ''));
+
+    const localSet = new Set(localBranches);
+    const remoteOnly = [...new Set(remoteBranches)].filter(branch => !localSet.has(branch));
+
+    const localCandidates: BranchCandidate[] = localBranches.map(branchName => ({
+        branchName,
+        checkoutRef: branchName,
+        createLocalBranch: false,
+        source: 'local',
+    }));
+
+    const remoteCandidates: BranchCandidate[] = remoteOnly.map(branchName => ({
+        branchName,
+        checkoutRef: `origin/${branchName}`,
+        createLocalBranch: true,
+        source: 'remote',
+    }));
+
+    return [...localCandidates, ...remoteCandidates]
+        .sort((a, b) => a.branchName.localeCompare(b.branchName));
+}
+
+function resolveCandidateFromRef(ref: string, candidates: BranchCandidate[]): BranchCandidate | undefined {
+    const trimmedRef = ref.trim();
+    if (!trimmedRef) return undefined;
+
+    if (trimmedRef.startsWith('origin/')) {
+        const branchName = trimmedRef.replace(/^origin\//, '');
+        return candidates.find(candidate => candidate.branchName === branchName);
+    }
+
+    return candidates.find(candidate =>
+        candidate.branchName === trimmedRef ||
+        candidate.checkoutRef === trimmedRef
+    );
 }
 
 export async function createCommand(options: CreateOptions) {
@@ -23,37 +101,91 @@ export async function createCommand(options: CreateOptions) {
         const repoRoot = await getRepoRoot();
         log.info(`Repo: ${chalk.dim(repoRoot)}`);
 
-        // 1. Gather inputs
-        const currentBranch = await getCurrentBranch();
-        
+        // 1. Load branches
+        const loadingSpinner = createSpinner('Fetching branches...').start();
+        await fetchAll();
+        const candidates = await listBranchCandidates();
+
+        if (candidates.length === 0) {
+            loadingSpinner.fail('No branches found.');
+            log.warning('Create a branch first, then run worktree-checkout again.');
+            return;
+        }
+
+        loadingSpinner.succeed(`Loaded ${candidates.length} branches.`);
+
+        // 2. Select branch
+        ensureAutocompletePrompt();
+
+        let selectedBranch: BranchCandidate | undefined;
+
+        if (options.ref) {
+            selectedBranch = resolveCandidateFromRef(options.ref, candidates);
+            if (!selectedBranch) {
+                log.error(`Branch "${options.ref}" not found.`);
+                log.warning('Tip: use a local branch name or origin/<branch>.');
+                return;
+            }
+        } else {
+            const { branchChoice } = await inquirer.prompt<{ branchChoice: BranchCandidate }>([
+                {
+                    type: 'autocomplete',
+                    name: 'branchChoice',
+                    message: 'Select branch (type to filter):',
+                    source: async (_answers: unknown, input = '') => {
+                        const term = input.trim().toLowerCase();
+                        const filtered = term
+                            ? candidates.filter(candidate => candidate.branchName.toLowerCase().includes(term))
+                            : candidates;
+
+                        return filtered.map(candidate => ({
+                            name: `${chalk.yellow(candidate.branchName)} ${chalk.dim(`(${candidate.source})`)}`,
+                            value: candidate,
+                        }));
+                    },
+                    pageSize: 10,
+                } as any,
+            ]);
+
+            selectedBranch = branchChoice;
+        }
+
+        if (!selectedBranch) {
+            log.error('No branch selected.');
+            return;
+        }
+
+        const existingWorktrees = await listWorktrees();
+        const existingManagedWorktree = existingWorktrees.find(
+            wt => wt.branch === selectedBranch.branchName && wt.path.startsWith(WORKTREES_ROOT)
+        );
+
+        if (existingManagedWorktree) {
+            log.info(
+                `Branch ${chalk.cyan(selectedBranch.branchName)} is already active in ${ui.path(existingManagedWorktree.path)}.`
+            );
+
+            if (options.enter === false) {
+                log.header(`cd "${existingManagedWorktree.path}"`);
+                return;
+            }
+
+            log.info('Opening existing worktree instead of creating a duplicate...');
+            await enterCommand(existingManagedWorktree.path, { exec: options.exec });
+            return;
+        }
+
+        // 3. Gather remaining inputs
+        const defaultSlug = toSlug(selectedBranch.branchName);
+
         const answers = await inquirer.prompt([
             {
                 type: 'input',
                 name: 'name',
                 message: 'Worktree name (slug):',
-                default: options.name,
+                default: options.name || defaultSlug,
                 when: !options.name,
                 validate: (input) => input.trim().length > 0 || 'Name is required',
-            },
-            {
-                type: 'input',
-                name: 'ref',
-                message: 'Base branch name:',
-                default: options.ref || currentBranch,
-                when: !options.ref,
-                validate: (input) => input.trim().length > 0 || 'Ref is required',
-            },
-            {
-                type: 'list',
-                name: 'source',
-                message: 'Base on:',
-                loop: false,
-                choices: [
-                    { name: 'Remote (origin)', value: 'remote' },
-                    { name: 'Local', value: 'local' },
-                ],
-                default: 'remote',
-                when: !options.ref && !options.source,
             },
             {
                 type: 'confirm',
@@ -79,49 +211,37 @@ export async function createCommand(options: CreateOptions) {
         ]);
 
         const name = options.name || answers.name;
-        let ref = options.ref || answers.ref;
-        const source = options.source || answers.source;
         const shouldEnter = options.enter !== undefined ? options.enter : answers.shouldEnter;
         const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
         const execCommandStr = options.exec || answers.exec;
-
-        // Append origin/ if remote is selected and not already present
-        if (!options.ref && source === 'remote' && !ref.startsWith('origin/')) {
-            ref = `origin/${ref}`;
-        }
         
-        const slug = name.replace(/\s+/g, '-');
+        const slug = toSlug(name);
         const repoName = await getRepoName();
         const wtPath = path.join(WORKTREES_ROOT, repoName, slug);
 
-        // 2. Validation
+        // 4. Validation
         if (!slug) throw new Error('Invalid name');
-        if (!ref) throw new Error('Invalid ref');
 
-        // 3. Execution
-        const spinner = createSpinner('Fetching...').start();
-        await fetchAll();
-        spinner.text = 'Verifying ref...';
-
-        const exists = await verifyRef(ref);
-        if (!exists) {
-            spinner.fail(`Ref not found: ${ref}`);
-            log.warning(`Tip: try 'origin/${ref}' or check if the branch exists.`);
-            return;
-        }
-
-        spinner.text = `Creating worktree at ${ui.path(wtPath)}...`;
+        // 5. Execution (checkout-style: attach to selected branch)
+        const spinner = createSpinner(`Creating worktree at ${ui.path(wtPath)}...`).start();
         try {
             await fs.ensureDir(path.dirname(wtPath));
-            await createWorktree(wtPath, ref);
+            if (selectedBranch.createLocalBranch) {
+                await execa('git', ['worktree', 'add', '-b', selectedBranch.branchName, wtPath, selectedBranch.checkoutRef]);
+            } else {
+                await createWorktree(wtPath, selectedBranch.checkoutRef);
+            }
             spinner.succeed('Worktree created.');
         } catch (e: any) {
             spinner.fail('Failed to create worktree.');
-            log.actionableError(e.message, `git worktree add ${wtPath} ${ref}`, wtPath, [
+            const command = selectedBranch.createLocalBranch
+                ? `git worktree add -b ${selectedBranch.branchName} ${wtPath} ${selectedBranch.checkoutRef}`
+                : `git worktree add ${wtPath} ${selectedBranch.checkoutRef}`;
+            log.actionableError(e.message, command, wtPath, [
                 'Check if the folder already exists: ls ' + wtPath,
-                'Check if the branch is already used: git worktree list',
+                `Check if branch "${selectedBranch.branchName}" is already checked out in another worktree: git worktree list`,
                 'Try pruning stale worktrees: yggtree wt prune',
-                `Run manually: git worktree add ${wtPath} ${ref}`
+                `Run manually: ${command}`
             ]);
             return;
         }
@@ -130,7 +250,7 @@ export async function createCommand(options: CreateOptions) {
             await runBootstrap(wtPath, repoRoot);
         }
 
-        // 5. Exec Command
+        // 6. Exec Command
         if (execCommandStr && execCommandStr.trim()) {
             log.info(`Executing: ${execCommandStr} in ${ui.path(wtPath)}`);
             try {
@@ -147,7 +267,7 @@ export async function createCommand(options: CreateOptions) {
             }
         }
 
-        // 6. Final Output
+        // 7. Final Output
         log.success('Worktree ready!');
         
         if (shouldEnter) {
@@ -168,7 +288,7 @@ export async function createCommand(options: CreateOptions) {
         }
 
     } catch (error: any) {
-        log.actionableError(error.message, 'yggtree wt create');
+        log.actionableError(error.message, 'yggtree wt worktree-checkout');
         process.exit(1);
     }
 }

@@ -232,14 +232,21 @@ yggtree wt create feat/new-ui --base main --exec "cursor ."
 
 ---
 
-### `yggtree wt create-slug [name] [ref]`
+### `yggtree wt worktree-checkout [name] [ref]`
 
-Create a worktree using manual slug/ref mode.
+Create a checkout-style worktree from an existing branch.
+
+Behavior:
+
+* Prompts a searchable branch picker (type to filter in real time).
+* Attaches the new worktree directly to the selected branch (checkout-style).
+* If you select a remote-only branch (`origin/*`), yggtree creates the local branch in the new worktree automatically.
+* If that branch already has an active yggtree-managed worktree, yggtree falls back to entering that worktree instead of creating a duplicate.
 
 Options:
 
 * `-n, --name <slug>`
-* `-r, --ref <ref>`
+* `-r, --ref <ref>`: skip picker and use a specific branch (`feature/x` or `origin/feature/x`)
 * `--no-bootstrap`
 * `--enter / --no-enter`
 * `--exec "<command>"`
@@ -248,7 +255,7 @@ Options:
 <summary>Example</summary>
 
 ```bash
-yggtree wt create-slug -n hotfix-auth -r main --no-enter
+yggtree wt worktree-checkout -n hotfix-auth -r main --no-enter
 ```
 
 </details>

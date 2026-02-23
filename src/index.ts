@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
+import chalk from 'chalk';
 import { welcome, log } from './lib/ui.js';
 
 import { listCommand } from './commands/wt/list.js';
@@ -33,23 +34,24 @@ program
                 name: 'action',
                 message: 'What would you like to do?',
                 loop: false,
+                pageSize: 12,
                 choices: [
-                    { name: '🌿 Create new worktree (Smart Branch)', value: 'create-smart' },
-                    { name: '🌳 Create multiple worktrees', value: 'create-multi' },
-                    { name: '🧪 Create sandbox worktree', value: 'create-sandbox' },
-                    // { name: '🌱 Create new worktree (Manual Slug)', value: 'create-slug' },
-                    { name: '📋 List worktrees', value: 'list' },
-                    { name: '🪓 Delete worktree', value: 'delete' },
-                     { name: '🚀 Bootstrap worktree', value: 'bootstrap' },
-                    { name: '🧹 Prune stale worktrees', value: 'prune' },
-                    { name: '🐚 Exec command', value: 'exec' },
-                    { name: '🚪 Enter worktree', value: 'enter' },
-                    { name: '📍 Get worktree path', value: 'path' },
+                    { name: `🌿 Grow New Realm ${chalk.dim('(create worktree)')}`, value: 'create-smart' },
+                    { name: `🔀 Traverse to Another Realm ${chalk.dim('(checkout existing branch in new worktree)')}`, value: 'worktree-checkout' },
+                    { name: `🌳 Grow Many Realms ${chalk.dim('(create multiple worktrees)')}`, value: 'create-multi' },
+                    { name: `🧪 Forge Sandbox Realm ${chalk.dim('(create sandbox worktree)')}`, value: 'create-sandbox' },
+                    { name: `🗺️ Survey Realms ${chalk.dim('(list worktrees)')}`, value: 'list' },
+                    { name: `🪓 Fell a Realm ${chalk.dim('(delete worktree)')}`, value: 'delete' },
+                    { name: `🚀 Bless Realm Setup ${chalk.dim('(bootstrap worktree)')}`, value: 'bootstrap' },
+                    { name: `🧹 Prune Withered Realms ${chalk.dim('(prune stale worktrees)')}`, value: 'prune' },
+                    { name: `🐚 Cast a Command ${chalk.dim('(exec command in worktree)')}`, value: 'exec' },
+                    { name: `🚪 Enter Realm Shell ${chalk.dim('(enter worktree)')}`, value: 'enter' },
+                    { name: `📍 Reveal Realm Path ${chalk.dim('(show worktree path)')}`, value: 'path' },
                     new inquirer.Separator(),
-                    { name: '✅ Apply sandbox changes', value: 'apply' },
-                    { name: '↩️  Unapply sandbox changes', value: 'unapply' },
+                    { name: `✅ Graft Sandbox Changes ${chalk.dim('(apply sandbox changes)')}`, value: 'apply' },
+                    { name: `↩️  Undo Sandbox Graft ${chalk.dim('(unapply sandbox changes)')}`, value: 'unapply' },
                     new inquirer.Separator(),
-                    { name: '🚪 Exit', value: 'exit' },
+                    { name: `🚪 Leave Yggdrasil ${chalk.dim('(exit)')}`, value: 'exit' },
                 ],
             },
         ]);
@@ -61,7 +63,7 @@ program
             case 'create-multi':
                 await createCommandMulti({ bootstrap: true });
                 break;
-            case 'create-slug':
+            case 'worktree-checkout':
                 await createCommand({ bootstrap: true });
                 break;
             case 'list':
@@ -132,8 +134,8 @@ wt.command('create-multi')
         await createCommandMulti(options);
     });
 
-wt.command('create-slug [name] [ref]')
-    .description('Create a new worktree (Manual slug/ref)')
+wt.command('worktree-checkout [name] [ref]')
+    .description('Create a checkout-style worktree from an existing branch')
     .option('-n, --name <slug>', 'Worktree name (slug)')
     .option('-r, --ref <ref>', 'Existing branch or ref')
     .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')

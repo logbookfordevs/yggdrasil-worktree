@@ -34,6 +34,7 @@
     "fs-extra": "^11.2.0",
     "gradient-string": "^2.0.2",
     "inquirer": "^9.2.14",
+    "inquirer-autocomplete-prompt": "^3.0.1",
     "ora": "^8.0.1",
     "zod": "^3.22.4"
   },

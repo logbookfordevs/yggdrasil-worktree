@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- `wt worktree-checkout`: checkout-style flow with searchable branch selection and branch-attached worktree creation (including remote-only branches).
+
 ### Changed
 - Improved `wt enter` interactive menu readability by color-coding branch names and folder paths separately.
 - `wt list` now groups entries by `TYPE` for easier scanning.
@@ -11,8 +14,8 @@ All notable changes to this project will be documented in this file.
 - Added `--all` support to `wt delete` so repo-linked worktrees outside `~/.yggtree` can be included when needed (with safety exclusions for main/current worktree).
 - Interactive `wt delete` now asks whether to include external linked worktrees, so the menu flow can reach non-yggtree worktrees too.
 - Increased `wt delete` menu pagination to show more options per page for better scanning.
-- Added `wt worktree-checkout` as a checkout-style flow with searchable branch selection and branch-attached worktree creation (including remote-only branches).
 - `wt worktree-checkout` now falls back to `wt enter` when the selected branch already has an active managed yggtree worktree.
+- Improved `wt enter` list readability in narrow terminals by truncating branch/path labels to avoid line wrapping noise.
 
 ## [1.3.0] - 2026-02-18
 

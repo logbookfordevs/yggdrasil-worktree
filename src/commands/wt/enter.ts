@@ -7,6 +7,31 @@ import { listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui } from '../../lib/ui.js';
 
+function truncateEnd(value: string, maxLen: number): string {
+    if (maxLen <= 0) return '';
+    if (value.length <= maxLen) return value;
+    if (maxLen <= 1) return '…';
+    return `${value.slice(0, maxLen - 1)}…`;
+}
+
+function truncateStart(value: string, maxLen: number): string {
+    if (maxLen <= 0) return '';
+    if (value.length <= maxLen) return value;
+    if (maxLen <= 1) return '…';
+    return `…${value.slice(-(maxLen - 1))}`;
+}
+
+function formatChoiceLabel(branchName: string, displayPath: string, terminalColumns: number): string {
+    const maxRowWidth = Math.max(40, terminalColumns - 10);
+    const branchWidth = Math.min(48, Math.max(16, Math.floor(maxRowWidth * 0.55)));
+    const pathWidth = Math.max(12, maxRowWidth - branchWidth - 1);
+
+    const branchText = truncateEnd(branchName, branchWidth).padEnd(branchWidth);
+    const pathText = truncateStart(displayPath, pathWidth);
+
+    return `${chalk.yellow(branchText)} ${chalk.cyan(pathText)}`;
+}
+
 export async function enterCommand(wtName?: string, options: { exec?: string } = {}) {
     try {
         await getRepoRoot();
@@ -37,6 +62,7 @@ export async function enterCommand(wtName?: string, options: { exec?: string } =
             }
         } else {
             // Interactive Selection
+            const terminalColumns = process.stdout.columns || 100;
             const choices = worktrees.map(wt => {
                 const branchName = wt.branch || wt.HEAD || 'detached';
                 const isManaged = wt.path.startsWith(WORKTREES_ROOT);
@@ -45,7 +71,7 @@ export async function enterCommand(wtName?: string, options: { exec?: string } =
                     : wt.path.replace(process.env.HOME || '', '~');
                 
                 return {
-                    name: `${chalk.yellow(branchName.padEnd(20))} ${chalk.cyan(displayPath)}`,
+                    name: formatChoiceLabel(branchName, displayPath, terminalColumns),
                     value: wt
                 };
             });

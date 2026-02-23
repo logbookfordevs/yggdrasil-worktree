@@ -1,43 +1,85 @@
 import chalk from 'chalk';
+import fs from 'fs-extra';
 import inquirer from 'inquirer';
 import path from 'path';
 import { listWorktrees, removeWorktree, getRepoRoot, getLastActivity } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
-import { log, ui, createSpinner, timeAgo } from '../../lib/ui.js';
+import { log, createSpinner, timeAgo } from '../../lib/ui.js';
+import { getSandboxMetaPath } from '../../lib/sandbox.js';
 
-export async function deleteCommand() {
+export async function deleteCommand(options: { all?: boolean } = {}) {
     try {
-        const _ = await getRepoRoot();
+        const currentWorktreePath = await getRepoRoot();
         const worktrees = await listWorktrees();
+        let showAll = options.all;
+        if (showAll === undefined) {
+            const { includeExternal } = await inquirer.prompt([
+                {
+                    type: 'confirm',
+                    name: 'includeExternal',
+                    message: 'Include external linked worktrees (outside ~/.yggtree)?',
+                    default: false,
+                },
+            ]);
+            showAll = includeExternal;
+        }
 
-        // Filter only managed worktrees
-        const managedWts = worktrees.filter(wt => wt.path.startsWith(WORKTREES_ROOT));
+        const includeAll = Boolean(showAll);
+        const mainWorktreePath = worktrees[0]?.path;
 
-        if (managedWts.length === 0) {
-            log.info('No managed worktrees found to delete.');
+        const formatWorktreePath = (wtPath: string) =>
+            wtPath.startsWith(WORKTREES_ROOT)
+                ? path.relative(WORKTREES_ROOT, wtPath)
+                : wtPath.replace(process.env.HOME || '', '~');
+
+        const deletableWts = worktrees.filter(wt => {
+            if (includeAll) {
+                const isMainWorktree = wt.path === mainWorktreePath;
+                const isCurrentWorktree = wt.path === currentWorktreePath;
+                return !isMainWorktree && !isCurrentWorktree;
+            }
+            return wt.path.startsWith(WORKTREES_ROOT);
+        });
+
+        if (deletableWts.length === 0) {
+            log.info(includeAll
+                ? 'No deletable linked worktrees found.'
+                : 'No managed worktrees found to delete. Use "yggtree wt delete --all" to include external linked worktrees.');
             return;
         }
 
-        // Pre-fetch activity for all managed worktrees in parallel
-        const activities = await Promise.all(
-            managedWts.map(wt => getLastActivity(wt.path))
-        );
+        const choices = await Promise.all(deletableWts.map(async (wt) => {
+            const isManaged = wt.path.startsWith(WORKTREES_ROOT);
+            const [activity, hasSandboxMeta] = await Promise.all([
+                getLastActivity(wt.path),
+                fs.pathExists(getSandboxMetaPath(wt.path)),
+            ]);
 
-        const choices = managedWts.map((wt, i) => {
+            const isSandboxBranch = (wt.branch || '').startsWith('sandbox-');
+            const isSandbox = isManaged && (hasSandboxMeta || isSandboxBranch);
+
+            const type = isSandbox
+                ? chalk.magenta('SANDBOX')
+                : isManaged
+                    ? chalk.green('MANAGED')
+                    : chalk.cyan('LINKED ');
+
             const branchName = wt.branch || wt.HEAD || 'detached';
-            const active = activities[i] ? chalk.magenta(timeAgo(activities[i])) : chalk.dim('—');
+            const active = activity ? chalk.magenta(timeAgo(activity)) : chalk.dim('—');
+            const displayPath = formatWorktreePath(wt.path);
             return {
-                name: `${chalk.bold.yellow(branchName)} ${chalk.dim('·')} ${active}`,
+                name: `${type} ${chalk.bold.yellow(branchName)} ${chalk.dim('·')} ${active} ${chalk.dim('·')} ${chalk.dim(displayPath)}`,
                 value: wt.path,
             };
-        });
+        }));
 
         const { selectedPaths } = await inquirer.prompt([
             {
                 type: 'checkbox',
                 name: 'selectedPaths',
-                message: 'Select worktrees to delete:',
+                message: includeAll ? 'Select worktrees to delete:' : 'Select managed worktrees to delete:',
                 choices: choices,
+                pageSize: 10,
             },
         ]);
 
@@ -47,7 +89,7 @@ export async function deleteCommand() {
         }
 
         const count = selectedPaths.length;
-        const names = selectedPaths.map((p: string) => path.relative(WORKTREES_ROOT, p));
+        const names = selectedPaths.map((p: string) => formatWorktreePath(p));
 
         const { confirm } = await inquirer.prompt([
             {
@@ -64,7 +106,7 @@ export async function deleteCommand() {
         }
 
         for (const wtPath of selectedPaths) {
-            const worktreeName = path.relative(WORKTREES_ROOT, wtPath);
+            const worktreeName = formatWorktreePath(wtPath);
             const spinner = createSpinner(`Deleting ${worktreeName}...`).start();
             try {
                 await removeWorktree(wtPath);

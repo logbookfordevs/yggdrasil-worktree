@@ -274,14 +274,14 @@ yggtree wt create-multi --base main
 
 ### `yggtree wt list`
 
-List all worktrees with state.
+List all repo-linked worktrees with state.
 
 Columns:
 
-* TYPE (MAIN / MANAGED)
+* TYPE (`MAIN`, `MANAGED`, `LINKED`, `SANDBOX`)
 * STATE (clean / dirty)
+* LAST ACTIVE
 * BRANCH
-* PATH
 
 ---
 
@@ -339,6 +339,10 @@ Re‑run bootstrap commands for a worktree.
 ### `yggtree wt delete`
 
 Interactively delete managed worktrees.
+
+Optional:
+
+* `--all` includes linked worktrees outside `~/.yggtree` (main/current worktree is excluded for safety)
 
 ---
 

@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Improved `wt enter` interactive menu readability by color-coding branch names and folder paths separately.
+- `wt list` now groups entries by `TYPE` for easier scanning.
+- `wt list` and `wt delete` now share consistent type rules: only worktrees inside `~/.yggtree` are `MANAGED`/`SANDBOX`; external worktrees are labeled `LINKED` (with `MAIN` reserved for the primary repo worktree in `wt list`).
+- Added `--all` support to `wt delete` so repo-linked worktrees outside `~/.yggtree` can be included when needed (with safety exclusions for main/current worktree).
+- Interactive `wt delete` now asks whether to include external linked worktrees, so the menu flow can reach non-yggtree worktrees too.
+- Increased `wt delete` menu pagination to show more options per page for better scanning.
 
 ## [1.3.0] - 2026-02-18
 

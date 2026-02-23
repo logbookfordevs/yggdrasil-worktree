@@ -104,7 +104,7 @@ program
 const wt = program.command('wt').description('Manage git worktrees');
 
 wt.command('list')
-    .description('List all worktrees')
+    .description('List all repo-linked worktrees')
     .action(listCommand);
 
 wt.command('create [branch]')
@@ -149,8 +149,11 @@ wt.command('create-slug [name] [ref]')
     });
 
 wt.command('delete')
-    .description('Delete a managed worktree')
-    .action(deleteCommand);
+    .description('Delete managed worktrees')
+    .option('-a, --all', 'Include repo-linked worktrees outside ~/.yggtree (except main/current)')
+    .action(async (options) => {
+        await deleteCommand(options);
+    });
 
 wt.command('bootstrap')
     .description('Bootstrap dependencies in a worktree')
@@ -203,4 +206,3 @@ wt.command('unapply')
     .action(unapplyCommand);
 
 program.parse(process.argv);
-

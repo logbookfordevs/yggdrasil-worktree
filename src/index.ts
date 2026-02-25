@@ -36,7 +36,7 @@ program
             { name: `🔀 Traverse to Another Realm ${chalk.dim('(checkout existing branch in new worktree)')}`, value: 'worktree-checkout' },
             { name: `🌳 Grow Many Realms ${chalk.dim('(create multiple worktrees)')}`, value: 'create-multi' },
             { name: `🧪 Forge Sandbox Realm ${chalk.dim('(create sandbox worktree)')}`, value: 'create-sandbox' },
-            { name: `🗺️ Survey Realms ${chalk.dim('(list worktrees)')}`, value: 'list' },
+            { name: `🗺️  Survey Realms ${chalk.dim('(list worktrees)')}`, value: 'list' },
             { name: `🧭 Open Realm in Tool ${chalk.dim('(open worktree in IDE/agent)')}`, value: 'open' },
             { name: `🪓 Fell a Realm ${chalk.dim('(delete worktree)')}`, value: 'delete' },
             { name: `🚀 Bless Realm Setup ${chalk.dim('(bootstrap worktree)')}`, value: 'bootstrap' },

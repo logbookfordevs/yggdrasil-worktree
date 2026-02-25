@@ -7,6 +7,7 @@ import { execa } from 'execa';
 import { listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui } from '../../lib/ui.js';
+import { getSandboxMetaPath } from '../../lib/sandbox.js';
 import { enterCommand } from './enter.js';
 
 interface OpenOptions {
@@ -37,6 +38,7 @@ const OPEN_TOOL_CANDIDATES: OpenToolOption[] = [
 ];
 
 type Worktree = { path: string; branch?: string; HEAD: string };
+type WorktreeType = 'MAIN' | 'MANAGED' | 'SANDBOX' | 'LINKED';
 
 function truncateEnd(value: string, maxLen: number): string {
     if (maxLen <= 0) return '';
@@ -52,14 +54,24 @@ function truncateStart(value: string, maxLen: number): string {
     return `…${value.slice(-(maxLen - 1))}`;
 }
 
-function formatWorktreeChoiceLabel(branchName: string, displayPath: string, terminalColumns: number): string {
+function formatType(type: WorktreeType): string {
+    if (type === 'SANDBOX') return chalk.magenta('SANDBOX');
+    if (type === 'MANAGED') return chalk.green('MANAGED');
+    if (type === 'MAIN') return chalk.blue('MAIN   ');
+    return chalk.cyan('LINKED ');
+}
+
+function formatWorktreeChoiceLabel(type: WorktreeType, branchName: string, displayPath: string, terminalColumns: number): string {
     const maxRowWidth = Math.max(40, terminalColumns - 10);
-    const branchWidth = Math.min(48, Math.max(16, Math.floor(maxRowWidth * 0.55)));
-    const pathWidth = Math.max(12, maxRowWidth - branchWidth - 1);
+    const typeWidth = 8;
+    const availableWidth = Math.max(22, maxRowWidth - typeWidth);
+    const branchWidth = Math.min(44, Math.max(12, Math.floor(availableWidth * 0.55)));
+    const pathWidth = Math.max(10, availableWidth - branchWidth - 1);
 
     const branchText = truncateEnd(branchName, branchWidth).padEnd(branchWidth);
     const pathText = truncateStart(displayPath, pathWidth);
-    return `${chalk.yellow(branchText)} ${chalk.cyan(pathText)}`;
+    const typeText = formatType(type);
+    return `${typeText} ${chalk.yellow(branchText)} ${chalk.cyan(pathText)}`;
 }
 
 export async function commandExists(command: string): Promise<boolean> {
@@ -196,6 +208,7 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
     try {
         await getRepoRoot();
         const worktrees = await listWorktrees();
+        const mainWorktreePath = worktrees[0]?.path || '';
 
         if (worktrees.length === 0) {
             log.info('No worktrees found.');
@@ -211,18 +224,28 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
             }
         } else {
             const terminalColumns = process.stdout.columns || 100;
-            const choices = worktrees.map(wt => {
+            const choices = await Promise.all(worktrees.map(async (wt) => {
                 const branchName = wt.branch || wt.HEAD || 'detached';
                 const isManaged = wt.path.startsWith(WORKTREES_ROOT);
+                const hasSandboxMeta = await fs.pathExists(getSandboxMetaPath(wt.path));
+                const isSandboxBranch = (wt.branch || '').startsWith('sandbox-');
+                const isSandbox = isManaged && (hasSandboxMeta || isSandboxBranch);
+                const type: WorktreeType = isSandbox
+                    ? 'SANDBOX'
+                    : isManaged
+                        ? 'MANAGED'
+                        : wt.path === mainWorktreePath
+                            ? 'MAIN'
+                            : 'LINKED';
                 const displayPath = isManaged
                     ? path.relative(WORKTREES_ROOT, wt.path)
                     : wt.path.replace(process.env.HOME || '', '~');
 
                 return {
-                    name: formatWorktreeChoiceLabel(branchName, displayPath, terminalColumns),
+                    name: formatWorktreeChoiceLabel(type, branchName, displayPath, terminalColumns),
                     value: wt,
                 };
-            });
+            }));
 
             const { selectedWt } = await inquirer.prompt<{ selectedWt: Worktree }>([
                 {

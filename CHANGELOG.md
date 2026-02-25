@@ -22,6 +22,8 @@ All notable changes to this project will be documented in this file.
 - `wt list` now supports `--open` as a shortcut to the worktree tool-open flow.
 - Interactive create flows (`wt create`, `wt worktree-checkout`, `wt create-sandbox`) now ask whether to open a tool after creation instead of asking for a free-form `exec` command by default.
 - `wt create-sandbox` now prompts for an optional sandbox name; leaving it blank preserves the existing auto-generated naming behavior.
+- `wt enter` interactive selection now includes worktree type labels (`MAIN`, `MANAGED`, `SANDBOX`, `LINKED`) for consistency with `wt list` and `wt delete`.
+- `wt open` interactive selection now includes worktree type labels (`MAIN`, `MANAGED`, `SANDBOX`, `LINKED`) for consistency with `wt list`, `wt delete`, and `wt enter`.
 
 ## [1.3.0] - 2026-02-18
 

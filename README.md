@@ -278,6 +278,7 @@ Create a temporary sandbox from your current local branch.
 
 Options:
 
+*   `-n, --name <name>`: Optional sandbox name (auto-generated if omitted).
 *   `--carry / --no-carry`: Bring uncommitted changes (staged/unstaged/untracked) with you.
 *   `--no-bootstrap`
 *   `--enter / --no-enter`
@@ -285,6 +286,7 @@ Options:
 
 Interactive flow:
 
+* Prompts for an optional sandbox name (leave empty to auto-generate one from current branch).
 * Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
 * `--exec` remains available as an advanced explicit override.
 

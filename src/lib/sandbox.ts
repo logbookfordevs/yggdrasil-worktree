@@ -27,6 +27,21 @@ export function generateSandboxName(branch: string): string {
 }
 
 /**
+ * Normalize a custom sandbox name into a branch-safe slug.
+ * Keeps current sandbox prefix conventions for easier filtering.
+ */
+export function normalizeSandboxName(input: string): string {
+    const cleaned = input
+        .trim()
+        .replace(/[\\/]/g, '-')
+        .replace(/\s+/g, '-')
+        .replace(/^-+|-+$/g, '');
+
+    if (!cleaned) return '';
+    return cleaned.startsWith('sandbox-') ? cleaned : `sandbox-${cleaned}`;
+}
+
+/**
  * Get the path to the sandbox metadata file
  */
 export function getSandboxMetaPath(wtPath: string): string {

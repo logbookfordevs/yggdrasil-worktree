@@ -5,7 +5,7 @@ import { getRepoRoot, getRepoName, getCurrentBranch } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
-import { generateSandboxName, writeSandboxMeta } from '../../lib/sandbox.js';
+import { generateSandboxName, normalizeSandboxName, writeSandboxMeta } from '../../lib/sandbox.js';
 import {
     buildAgentExecCommand,
     detectInstalledOpenTools,
@@ -18,6 +18,7 @@ import { spawn } from 'child_process';
 import fs from 'fs-extra';
 
 interface SandboxCreateOptions {
+    name?: string;
     bootstrap?: boolean;
     enter?: boolean;
     exec?: string;
@@ -38,12 +39,33 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
 
         log.info(`Current branch: ${chalk.cyan(currentBranch)}`);
 
-        // 2. Generate random sandbox name
-        const sandboxName = generateSandboxName(currentBranch);
-        log.info(`Sandbox name: ${chalk.yellow(sandboxName)}`);
+        // 2. Build default + optional custom name validation
+        const generatedSandboxName = generateSandboxName(currentBranch);
+        const validateSandboxName = async (input: string): Promise<true | string> => {
+            if (!input.trim()) return true;
+
+            const normalized = normalizeSandboxName(input);
+            if (!normalized) {
+                return 'Please provide at least one valid character.';
+            }
+
+            try {
+                await execa('git', ['check-ref-format', '--branch', normalized], { cwd: repoRoot });
+                return true;
+            } catch {
+                return 'Sandbox name is not a valid git branch name.';
+            }
+        };
 
         // 3. Gather remaining inputs
         const answers = await inquirer.prompt([
+            {
+                type: 'input',
+                name: 'name',
+                message: `Sandbox name (optional, leave empty for auto: ${generatedSandboxName}):`,
+                when: options.name === undefined,
+                validate: validateSandboxName,
+            },
             {
                 type: 'confirm',
                 name: 'carry',
@@ -73,6 +95,20 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
                 when: options.exec === undefined,
             },
         ]);
+
+        const requestedSandboxName = options.name !== undefined ? options.name : answers.name || '';
+        const nameValidation = await validateSandboxName(requestedSandboxName);
+        if (nameValidation !== true) {
+            log.error(nameValidation);
+            return;
+        }
+
+        const normalizedCustomName = normalizeSandboxName(requestedSandboxName);
+        const sandboxName = normalizedCustomName || generatedSandboxName;
+        if (requestedSandboxName.trim() && normalizedCustomName !== requestedSandboxName.trim()) {
+            log.dim(`Normalized sandbox name: ${chalk.yellow(sandboxName)}`);
+        }
+        log.info(`Sandbox name: ${chalk.yellow(sandboxName)}`);
 
         const shouldCarry = options.carry !== undefined ? options.carry : answers.carry;
         const shouldEnter = options.enter !== undefined ? options.enter : answers.shouldEnter;

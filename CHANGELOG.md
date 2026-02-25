@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - `wt open` interactive selection now includes worktree type labels (`MAIN`, `MANAGED`, `SANDBOX`, `LINKED`) for consistency with `wt list`, `wt delete`, and `wt enter`.
 - Worktree metadata helpers (`type` detection, colored type label, display path formatting, branch-name fallback, and name lookup) are now centralized in `lib/worktree` and reused across `list`, `delete`, `enter`, `open`, `exec`, and `path`.
 - `wt enter` no longer asks for an interactive pre-enter command; use `--exec "<command>"` when needed.
+- `wt open` now supports type-to-filter worktree selection, similar to `wt worktree-checkout`.
 
 ## [1.3.0] - 2026-02-18
 

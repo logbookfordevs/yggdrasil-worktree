@@ -377,7 +377,7 @@ Open a worktree in an IDE or agent CLI.
 
 Behavior:
 
-* If `[worktree]` is omitted, you can pick from the worktree list.
+* If `[worktree]` is omitted, you can pick from the worktree list with type-to-filter search.
 * Detects available tool commands in your `PATH` (for example: IDEs like `cursor`, `code`, `zed`; agents like `claude`, `codex`, `gemini`, `opencode`).
 * Lets you choose one interactively, or pass `--tool`.
 * If an agent CLI is selected, yggtree opens a sub-shell and launches it there.

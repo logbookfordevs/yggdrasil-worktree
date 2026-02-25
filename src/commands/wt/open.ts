@@ -6,6 +6,7 @@ import { constants as fsConstants } from 'fs';
 import { execa } from 'execa';
 import { GitWorktree, listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { log, ui } from '../../lib/ui.js';
+import { ensureAutocompletePrompt } from '../../lib/prompt.js';
 import {
     detectWorktreeType,
     findWorktreeByName,
@@ -18,6 +19,12 @@ import { enterCommand } from './enter.js';
 
 interface OpenOptions {
     tool?: string;
+}
+
+interface OpenWorktreeCandidate {
+    worktree: GitWorktree;
+    label: string;
+    searchText: string;
 }
 
 export interface OpenToolOption {
@@ -211,27 +218,41 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
                 return;
             }
         } else {
+            ensureAutocompletePrompt();
             const terminalColumns = process.stdout.columns || 100;
-            const choices = await Promise.all(worktrees.map(async (wt) => {
+            const candidates: OpenWorktreeCandidate[] = await Promise.all(worktrees.map(async (wt) => {
                 const type = await detectWorktreeType(wt, mainWorktreePath);
                 const branchName = getWorktreeBranchName(wt);
                 const displayPath = formatWorktreeDisplayPath(wt.path);
+                const rawType = type.toLowerCase();
+                const rawDisplayPath = displayPath.toLowerCase();
+                const rawBranchName = branchName.toLowerCase();
 
                 return {
-                    name: formatWorktreeChoiceLabel(type, branchName, displayPath, terminalColumns),
-                    value: wt,
+                    worktree: wt,
+                    label: formatWorktreeChoiceLabel(type, branchName, displayPath, terminalColumns),
+                    searchText: `${rawType} ${rawBranchName} ${rawDisplayPath}`,
                 };
             }));
 
             const { selectedWt } = await inquirer.prompt<{ selectedWt: GitWorktree }>([
                 {
-                    type: 'list',
+                    type: 'autocomplete',
                     name: 'selectedWt',
-                    message: 'Select a worktree to open:',
-                    choices,
-                    loop: false,
+                    message: 'Select a worktree to open (type to filter):',
+                    source: async (_answers: unknown, input = '') => {
+                        const term = input.trim().toLowerCase();
+                        const filtered = term
+                            ? candidates.filter(candidate => candidate.searchText.includes(term))
+                            : candidates;
+
+                        return filtered.map(candidate => ({
+                            name: candidate.label,
+                            value: candidate.worktree,
+                        }));
+                    },
                     pageSize: 10,
-                },
+                } as any,
             ]);
 
             targetWt = selectedWt;

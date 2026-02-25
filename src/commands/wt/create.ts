@@ -1,11 +1,11 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import autocompletePrompt from 'inquirer-autocomplete-prompt';
 import path from 'path';
 import { getRepoRoot, getRepoName, createWorktree, fetchAll, listWorktrees } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
+import { ensureAutocompletePrompt } from '../../lib/prompt.js';
 import { enterCommand } from './enter.js';
 import {
     buildAgentExecCommand,
@@ -31,15 +31,6 @@ interface BranchCandidate {
     checkoutRef: string;
     createLocalBranch: boolean;
     source: 'local' | 'remote';
-}
-
-let autocompleteRegistered = false;
-
-function ensureAutocompletePrompt() {
-    if (!autocompleteRegistered) {
-        inquirer.registerPrompt('autocomplete', autocompletePrompt as any);
-        autocompleteRegistered = true;
-    }
 }
 
 function toSlug(value: string): string {

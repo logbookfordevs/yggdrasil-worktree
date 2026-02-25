@@ -1,9 +1,12 @@
 import chalk from 'chalk';
-import fs from 'fs-extra';
 import { listWorktrees, getRepoRoot, isGitClean, getLastActivity } from '../../lib/git.js';
-import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, timeAgo } from '../../lib/ui.js';
-import { getSandboxMetaPath } from '../../lib/sandbox.js';
+import {
+    detectWorktreeType,
+    formatWorktreeType,
+    getWorktreeBranchName,
+    WORKTREE_TYPE_ORDER,
+} from '../../lib/worktree.js';
 
 export async function listCommand() {
     try {
@@ -22,43 +25,14 @@ export async function listCommand() {
         console.log(`  ${chalk.dim('TYPE')}    ${chalk.dim('STATE')}    ${chalk.dim('LAST ACTIVE')}    ${chalk.dim('BRANCH')}`);
         console.log(chalk.dim('  ' + '-'.repeat(70)));
 
-        const typeOrder = {
-            MAIN: 0,
-            MANAGED: 1,
-            SANDBOX: 2,
-            LINKED: 3,
-        } as const;
-
         const rows = await Promise.all(worktrees.map(async (wt, index) => {
-            const isManaged = wt.path.startsWith(WORKTREES_ROOT);
-
-            // Sandbox is only a managed worktree with sandbox metadata or sandbox branch naming.
-            const [hasSandboxMeta, isClean, lastActive] = await Promise.all([
-                fs.pathExists(getSandboxMetaPath(wt.path)),
+            const [typeKey, isClean, lastActive] = await Promise.all([
+                detectWorktreeType(wt, mainWorktreePath),
                 isGitClean(wt.path),
                 getLastActivity(wt.path),
             ]);
-
-            const isSandboxBranch = (wt.branch || '').startsWith('sandbox-');
-            const isSandbox = isManaged && (hasSandboxMeta || isSandboxBranch);
-
-            const typeKey: keyof typeof typeOrder = isSandbox
-                ? 'SANDBOX'
-                : isManaged
-                    ? 'MANAGED'
-                    : wt.path === mainWorktreePath
-                        ? 'MAIN'
-                        : 'LINKED';
-
-            const type = typeKey === 'SANDBOX'
-                ? chalk.magenta('SANDBOX')
-                : typeKey === 'MANAGED'
-                    ? chalk.green('MANAGED')
-                    : typeKey === 'MAIN'
-                        ? chalk.blue('MAIN   ')
-                        : chalk.cyan('LINKED ');
-
-            const branchName = wt.branch || wt.HEAD || 'detached';
+            const type = formatWorktreeType(typeKey);
+            const branchName = getWorktreeBranchName(wt);
             const stateLabel = (isClean ? 'clean' : 'dirty').padEnd(8);
             const stateText = isClean ? chalk.green(stateLabel) : chalk.yellow(stateLabel);
             const activeLabel = lastActive ? timeAgo(lastActive) : '—';
@@ -66,7 +40,7 @@ export async function listCommand() {
 
             return {
                 text: `  ${type}  ${stateText} ${activeText} ${chalk.yellow(branchName)}`,
-                sortType: typeOrder[typeKey],
+                sortType: WORKTREE_TYPE_ORDER[typeKey],
                 sortBranch: branchName.toLowerCase(),
                 sortIndex: index,
             };

@@ -24,6 +24,8 @@ All notable changes to this project will be documented in this file.
 - `wt create-sandbox` now prompts for an optional sandbox name; leaving it blank preserves the existing auto-generated naming behavior.
 - `wt enter` interactive selection now includes worktree type labels (`MAIN`, `MANAGED`, `SANDBOX`, `LINKED`) for consistency with `wt list` and `wt delete`.
 - `wt open` interactive selection now includes worktree type labels (`MAIN`, `MANAGED`, `SANDBOX`, `LINKED`) for consistency with `wt list`, `wt delete`, and `wt enter`.
+- Worktree metadata helpers (`type` detection, colored type label, display path formatting, branch-name fallback, and name lookup) are now centralized in `lib/worktree` and reused across `list`, `delete`, `enter`, `open`, `exec`, and `path`.
+- `wt enter` no longer asks for an interactive pre-enter command; use `--exec "<command>"` when needed.
 
 ## [1.3.0] - 2026-02-18
 

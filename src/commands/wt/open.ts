@@ -4,10 +4,16 @@ import path from 'path';
 import fs from 'fs-extra';
 import { constants as fsConstants } from 'fs';
 import { execa } from 'execa';
-import { listWorktrees, getRepoRoot } from '../../lib/git.js';
-import { WORKTREES_ROOT } from '../../lib/paths.js';
+import { GitWorktree, listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { log, ui } from '../../lib/ui.js';
-import { getSandboxMetaPath } from '../../lib/sandbox.js';
+import {
+    detectWorktreeType,
+    findWorktreeByName,
+    formatWorktreeDisplayPath,
+    formatWorktreeType,
+    getWorktreeBranchName,
+    WorktreeType,
+} from '../../lib/worktree.js';
 import { enterCommand } from './enter.js';
 
 interface OpenOptions {
@@ -37,9 +43,6 @@ const OPEN_TOOL_CANDIDATES: OpenToolOption[] = [
     { id: 'opencode', name: 'OpenCode', command: 'opencode', kind: 'agent', aliases: ['opencode'] },
 ];
 
-type Worktree = { path: string; branch?: string; HEAD: string };
-type WorktreeType = 'MAIN' | 'MANAGED' | 'SANDBOX' | 'LINKED';
-
 function truncateEnd(value: string, maxLen: number): string {
     if (maxLen <= 0) return '';
     if (value.length <= maxLen) return value;
@@ -54,13 +57,6 @@ function truncateStart(value: string, maxLen: number): string {
     return `…${value.slice(-(maxLen - 1))}`;
 }
 
-function formatType(type: WorktreeType): string {
-    if (type === 'SANDBOX') return chalk.magenta('SANDBOX');
-    if (type === 'MANAGED') return chalk.green('MANAGED');
-    if (type === 'MAIN') return chalk.blue('MAIN   ');
-    return chalk.cyan('LINKED ');
-}
-
 function formatWorktreeChoiceLabel(type: WorktreeType, branchName: string, displayPath: string, terminalColumns: number): string {
     const maxRowWidth = Math.max(40, terminalColumns - 10);
     const typeWidth = 8;
@@ -70,7 +66,7 @@ function formatWorktreeChoiceLabel(type: WorktreeType, branchName: string, displ
 
     const branchText = truncateEnd(branchName, branchWidth).padEnd(branchWidth);
     const pathText = truncateStart(displayPath, pathWidth);
-    const typeText = formatType(type);
+    const typeText = formatWorktreeType(type);
     return `${typeText} ${chalk.yellow(branchText)} ${chalk.cyan(pathText)}`;
 }
 
@@ -120,16 +116,8 @@ export async function detectInstalledOpenTools(): Promise<OpenToolOption[]> {
         .map(check => check.tool);
 }
 
-function resolveWorktreeByName(worktrees: Worktree[], wtName: string): Worktree | undefined {
-    return worktrees.find(wt => {
-        const branchName = wt.branch || wt.HEAD || '';
-        const relativePath = path.relative(WORKTREES_ROOT, wt.path);
-        const basename = path.basename(wt.path);
-        return branchName === wtName ||
-            relativePath === wtName ||
-            wt.path === wtName ||
-            basename === wtName;
-    });
+function resolveWorktreeByName(worktrees: GitWorktree[], wtName: string): GitWorktree | undefined {
+    return findWorktreeByName(worktrees, wtName);
 }
 
 export function resolveOpenToolOption(input: string, installed: OpenToolOption[]): OpenToolOption | undefined {
@@ -215,7 +203,7 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
             return;
         }
 
-        let targetWt: Worktree | undefined;
+        let targetWt: GitWorktree | undefined;
         if (wtName) {
             targetWt = resolveWorktreeByName(worktrees, wtName);
             if (!targetWt) {
@@ -225,21 +213,9 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
         } else {
             const terminalColumns = process.stdout.columns || 100;
             const choices = await Promise.all(worktrees.map(async (wt) => {
-                const branchName = wt.branch || wt.HEAD || 'detached';
-                const isManaged = wt.path.startsWith(WORKTREES_ROOT);
-                const hasSandboxMeta = await fs.pathExists(getSandboxMetaPath(wt.path));
-                const isSandboxBranch = (wt.branch || '').startsWith('sandbox-');
-                const isSandbox = isManaged && (hasSandboxMeta || isSandboxBranch);
-                const type: WorktreeType = isSandbox
-                    ? 'SANDBOX'
-                    : isManaged
-                        ? 'MANAGED'
-                        : wt.path === mainWorktreePath
-                            ? 'MAIN'
-                            : 'LINKED';
-                const displayPath = isManaged
-                    ? path.relative(WORKTREES_ROOT, wt.path)
-                    : wt.path.replace(process.env.HOME || '', '~');
+                const type = await detectWorktreeType(wt, mainWorktreePath);
+                const branchName = getWorktreeBranchName(wt);
+                const displayPath = formatWorktreeDisplayPath(wt.path);
 
                 return {
                     name: formatWorktreeChoiceLabel(type, branchName, displayPath, terminalColumns),
@@ -247,7 +223,7 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
                 };
             }));
 
-            const { selectedWt } = await inquirer.prompt<{ selectedWt: Worktree }>([
+            const { selectedWt } = await inquirer.prompt<{ selectedWt: GitWorktree }>([
                 {
                     type: 'list',
                     name: 'selectedWt',

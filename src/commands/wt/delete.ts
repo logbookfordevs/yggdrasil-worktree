@@ -1,11 +1,14 @@
 import chalk from 'chalk';
-import fs from 'fs-extra';
 import inquirer from 'inquirer';
-import path from 'path';
 import { listWorktrees, removeWorktree, getRepoRoot, getLastActivity } from '../../lib/git.js';
-import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, createSpinner, timeAgo } from '../../lib/ui.js';
-import { getSandboxMetaPath } from '../../lib/sandbox.js';
+import {
+    detectWorktreeType,
+    formatWorktreeDisplayPath,
+    formatWorktreeType,
+    getWorktreeBranchName,
+    isManagedWorktreePath,
+} from '../../lib/worktree.js';
 
 export async function deleteCommand(options: { all?: boolean } = {}) {
     try {
@@ -27,18 +30,13 @@ export async function deleteCommand(options: { all?: boolean } = {}) {
         const includeAll = Boolean(showAll);
         const mainWorktreePath = worktrees[0]?.path;
 
-        const formatWorktreePath = (wtPath: string) =>
-            wtPath.startsWith(WORKTREES_ROOT)
-                ? path.relative(WORKTREES_ROOT, wtPath)
-                : wtPath.replace(process.env.HOME || '', '~');
-
         const deletableWts = worktrees.filter(wt => {
             if (includeAll) {
                 const isMainWorktree = wt.path === mainWorktreePath;
                 const isCurrentWorktree = wt.path === currentWorktreePath;
                 return !isMainWorktree && !isCurrentWorktree;
             }
-            return wt.path.startsWith(WORKTREES_ROOT);
+            return isManagedWorktreePath(wt.path);
         });
 
         if (deletableWts.length === 0) {
@@ -49,26 +47,15 @@ export async function deleteCommand(options: { all?: boolean } = {}) {
         }
 
         const choices = await Promise.all(deletableWts.map(async (wt) => {
-            const isManaged = wt.path.startsWith(WORKTREES_ROOT);
-            const [activity, hasSandboxMeta] = await Promise.all([
+            const [activity, type] = await Promise.all([
                 getLastActivity(wt.path),
-                fs.pathExists(getSandboxMetaPath(wt.path)),
+                detectWorktreeType(wt, mainWorktreePath || ''),
             ]);
-
-            const isSandboxBranch = (wt.branch || '').startsWith('sandbox-');
-            const isSandbox = isManaged && (hasSandboxMeta || isSandboxBranch);
-
-            const type = isSandbox
-                ? chalk.magenta('SANDBOX')
-                : isManaged
-                    ? chalk.green('MANAGED')
-                    : chalk.cyan('LINKED ');
-
-            const branchName = wt.branch || wt.HEAD || 'detached';
+            const branchName = getWorktreeBranchName(wt);
             const active = activity ? chalk.magenta(timeAgo(activity)) : chalk.dim('—');
-            const displayPath = formatWorktreePath(wt.path);
+            const displayPath = formatWorktreeDisplayPath(wt.path);
             return {
-                name: `${type} ${chalk.bold.yellow(branchName)} ${chalk.dim('·')} ${active} ${chalk.dim('·')} ${chalk.dim(displayPath)}`,
+                name: `${formatWorktreeType(type)} ${chalk.bold.yellow(branchName)} ${chalk.dim('·')} ${active} ${chalk.dim('·')} ${chalk.dim(displayPath)}`,
                 value: wt.path,
             };
         }));
@@ -89,7 +76,7 @@ export async function deleteCommand(options: { all?: boolean } = {}) {
         }
 
         const count = selectedPaths.length;
-        const names = selectedPaths.map((p: string) => formatWorktreePath(p));
+        const names = selectedPaths.map((p: string) => formatWorktreeDisplayPath(p));
 
         const { confirm } = await inquirer.prompt([
             {
@@ -106,7 +93,7 @@ export async function deleteCommand(options: { all?: boolean } = {}) {
         }
 
         for (const wtPath of selectedPaths) {
-            const worktreeName = formatWorktreePath(wtPath);
+            const worktreeName = formatWorktreeDisplayPath(wtPath);
             const spinner = createSpinner(`Deleting ${worktreeName}...`).start();
             try {
                 await removeWorktree(wtPath);

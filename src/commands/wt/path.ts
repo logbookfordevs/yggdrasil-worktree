@@ -1,8 +1,7 @@
 import inquirer from 'inquirer';
-import path from 'path';
-import { listWorktrees, getRepoRoot } from '../../lib/git.js';
-import { WORKTREES_ROOT } from '../../lib/paths.js';
+import { GitWorktree, listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { log } from '../../lib/ui.js';
+import { findWorktreeByName, formatWorktreeDisplayPath, getWorktreeBranchName } from '../../lib/worktree.js';
 
 export async function pathCommand(wtName?: string) {
     try {
@@ -14,19 +13,10 @@ export async function pathCommand(wtName?: string) {
             return;
         }
 
-        let targetWt: { path: string; branch?: string; HEAD: string } | undefined;
+        let targetWt: GitWorktree | undefined;
 
         if (wtName) {
-            // Find worktree by name (branch name, relative path, or slug/basename)
-            targetWt = worktrees.find(wt => {
-                const branchName = wt.branch || wt.HEAD || '';
-                const relativePath = path.relative(WORKTREES_ROOT, wt.path);
-                const basename = path.basename(wt.path);
-                return branchName === wtName || 
-                       relativePath === wtName || 
-                       wt.path === wtName || 
-                       basename === wtName;
-            });
+            targetWt = findWorktreeByName(worktrees, wtName);
 
             if (!targetWt) {
                 log.error(`Worktree "${wtName}" not found.`);
@@ -35,11 +25,8 @@ export async function pathCommand(wtName?: string) {
         } else {
             // Interactive Selection
             const choices = worktrees.map(wt => {
-                const branchName = wt.branch || wt.HEAD || 'detached';
-                const isManaged = wt.path.startsWith(WORKTREES_ROOT);
-                const displayPath = isManaged 
-                    ? path.relative(WORKTREES_ROOT, wt.path)
-                    : wt.path.replace(process.env.HOME || '', '~');
+                const branchName = getWorktreeBranchName(wt);
+                const displayPath = formatWorktreeDisplayPath(wt.path);
                 
                 return {
                     name: `${branchName.padEnd(20)} ${displayPath}`,

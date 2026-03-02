@@ -162,7 +162,7 @@ Sometimes you don't want to "commit to a branch" yet. You just want to try somet
 
 **Sandboxes** are temporary, local-only worktrees designed for this:
 
-1.  **Create**: `yggtree wt create-sandbox` (creates `branch_qes2`).
+1.  **Create**: `yggtree wt create-sandbox` (creates something like `sandbox-a3f2_feature-branch`).
 2.  **Experiment**: Change files, run tests, try that risky refactor.
 3.  **Apply**: `yggtree wt apply` to "push" those file changes back to your origin directory.
 4.  **Unapply**: Don't like it? `yggtree wt unapply` restores your origin to exactly how it was before.
@@ -177,10 +177,13 @@ Yggdrasil automatically prepares each worktree.
 
 Resolution order:
 
-1. `yggtree-worktree.json` inside the worktree
-2. `yggtree-worktree.json` in the repo root
-3. `.cursor/worktrees.json`
-4. Fallback: `npm install` + submodules
+1. `.yggtree/worktree-setup.json` in the repo root
+2. `yggtree-worktree.json` in the repo root (legacy fallback)
+3. `.cursor/worktrees.json` in the repo root (legacy fallback)
+4. `.yggtree/worktree-setup.json` inside the worktree (per-worktree fallback)
+5. `yggtree-worktree.json` inside the worktree (legacy fallback)
+6. `.cursor/worktrees.json` inside the worktree (legacy fallback)
+7. Fallback: `npm install` + submodules
 
 ### Example configuration
 
@@ -211,11 +214,17 @@ Create a worktree from a branch.
 
 Options:
 
+* `-b, --branch <name>`
 * `--base <ref>`
 * `--source local|remote`
 * `--no-bootstrap`
 * `--enter / --no-enter`
 * `--exec "<command>"`
+
+Interactive flow:
+
+* Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
+* `--exec` remains available as an advanced explicit override.
 
 <details>
 <summary>Example</summary>
@@ -228,16 +237,58 @@ yggtree wt create feat/new-ui --base main --exec "cursor ."
 
 ---
 
+### `yggtree wt worktree-checkout [name] [ref]`
+
+Create a checkout-style worktree from an existing branch.
+
+Behavior:
+
+* Prompts a searchable branch picker (type to filter in real time).
+* Attaches the new worktree directly to the selected branch (checkout-style).
+* If you select a remote-only branch (`origin/*`), yggtree creates the local branch in the new worktree automatically.
+* If that branch already has an active yggtree-managed worktree, yggtree falls back to entering that worktree instead of creating a duplicate.
+
+Options:
+
+* `-n, --name <slug>`
+* `-r, --ref <ref>`: skip picker and use a specific branch (`feature/x` or `origin/feature/x`)
+* `--no-bootstrap`
+* `--enter / --no-enter`
+* `--exec "<command>"`
+
+Interactive flow:
+
+* Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
+* `--exec` remains available as an advanced explicit override.
+
+<details>
+<summary>Example</summary>
+
+```bash
+yggtree wt worktree-checkout -n hotfix-auth -r main --no-enter
+```
+
+</details>
+
+---
+
 ### `yggtree wt create-sandbox`
 
 Create a temporary sandbox from your current local branch.
 
 Options:
 
+*   `-n, --name <name>`: Optional sandbox name (auto-generated if omitted).
 *   `--carry / --no-carry`: Bring uncommitted changes (staged/unstaged/untracked) with you.
 *   `--no-bootstrap`
 *   `--enter / --no-enter`
 *   `--exec "<command>"`
+
+Interactive flow:
+
+* Prompts for an optional sandbox name (leave empty to auto-generate one from current branch).
+* Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
+* `--exec` remains available as an advanced explicit override.
 
 ---
 
@@ -261,6 +312,12 @@ Undo a previous `apply` operation.
 
 Create multiple worktrees at once.
 
+Options:
+
+* `--base <ref>`
+* `--source local|remote`
+* `--no-bootstrap`
+
 <details>
 <summary>Example</summary>
 
@@ -274,14 +331,21 @@ yggtree wt create-multi --base main
 
 ### `yggtree wt list`
 
-List all worktrees with state.
+List all repo-linked worktrees with state.
 
 Columns:
 
-* TYPE (MAIN / MANAGED)
+* TYPE (`MAIN`, `MANAGED`, `LINKED`, `SANDBOX`)
 * STATE (clean / dirty)
+* LAST ACTIVE
 * BRANCH
-* PATH
+
+Notes:
+
+* Entries are grouped by `TYPE`.
+* `SANDBOX` and `MANAGED` are worktrees inside `~/.yggtree`.
+* External worktrees are labeled `LINKED`.
+* Use `--open` to switch this flow into "pick and open in tool" mode.
 
 ---
 
@@ -301,6 +365,35 @@ Optional:
 
 ```bash
 yggtree wt enter feat/new-ui --exec "npm test"
+```
+
+</details>
+
+---
+
+### `yggtree wt open [worktree]`
+
+Open a worktree in an IDE or agent CLI.
+
+Behavior:
+
+* If `[worktree]` is omitted, you can pick from the worktree list with type-to-filter search.
+* Detects available tool commands in your `PATH` (for example: IDEs like `cursor`, `code`, `zed`; agents like `claude`, `codex`, `gemini`, `opencode`).
+* Lets you choose one interactively, or pass `--tool`.
+* If an agent CLI is selected, yggtree opens a sub-shell and launches it there.
+
+Options:
+
+* `--tool <command>`
+
+<details>
+<summary>Examples</summary>
+
+```bash
+yggtree wt open
+yggtree wt open feat/new-ui --tool cursor
+yggtree wt open feat/new-ui --tool claude
+yggtree wt list --open
 ```
 
 </details>
@@ -338,7 +431,18 @@ Re‑run bootstrap commands for a worktree.
 
 ### `yggtree wt delete`
 
-Interactively delete managed worktrees.
+Interactively delete worktrees.
+
+Behavior:
+
+* Default flow targets managed worktrees.
+* In interactive mode, yggtree asks whether to include external linked worktrees.
+* In direct CLI usage, `--all` includes external linked worktrees (main/current are still excluded for safety).
+* The delete selector shows 6 items per page.
+
+Optional:
+
+* `--all` includes linked worktrees outside `~/.yggtree` (main/current worktree is excluded for safety)
 
 ---
 
@@ -488,7 +592,7 @@ yggtree wt create-sandbox --carry
 **Scenario:**
 
 1.  You have 5 files changed in your main repo but aren't sure about the direction.
-2.  Run `create-sandbox --carry` to move those changes into an isolated `current-branch_a1b2` folder.
+2.  Run `create-sandbox --carry` to move those changes into an isolated `sandbox-a3f2_feature-branch` folder.
 3.  Experiment freely.
 4.  If it works: `yggtree wt apply`.
 5.  If it fails: Just delete the sandbox or `unapply`.

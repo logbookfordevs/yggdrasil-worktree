@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-03-02
+
+### Added
+- `wt worktree-checkout`: checkout-style flow with searchable branch selection and branch-attached worktree creation (including remote-only branches).
+- `wt open`: open a selected worktree in an IDE or agent CLI, with tool detection and interactive selection.
+- `wt create-sandbox --name <name>`: optional explicit sandbox naming for CLI/scripted usage.
+
+### Changed
+- Improved `wt enter` interactive menu readability by color-coding branch names and folder paths separately.
+- `wt list` now groups entries by `TYPE` for easier scanning.
+- `wt list` and `wt delete` now share consistent type rules: only worktrees inside `~/.yggtree` are `MANAGED`/`SANDBOX`; external worktrees are labeled `LINKED` (with `MAIN` reserved for the primary repo worktree in `wt list`).
+- Added `--all` support to `wt delete` so repo-linked worktrees outside `~/.yggtree` can be included when needed (with safety exclusions for main/current worktree).
+- Interactive `wt delete` now asks whether to include external linked worktrees, so the menu flow can reach non-yggtree worktrees too.
+- Increased `wt delete` menu pagination to show more options per page for better scanning.
+- `wt worktree-checkout` now falls back to `wt enter` when the selected branch already has an active managed yggtree worktree.
+- Improved `wt enter` list readability in narrow terminals by truncating branch/path labels to avoid line wrapping noise.
+- Core interactive menu now prioritizes `apply`/`unapply` when running inside a sandbox worktree.
+- `wt list` now supports `--open` as a shortcut to the worktree tool-open flow.
+- Interactive create flows (`wt create`, `wt worktree-checkout`, `wt create-sandbox`) now ask whether to open a tool after creation instead of asking for a free-form `exec` command by default.
+- `wt create-sandbox` now prompts for an optional sandbox name; leaving it blank preserves the existing auto-generated naming behavior.
+- `wt enter` interactive selection now includes worktree type labels (`MAIN`, `MANAGED`, `SANDBOX`, `LINKED`) for consistency with `wt list` and `wt delete`.
+- `wt open` interactive selection now includes worktree type labels (`MAIN`, `MANAGED`, `SANDBOX`, `LINKED`) for consistency with `wt list`, `wt delete`, and `wt enter`.
+- Worktree metadata helpers (`type` detection, colored type label, display path formatting, branch-name fallback, and name lookup) are now centralized in `lib/worktree` and reused across `list`, `delete`, `enter`, `open`, `exec`, and `path`.
+- `wt enter` no longer asks for an interactive pre-enter command; use `--exec "<command>"` when needed.
+- `wt open` now supports type-to-filter worktree selection, similar to `wt worktree-checkout`.
+
 ## [1.3.0] - 2026-02-18
 
 ### Added

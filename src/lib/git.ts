@@ -4,6 +4,12 @@ import path from 'path';
 import { log } from './ui.js';
 import chalk from 'chalk';
 
+export interface GitWorktree {
+    path: string;
+    HEAD: string;
+    branch?: string;
+}
+
 export async function getRepoRoot(): Promise<string> {
     try {
         const { stdout } = await execa('git', ['rev-parse', '--show-toplevel']);
@@ -49,9 +55,9 @@ export async function removeWorktree(wtPath: string): Promise<void> {
     await execa('git', ['worktree', 'remove', wtPath, '--force']);
 }
 
-export async function listWorktrees(): Promise<{ path: string; HEAD: string; branch?: string }[]> {
+export async function listWorktrees(): Promise<GitWorktree[]> {
     const { stdout } = await execa('git', ['worktree', 'list', '--porcelain']);
-    const worktrees: { path: string; HEAD: string; branch?: string }[] = [];
+    const worktrees: GitWorktree[] = [];
     
     let currentWt: any = {};
     
@@ -179,4 +185,3 @@ export async function getLastActivity(wtPath: string): Promise<Date | null> {
     if (dates.length === 0) return null;
     return new Date(Math.max(...dates.map(d => d.getTime())));
 }
-

@@ -19,6 +19,8 @@ import { applyCommand } from './commands/wt/apply.js';
 import { unapplyCommand } from './commands/wt/unapply.js';
 import { getVersion } from './lib/version.js';
 import { findSandboxRoot } from './lib/sandbox.js';
+import { bifrostCommand } from './commands/bifrost.js';
+import { thorCommand } from './commands/thor.js';
 
 const program = new Command();
 
@@ -57,6 +59,8 @@ program
                 new inquirer.Separator(),
                 ...realmChoices,
                 new inquirer.Separator(),
+                { name: `🌈 Summon the Bifrost ${chalk.dim('(easter egg)')}`, value: 'bifrost' },
+                { name: `⚡ Consult Thor ${chalk.dim('(easter egg)')}`, value: 'thor' },
                 { name: `🚪 Leave Yggdrasil ${chalk.dim('(exit)')}`, value: 'exit' },
             ]
             : [
@@ -64,6 +68,8 @@ program
                 new inquirer.Separator(),
                 ...sandboxChoices,
                 new inquirer.Separator(),
+                { name: `🌈 Summon the Bifrost ${chalk.dim('(easter egg)')}`, value: 'bifrost' },
+                { name: `⚡ Consult Thor ${chalk.dim('(easter egg)')}`, value: 'thor' },
                 { name: `🚪 Leave Yggdrasil ${chalk.dim('(exit)')}`, value: 'exit' },
             ];
         
@@ -120,6 +126,12 @@ program
                 break;
             case 'create-sandbox':
                 await createSandboxCommand({ bootstrap: true });
+                break;
+            case 'bifrost':
+                await bifrostCommand();
+                break;
+            case 'thor':
+                await thorCommand();
                 break;
             case 'exit':
                 log.info('Bye! 👋');
@@ -246,5 +258,13 @@ wt.command('apply')
 wt.command('unapply')
     .description('Undo applied sandbox changes in origin')
     .action(unapplyCommand);
+
+program.command('bifrost')
+    .description('Summon the Bifrost (Easter Egg)')
+    .action(bifrostCommand);
+
+program.command('thor')
+    .description('Consult the God of Thunder (Easter Egg)')
+    .action(thorCommand);
 
 program.parse(process.argv);

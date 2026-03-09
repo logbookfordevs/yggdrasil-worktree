@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Next Release] - Unreleased
+
+### Added
+- `wt close`: Gracefully exit a worktree sub-shell with an option to delete the worktree on the way out. Includes double-confirmation for safety; main worktree is never offered for deletion.
+- `wt list` now shows a **PR** column with the pull request status for each worktree branch (e.g. `OPEN`, `IN REVIEW`, `APPROVED`, `MERGED`, `DRAFT`, `CHANGES`). Requires [GitHub CLI](https://cli.github.com/) — the column is silently omitted when `gh` is not installed.
+
 ## [1.4.1] - 2026-03-08
 
 ### Added

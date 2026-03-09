@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
-import { GitWorktree } from './git.js';
+import { GitWorktree, PrStatus } from './git.js';
 import { WORKTREES_ROOT } from './paths.js';
 import { getSandboxMetaPath } from './sandbox.js';
 
@@ -58,3 +58,17 @@ export function formatWorktreeType(type: WorktreeType): string {
     if (type === 'MAIN') return chalk.blue('MAIN   ');
     return chalk.cyan('LINKED ');
 }
+
+export function formatPrStatus(pr: PrStatus): string {
+    switch (pr.label) {
+        case 'MERGED':   return chalk.magenta(`#${pr.number} MERGED`);
+        case 'APPROVED': return chalk.green(`#${pr.number} APPROVED`);
+        case 'CHANGES':  return chalk.red(`#${pr.number} CHANGES`);
+        case 'IN REVIEW': return chalk.yellow(`#${pr.number} IN REVIEW`);
+        case 'DRAFT':    return chalk.dim(`#${pr.number} DRAFT`);
+        case 'OPEN':     return chalk.cyan(`#${pr.number} OPEN`);
+        case 'CLOSED':   return chalk.dim(`#${pr.number} CLOSED`);
+        default:         return chalk.dim(`#${pr.number} ${pr.label}`);
+    }
+}
+

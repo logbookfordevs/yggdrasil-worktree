@@ -156,6 +156,105 @@ export async function publishBranch(wtPath: string, branchName: string): Promise
  *
  * The most recent of the two wins. Returns null if both fail.
  */
+// ── PR Status (requires `gh` CLI — gracefully degrades) ─────────────────────
+
+export type PrState = 'open' | 'merged' | 'closed' | 'draft';
+export type PrReviewDecision = 'approved' | 'changes_requested' | 'review_required' | null;
+
+export interface PrStatus {
+    state: PrState;
+    reviewDecision: PrReviewDecision;
+    /** Human-friendly label for display */
+    label: string;
+    number: number;
+}
+
+let ghAvailableCache: boolean | null = null;
+
+/**
+ * Check whether `gh` CLI is installed and authenticated.
+ * Result is cached for the process lifetime.
+ */
+export async function isGhAvailable(): Promise<boolean> {
+    if (ghAvailableCache !== null) return ghAvailableCache;
+
+    try {
+        await execa('gh', ['auth', 'status'], { stdio: 'ignore' });
+        ghAvailableCache = true;
+    } catch {
+        ghAvailableCache = false;
+    }
+    return ghAvailableCache;
+}
+
+function derivePrLabel(state: PrState, reviewDecision: PrReviewDecision): string {
+    if (state === 'merged') return 'MERGED';
+    if (state === 'closed') return 'CLOSED';
+    if (state === 'draft') return 'DRAFT';
+
+    // state === 'open'
+    if (reviewDecision === 'approved') return 'APPROVED';
+    if (reviewDecision === 'changes_requested') return 'CHANGES';
+    if (reviewDecision === 'review_required') return 'IN REVIEW';
+
+    return 'OPEN';
+}
+
+/**
+ * Fetch PR status for a branch using `gh pr view`.
+ * Returns null when `gh` is unavailable or the branch has no PR.
+ */
+export async function getPrStatusForBranch(branch: string, cwd?: string): Promise<PrStatus | null> {
+    if (!branch || branch === 'detached') return null;
+
+    try {
+        const { stdout } = await execa(
+            'gh',
+            ['pr', 'view', branch, '--json', 'state,reviewDecision,isDraft,number'],
+            { cwd, timeout: 10_000 },
+        );
+
+        const data = JSON.parse(stdout);
+        const isDraft = data.isDraft === true;
+        const rawState = (data.state || '').toLowerCase() as PrState;
+        const state: PrState = isDraft && rawState === 'open' ? 'draft' : rawState;
+        const reviewDecision = (data.reviewDecision || '').toLowerCase().replace(/ /g, '_') as PrReviewDecision || null;
+
+        return {
+            state,
+            reviewDecision,
+            label: derivePrLabel(state, reviewDecision),
+            number: data.number,
+        };
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Batch-fetch PR statuses for all provided branches (parallelized).
+ * Returns a Map<branchName, PrStatus>.
+ * If `gh` is unavailable, returns an empty map immediately.
+ */
+export async function getPrStatusBatch(branches: string[], cwd?: string): Promise<Map<string, PrStatus>> {
+    const map = new Map<string, PrStatus>();
+
+    if (!(await isGhAvailable())) return map;
+
+    const results = await Promise.all(
+        branches.map(async branch => {
+            const status = await getPrStatusForBranch(branch, cwd);
+            return { branch, status };
+        }),
+    );
+
+    for (const { branch, status } of results) {
+        if (status) map.set(branch, status);
+    }
+
+    return map;
+}
+
 export async function getLastActivity(wtPath: string): Promise<Date | null> {
     const dates: Date[] = [];
 

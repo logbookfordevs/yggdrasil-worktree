@@ -338,6 +338,7 @@ Columns:
 * TYPE (`MAIN`, `MANAGED`, `LINKED`, `SANDBOX`)
 * STATE (clean / dirty)
 * LAST ACTIVE
+* PR (optional — requires [GitHub CLI](https://cli.github.com/))
 * BRANCH
 
 Notes:
@@ -346,6 +347,7 @@ Notes:
 * `SANDBOX` and `MANAGED` are worktrees inside `~/.yggtree`.
 * External worktrees are labeled `LINKED`.
 * Use `--open` to switch this flow into "pick and open in tool" mode.
+* The **PR** column shows the pull request status for each branch (e.g. `OPEN`, `IN REVIEW`, `APPROVED`, `MERGED`, `DRAFT`, `CHANGES`). It only appears when `gh` CLI is installed and authenticated — otherwise it's silently omitted.
 
 ---
 
@@ -365,6 +367,32 @@ Optional:
 
 ```bash
 yggtree wt enter feat/new-ui --exec "npm test"
+```
+
+</details>
+
+---
+
+### `yggtree wt close`
+
+Gracefully exit a worktree sub-shell with an option to delete it.
+
+Behavior:
+
+* Only works inside an Yggdrasil sub-shell (entered via `wt enter` or post-creation).
+* Asks whether you want to delete the worktree before leaving.
+* Includes double-confirmation for safety.
+* Main worktree is never offered for deletion.
+
+<details>
+<summary>Example</summary>
+
+```bash
+# Inside a worktree sub-shell:
+yggtree wt close
+# → "Delete this worktree before leaving? (y/N)"
+# → If yes: removes the worktree, then exits
+# → If no: exits normally
 ```
 
 </details>

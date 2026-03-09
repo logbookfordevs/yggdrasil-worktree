@@ -16,6 +16,7 @@ import { enterCommand } from './commands/wt/enter.js';
 import { pathCommand } from './commands/wt/path.js';
 import { openCommand } from './commands/wt/open.js';
 import { applyCommand } from './commands/wt/apply.js';
+import { closeCommand } from './commands/wt/close.js';
 import { unapplyCommand } from './commands/wt/unapply.js';
 import { getVersion } from './lib/version.js';
 import { findSandboxRoot } from './lib/sandbox.js';
@@ -46,6 +47,7 @@ program
             { name: `🐚 Cast a Command ${chalk.dim('(exec command in worktree)')}`, value: 'exec' },
             { name: `🚪 Enter Realm Shell ${chalk.dim('(enter worktree)')}`, value: 'enter' },
             { name: `📍 Reveal Realm Path ${chalk.dim('(show worktree path)')}`, value: 'path' },
+            { name: `🔒 Close Realm ${chalk.dim('(exit & optionally delete worktree)')}`, value: 'close' },
         ];
 
         const sandboxChoices = [
@@ -132,6 +134,9 @@ program
                 break;
             case 'thor':
                 await thorCommand();
+                break;
+            case 'close':
+                await closeCommand();
                 break;
             case 'exit':
                 log.info('Bye! 👋');
@@ -254,6 +259,12 @@ wt.command('create-sandbox')
 wt.command('apply')
     .description('Apply sandbox changes to origin directory')
     .action(applyCommand);
+
+wt.command('close')
+    .description('Exit the sub-shell with an option to delete the worktree')
+    .action(async () => {
+        await closeCommand();
+    });
 
 wt.command('unapply')
     .description('Undo applied sandbox changes in origin')

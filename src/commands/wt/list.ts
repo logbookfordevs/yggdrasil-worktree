@@ -1,9 +1,10 @@
 import chalk from 'chalk';
-import { listWorktrees, getRepoRoot, isGitClean, getLastActivity } from '../../lib/git.js';
-import { log, timeAgo } from '../../lib/ui.js';
+import { listWorktrees, getRepoRoot, isGitClean, getLastActivity, isGhAvailable, getPrStatusBatch, PrStatus } from '../../lib/git.js';
+import { log, timeAgo, createSpinner } from '../../lib/ui.js';
 import {
     detectWorktreeType,
     formatWorktreeType,
+    formatPrStatus,
     getWorktreeBranchName,
     WORKTREE_TYPE_ORDER,
 } from '../../lib/worktree.js';
@@ -19,11 +20,20 @@ export async function listCommand() {
             return;
         }
 
+        // Determine if PR status column should be shown
+        const ghReady = await isGhAvailable();
+
+        // Collect branch names for batch PR lookup
+        const branches = worktrees.map(wt => getWorktreeBranchName(wt));
+        const prStatusMap = ghReady ? await getPrStatusBatch(branches) : new Map<string, PrStatus>();
+        const showPr = prStatusMap.size > 0;
+
         console.log(chalk.bold('\n  Active Worktrees:\n'));
 
-        // Header
-        console.log(`  ${chalk.dim('TYPE')}    ${chalk.dim('STATE')}    ${chalk.dim('LAST ACTIVE')}    ${chalk.dim('BRANCH')}`);
-        console.log(chalk.dim('  ' + '-'.repeat(70)));
+        // Header — PR column only appears when there's data
+        const headerPr = showPr ? `${chalk.dim('PR')}            ` : '';
+        console.log(`  ${chalk.dim('TYPE')}    ${chalk.dim('STATE')}    ${chalk.dim('LAST ACTIVE')}     ${headerPr}${chalk.dim('BRANCH')}`);
+        console.log(chalk.dim('  ' + '-'.repeat(showPr ? 90 : 70)));
 
         const rows = await Promise.all(worktrees.map(async (wt, index) => {
             const [typeKey, isClean, lastActive] = await Promise.all([
@@ -38,8 +48,13 @@ export async function listCommand() {
             const activeLabel = lastActive ? timeAgo(lastActive) : '—';
             const activeText = chalk.magenta(activeLabel.padEnd(14));
 
+            const prStatus = prStatusMap.get(branchName);
+            const prText = showPr
+                ? (prStatus ? formatPrStatus(prStatus).padEnd(24) : chalk.dim('—'.padEnd(14)))
+                : '';
+
             return {
-                text: `  ${type}  ${stateText} ${activeText} ${chalk.yellow(branchName)}`,
+                text: `  ${type}  ${stateText} ${activeText} ${prText}${chalk.yellow(branchName)}`,
                 sortType: WORKTREE_TYPE_ORDER[typeKey],
                 sortBranch: branchName.toLowerCase(),
                 sortIndex: index,
@@ -53,6 +68,12 @@ export async function listCommand() {
                 a.sortIndex - b.sortIndex
             )
             .forEach(row => console.log(row.text));
+
+        if (ghReady && !showPr) {
+            console.log(chalk.dim('\n  ℹ No open PRs found for any worktree branch.'));
+        } else if (!ghReady) {
+            console.log(chalk.dim('\n  ℹ PR status omitted (gh CLI not found). Install GitHub CLI for PR tracking.'));
+        }
         console.log('');
     } catch (error: any) {
         log.actionableError(error.message, 'yggtree wt list');

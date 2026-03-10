@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - `wt close`: Gracefully exit a worktree sub-shell with an option to delete the worktree on the way out. Includes double-confirmation for safety; main worktree is never offered for deletion.
+
+### Changed
+- `wt enter` now allows entering realms from anywhere: if run outside a git repository, it presents an interactive menu of previously visited realms. Realms are automatically registered whenever `yggtree` commands are used within them.
 - `wt list` now shows a **PR** column with the pull request status for each worktree branch (e.g. `OPEN`, `IN REVIEW`, `APPROVED`, `MERGED`, `DRAFT`, `CHANGES`). Requires [GitHub CLI](https://cli.github.com/) — the column is silently omitted when `gh` is not installed.
 
 ## [1.4.1] - 2026-03-08

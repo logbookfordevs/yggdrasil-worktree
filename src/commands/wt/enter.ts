@@ -13,6 +13,8 @@ import {
     WorktreeType,
 } from '../../lib/worktree.js';
 
+import { getValidRegisteredRepos } from '../../lib/registry.js';
+
 function truncateEnd(value: string, maxLen: number): string {
     if (maxLen <= 0) return '';
     if (value.length <= maxLen) return value;
@@ -43,7 +45,34 @@ function formatChoiceLabel(type: WorktreeType, branchName: string, displayPath: 
 
 export async function enterCommand(wtName?: string, options: { exec?: string } = {}) {
     try {
-        await getRepoRoot();
+        try {
+            await getRepoRoot();
+        } catch {
+            const validRepos = await getValidRegisteredRepos();
+            const repoNames = Object.keys(validRepos);
+            
+            if (repoNames.length === 0) {
+                log.error('Not inside a git repository and no registered realms found.');
+                log.dim('Run `yggtree` inside an existing git project first to register it.');
+                process.exit(1);
+            }
+            
+            console.log(chalk.bold('\n  Not inside a realm. Pick a known one:'));
+            const { selectedRepoName } = await inquirer.prompt([{
+                type: 'list',
+                name: 'selectedRepoName',
+                message: 'Select a realm:',
+                choices: Object.entries(validRepos).map(([name, rPath]) => ({
+                    name: `${chalk.bold.yellow(name)} ${chalk.dim(formatWorktreeDisplayPath(rPath))}`,
+                    value: name,
+                })),
+                pageSize: 10,
+            }]);
+            
+            const repoPath = validRepos[selectedRepoName];
+            process.chdir(repoPath);
+        }
+
         const worktrees = await listWorktrees();
         const mainWorktreePath = worktrees[0]?.path || '';
 

@@ -4,16 +4,27 @@ import path from 'path';
 import { log } from './ui.js';
 import chalk from 'chalk';
 
+import { registerRepo } from './registry.js';
+
 export interface GitWorktree {
     path: string;
     HEAD: string;
     branch?: string;
 }
 
+let cachedRepoRoot: string | null = null;
+
 export async function getRepoRoot(): Promise<string> {
+    if (cachedRepoRoot) return cachedRepoRoot;
     try {
         const { stdout } = await execa('git', ['rev-parse', '--show-toplevel']);
-        return stdout.trim();
+        cachedRepoRoot = stdout.trim();
+        
+        // Silently register the repo in the background
+        const name = path.basename(cachedRepoRoot);
+        registerRepo(name, cachedRepoRoot).catch(() => {});
+        
+        return cachedRepoRoot;
     } catch (error) {
         throw new Error('Not a git repository');
     }

@@ -218,7 +218,7 @@ Options:
 * `--base <ref>`
 * `--source local|remote`
 * `--no-bootstrap`
-* `--enter / --no-enter`
+* `--open / --no-open`
 * `--exec "<command>"`
 
 Interactive flow:
@@ -253,7 +253,7 @@ Options:
 * `-n, --name <slug>`
 * `-r, --ref <ref>`: skip picker and use a specific branch (`feature/x` or `origin/feature/x`)
 * `--no-bootstrap`
-* `--enter / --no-enter`
+* `--open / --no-open`
 * `--exec "<command>"`
 
 Interactive flow:
@@ -265,7 +265,7 @@ Interactive flow:
 <summary>Example</summary>
 
 ```bash
-yggtree wt worktree-checkout -n hotfix-auth -r main --no-enter
+yggtree wt worktree-checkout -n hotfix-auth -r main --no-open
 ```
 
 </details>
@@ -281,7 +281,7 @@ Options:
 *   `-n, --name <name>`: Optional sandbox name (auto-generated if omitted).
 *   `--carry / --no-carry`: Bring uncommitted changes (staged/unstaged/untracked) with you.
 *   `--no-bootstrap`
-*   `--enter / --no-enter`
+*   `--open / --no-open`
 *   `--exec "<command>"`
 
 Interactive flow:
@@ -495,7 +495,7 @@ Yggdrasil is ideal when:
 ## 📝 Practical Examples
 
 <details>
-<summary>Create a worktree and enter it immediately</summary>
+<summary>Create a worktree with the guided post-create flow</summary>
 
 **Command:**
 
@@ -508,25 +508,25 @@ yggtree wt create feat/login-flow
 * Creates a new branch if it doesn’t exist (without inheriting base tracking), then publishes it to `origin` when possible
 * Creates a dedicated worktree
 * Runs bootstrap if enabled
-* Drops you into a sub-shell inside the worktree
+* Lets you choose whether to open an IDE or agent after creation
 
 
 </details>
 ---
 
 <details>
-<summary>Create a worktree without bootstrap and without entering</summary>
+<summary>Create a worktree without bootstrap and without opening a tool</summary>
 
 **Command:**
 
 ```
-yggtree wt create feat/cleanup-api --no-bootstrap --no-enter
+yggtree wt create feat/cleanup-api --no-bootstrap --no-open
 ```
 
 **When to use:**
 
 * You just want the folder ready
-* You’ll enter it later
+* You’ll open or enter it later if needed
 * You don’t want installs running automatically
 
 </details>

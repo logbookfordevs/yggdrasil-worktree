@@ -7,19 +7,17 @@ import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { generateSandboxName, normalizeSandboxName, writeSandboxMeta } from '../../lib/sandbox.js';
 import {
-    buildAgentExecCommand,
     detectInstalledOpenTools,
-    isAgentTool,
     launchOpenTool,
     promptOpenToolSelection,
 } from './open.js';
 import { execa } from 'execa';
-import { spawn } from 'child_process';
 import fs from 'fs-extra';
 
 interface SandboxCreateOptions {
     name?: string;
     bootstrap?: boolean;
+    open?: boolean;
     enter?: boolean;
     exec?: string;
     carry?: boolean;
@@ -29,6 +27,10 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
     try {
         const repoRoot = await getRepoRoot();
         log.info(`Repo: ${chalk.dim(repoRoot)}`);
+
+        if (options.enter !== undefined) {
+            log.warning('`--enter` / `--no-enter` is deprecated. Use `--open` / `--no-open` instead.');
+        }
 
         // 1. Auto-detect current branch (no prompt!)
         const currentBranch = await getCurrentBranch();
@@ -82,17 +84,10 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
             },
             {
                 type: 'confirm',
-                name: 'shouldEnter',
-                message: 'Do you want to enter the sandbox now?',
-                default: true,
-                when: options.enter === undefined,
-            },
-            {
-                type: 'confirm',
                 name: 'shouldOpenTool',
                 message: 'Open a tool after creation? (IDE or agent CLI)',
                 default: false,
-                when: options.exec === undefined,
+                when: options.exec === undefined && options.open === undefined && options.enter === undefined,
             },
         ]);
 
@@ -111,10 +106,14 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
         log.info(`Sandbox name: ${chalk.yellow(sandboxName)}`);
 
         const shouldCarry = options.carry !== undefined ? options.carry : answers.carry;
-        const shouldEnter = options.enter !== undefined ? options.enter : answers.shouldEnter;
         const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
+        const shouldOpenTool = options.open !== undefined
+            ? options.open
+            : options.enter !== undefined
+                ? options.enter
+                : Boolean(answers.shouldOpenTool);
         let selectedTool: Awaited<ReturnType<typeof promptOpenToolSelection>> | undefined;
-        if (options.exec === undefined && answers.shouldOpenTool) {
+        if (options.exec === undefined && shouldOpenTool) {
             const installedTools = await detectInstalledOpenTools();
             if (installedTools.length === 0) {
                 log.warning('No IDE/agent tool detected in PATH. Skipping open step.');
@@ -122,8 +121,6 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
                 selectedTool = await promptOpenToolSelection(installedTools, 'Select tool to open:');
             }
         }
-
-        const execCommandStr = options.exec || (selectedTool && isAgentTool(selectedTool) ? buildAgentExecCommand(selectedTool) : undefined);
 
         // 4. Detect uncommitted changes before creating worktree
         let changedFiles: string[] = [];
@@ -218,23 +215,21 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
         }
 
         // 9. Exec command
-        if (execCommandStr && execCommandStr.trim()) {
-            log.info(`Executing: ${execCommandStr} in ${ui.path(wtPath)}`);
+        if (options.exec && options.exec.trim()) {
+            log.info(`Executing: ${options.exec} in ${ui.path(wtPath)}`);
             try {
-                await execa(execCommandStr, {
+                await execa(options.exec, {
                     cwd: wtPath,
                     stdio: 'inherit',
                     shell: true
                 });
             } catch (error: any) {
-                log.actionableError(error.message, execCommandStr, wtPath, [
-                    `cd ${wtPath} && ${execCommandStr}`,
+                log.actionableError(error.message, options.exec, wtPath, [
+                    `cd ${wtPath} && ${options.exec}`,
                     'Check your command syntax and environment variables'
                 ]);
             }
-        }
-
-        if (selectedTool && !isAgentTool(selectedTool)) {
+        } else if (selectedTool) {
             try {
                 log.info(`Opening ${ui.path(wtPath)} in ${chalk.cyan(selectedTool.name)}...`);
                 await launchOpenTool(selectedTool, wtPath);
@@ -247,23 +242,7 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
         log.success('Sandbox ready!');
         log.info(`Use ${chalk.cyan('yggtree wt apply')} to apply changes to origin.`);
         log.info(`Use ${chalk.cyan('yggtree wt unapply')} to undo applied changes.`);
-
-        if (shouldEnter) {
-            log.info(`Spawning sub-shell in ${ui.path(wtPath)}...`);
-            log.dim('Type "exit" to return to the main terminal.');
-
-            const shell = process.env.SHELL || 'zsh';
-            const child = spawn(shell, [], {
-                cwd: wtPath,
-                stdio: 'inherit',
-            });
-
-            child.on('close', () => {
-                log.info('Exited sub-shell.');
-            });
-        } else {
-            log.header(`cd "${wtPath}"`);
-        }
+        log.header(`cd "${wtPath}"`);
 
     } catch (error: any) {
         log.actionableError(error.message, 'yggtree wt create-sandbox');

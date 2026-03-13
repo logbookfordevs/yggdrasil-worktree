@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import { welcome, log } from './lib/ui.js';
@@ -164,8 +164,10 @@ wt.command('create [branch]')
     .option('--base <ref>', 'Base ref (e.g. main)')
     .option('--source <type>', 'Base source (local or remote)')
     .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-    .option('--enter', 'Enter sub-shell after creation')
-    .option('--no-enter', 'Skip entering sub-shell')
+    .option('--open', 'Open a tool after creation (IDE or agent CLI)')
+    .option('--no-open', 'Skip opening a tool after creation')
+    .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
+    .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
     .option('--exec <command>', 'Command to execute after creation')
     .action(async (branch, options) => {
         await createCommandNew({ 
@@ -188,8 +190,10 @@ wt.command('worktree-checkout [name] [ref]')
     .option('-n, --name <slug>', 'Worktree name (slug)')
     .option('-r, --ref <ref>', 'Existing branch or ref')
     .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-    .option('--enter', 'Enter sub-shell after creation')
-    .option('--no-enter', 'Skip entering sub-shell')
+    .option('--open', 'Open a tool after creation (IDE or agent CLI)')
+    .option('--no-open', 'Skip opening a tool after creation')
+    .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
+    .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
     .option('--exec <command>', 'Command to execute after creation')
     .action(async (name, ref, options) => {
         await createCommand({ 
@@ -249,8 +253,10 @@ wt.command('create-sandbox')
     .option('--carry', 'Carry uncommitted changes to sandbox')
     .option('--no-carry', 'Do not carry uncommitted changes')
     .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-    .option('--enter', 'Enter sub-shell after creation')
-    .option('--no-enter', 'Skip entering sub-shell')
+    .option('--open', 'Open a tool after creation (IDE or agent CLI)')
+    .option('--no-open', 'Skip opening a tool after creation')
+    .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
+    .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
     .option('--exec <command>', 'Command to execute after creation')
     .action(async (options) => {
         await createSandboxCommand(options);

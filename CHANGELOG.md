@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Next Release] - Unreleased
+## [1.4.2] - 2026-03-15
 
 ### Added
 - `wt close`: Gracefully exit a worktree sub-shell with an option to delete the worktree on the way out. Includes double-confirmation for safety; main worktree is never offered for deletion.

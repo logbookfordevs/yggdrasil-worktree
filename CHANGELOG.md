@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Next Release] - Unreleased
+
+
+
 ## [1.4.2] - 2026-03-15
 
 ### Added
@@ -10,6 +14,8 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - `wt enter` now allows entering realms from anywhere: if run outside a git repository, it presents an interactive menu of previously visited realms. Realms are automatically registered whenever `yggtree` commands are used within them.
 - `wt list` now shows a **PR** column with the pull request status for each worktree branch (e.g. `OPEN`, `IN REVIEW`, `APPROVED`, `MERGED`, `DRAFT`, `CHANGES`). Requires [GitHub CLI](https://cli.github.com/) — the column is silently omitted when `gh` is not installed.
+
+### Fixed
 - Interactive create flows now use `--open / --no-open` for post-create IDE/agent launching. `--enter / --no-enter` still works as a deprecated alias for backward compatibility.
 
 ## [1.4.1] - 2026-03-08

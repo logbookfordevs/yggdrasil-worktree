@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "type": "module",
   "repository": {
-    "url": "github.com/leoreisdias/yggdrasil-worktree",
+    "url": "git+https://github.com/logbookfordevs/yggdrasil-worktree.git",
     "type": "git"
   },
   "homepage": "yggtree.logbookfordevs.com",

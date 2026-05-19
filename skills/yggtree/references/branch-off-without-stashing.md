@@ -1,11 +1,11 @@
 # Branch Off Without Stashing
 
-Use `wt worktree-checkout` when the user does not want a brand-new branch. This
+Use `worktree-checkout` when the user does not want a brand-new branch. This
 workflow preserves the current realm exactly as-is and opens a separate worktree
 for an existing branch or ref.
 
 ```bash
-yggtree wt worktree-checkout --ref main --no-open
+yggtree worktree-checkout --ref main --no-open
 ```
 
 ## Core Patterns
@@ -13,20 +13,20 @@ yggtree wt worktree-checkout --ref main --no-open
 Leave current work alone and jump into another branch:
 
 ```bash
-yggtree wt worktree-checkout --ref hotfix/payment-timeout
+yggtree worktree-checkout --ref hotfix/payment-timeout
 ```
 
 Branch off cleanly from a base branch without stash pressure:
 
 ```bash
-yggtree wt worktree-checkout --ref main --name fresh-main
+yggtree worktree-checkout --ref main --name fresh-main
 ```
 
 Reuse an existing managed worktree if the branch is already active:
 
 ```bash
-yggtree wt list
-yggtree wt open main
+yggtree list
+yggtree open main
 ```
 
 ## Common Mistakes
@@ -43,7 +43,7 @@ git checkout hotfix/payment-timeout
 Correct:
 
 ```bash
-yggtree wt worktree-checkout --ref hotfix/payment-timeout
+yggtree worktree-checkout --ref hotfix/payment-timeout
 ```
 
 The point of this flow is to preserve current in-progress work without stash
@@ -56,13 +56,13 @@ Source: `README.md`
 Wrong:
 
 ```bash
-yggtree wt worktree-checkout --ref refs/heads/main
+yggtree worktree-checkout --ref refs/heads/main
 ```
 
 Correct:
 
 ```bash
-yggtree wt worktree-checkout --ref main
+yggtree worktree-checkout --ref main
 ```
 
 Checkout-style resolution expects a local branch name or `origin/<branch>`, so
@@ -75,14 +75,14 @@ Source: `src/commands/wt/create.ts`
 Wrong:
 
 ```bash
-yggtree wt worktree-checkout --ref main
+yggtree worktree-checkout --ref main
 ```
 
 Correct:
 
 ```bash
-yggtree wt list
-yggtree wt open main
+yggtree list
+yggtree open main
 ```
 
 Git refuses to check out the same branch in two worktrees; if it already
@@ -95,13 +95,13 @@ Source: `src/commands/wt/create.ts`
 Wrong:
 
 ```bash
-yggtree wt worktree-checkout --ref main --name try-another-approach
+yggtree worktree-checkout --ref main --name try-another-approach
 ```
 
 Correct:
 
 ```bash
-yggtree wt create-sandbox
+yggtree create-sandbox
 ```
 
 If the user is already in the middle of a task and wants alternate

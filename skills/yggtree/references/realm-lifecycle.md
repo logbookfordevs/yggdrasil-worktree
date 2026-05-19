@@ -13,7 +13,7 @@ Bootstrap resolves setup commands in this order:
 5. fallback: `npm install` plus submodule sync
 
 ```bash
-yggtree wt bootstrap
+yggtree bootstrap
 ```
 
 Define setup explicitly if the repo does not want the fallback `npm install`.
@@ -33,19 +33,19 @@ Define setup explicitly if the repo does not want the fallback `npm install`.
 Use `enter` for an interactive shell:
 
 ```bash
-yggtree wt enter
+yggtree enter
 ```
 
 Use `open` for IDE-style opening:
 
 ```bash
-yggtree wt open my-feature --tool cursor
+yggtree open my-feature --tool cursor
 ```
 
 Use `exec` for simple non-interactive commands inside a chosen worktree:
 
 ```bash
-yggtree wt exec orchestrator-branch codex --approval-mode auto
+yggtree exec orchestrator-branch codex --approval-mode auto
 ```
 
 ## Common Mistakes
@@ -55,7 +55,7 @@ yggtree wt exec orchestrator-branch codex --approval-mode auto
 Wrong:
 
 ```bash
-yggtree wt bootstrap
+yggtree bootstrap
 ```
 
 Correct:
@@ -80,7 +80,7 @@ Source: `src/lib/config.ts`
 Wrong:
 
 ```bash
-yggtree wt bootstrap
+yggtree bootstrap
 ```
 
 Correct:
@@ -101,13 +101,13 @@ Source: `src/lib/config.ts`
 Wrong:
 
 ```bash
-yggtree wt open orchestrator-branch --tool codex
+yggtree open orchestrator-branch --tool codex
 ```
 
 Correct:
 
 ```bash
-yggtree wt exec orchestrator-branch codex --approval-mode auto
+yggtree exec orchestrator-branch codex --approval-mode auto
 ```
 
 Treat `open` as IDE-oriented. Use the separate orchestration skill when a main
@@ -120,13 +120,13 @@ Source: `src/commands/wt/open.ts`
 Wrong:
 
 ```bash
-yggtree wt exec my-branch infisical run --env=local npm run dev
+yggtree exec my-branch infisical run --env=local npm run dev
 ```
 
 Correct:
 
 ```bash
-yggtree wt open my-branch --tool cursor
+yggtree open my-branch --tool cursor
 cd ~/.yggtree/<repo>/<worktree>
 infisical run --env=local npm run dev
 ```

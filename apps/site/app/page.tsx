@@ -6,7 +6,6 @@ import { Section } from './components/Section';
 import { FeatureCard } from './components/FeatureCard';
 import { CommandBlock } from './components/CommandBlock';
 import { AnimatedTerminal } from './components/AnimatedTerminal';
-import { AccordionCommand } from './components/AccordionCommand';
 import { AudioExperience } from './components/AudioExperience';
 import { BuyMeACoffee } from './components/BuyMeACoffee';
 
@@ -475,276 +474,81 @@ export default function Home() {
         </div>
       </Section>
 
-      {/* Command Reference Section */}
+      {/* Docs Preview Section */}
       <Section id="commands" className="bg-mist-green/20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-100px' }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
-          <h2 className="font-display text-4xl md:text-5xl font-bold text-frost-white mb-6">Command Reference</h2>
+          <h2 className="font-display text-4xl md:text-5xl font-bold text-frost-white mb-6">Choose the right realm</h2>
           <p className="text-parchment/80 text-lg max-w-2xl mx-auto">
-            Everything you need to master Yggdrasil worktrees.
+            The full docs now carry the command reference. Here are the three choices that matter most.
           </p>
         </motion.div>
 
-        <div className="max-w-4xl mx-auto space-y-4">
-          <AccordionCommand
-            command="yggtree"
-            thematicLabel="🌳 The World Tree"
-            description="Open the interactive menu"
-            example={{
-              command: 'yggtree',
-              explanation: 'Launches the interactive UI for managing worktrees',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree create [branch]"
-            thematicLabel="🌿 Grow New Realm"
-            description="Create a worktree from a branch"
-            options={[
-              {
-                flag: '-b, --branch <name>',
-                description: 'Branch name for the worktree',
-              },
-              {
-                flag: '--base <ref>',
-                description: 'Base branch to create from',
-              },
-              {
-                flag: '--source local|remote',
-                description: 'Source for branch lookup',
-              },
-              { flag: '--no-bootstrap', description: 'Skip automatic setup' },
-              {
-                flag: '--open / --no-open',
-                description: 'Open a tool after creation',
-              },
-              {
-                flag: '--exec "<command>"',
-                description: 'Execute command after creation',
-              },
-            ]}
-            example={{
-              command: 'yggtree create feat/new-ui --base main --exec "cursor ."',
-              explanation: 'Creates a new worktree from main and opens it in Cursor',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree create-sandbox"
-            thematicLabel="🧪 Forge Sandbox Realm"
-            description="Create a temporary sandbox worktree"
-            options={[
-              {
-                flag: '--carry / --no-carry',
-                description: 'Carry uncommitted changes to sandbox',
-              },
-              { flag: '--no-bootstrap', description: 'Skip automatic setup' },
-              {
-                flag: '--open / --no-open',
-                description: 'Open a tool after creation',
-              },
-              {
-                flag: '--exec "<command>"',
-                description: 'Execute command after creation',
-              },
-            ]}
-            example={{
+        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
+          {[
+            {
+              title: 'Official task',
+              command: 'yggtree create feat/new-flow',
+              description: 'Create a branch-backed worktree for real implementation work.',
+            },
+            {
+              title: 'Existing branch',
+              command: 'yggtree worktree-checkout --ref main',
+              description: 'Review or fix another branch without stashing your current work.',
+            },
+            {
+              title: 'Disposable experiment',
               command: 'yggtree create-sandbox --carry',
-              explanation: 'Creates a sandbox with your uncommitted changes ready to experiment',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree worktree-checkout"
-            thematicLabel="🔀 Traverse to Another Realm"
-            description="Jump to an existing branch in an isolated worktree — without touching your current work"
-            example={{
-              command: 'yggtree worktree-checkout',
-              explanation:
-                'Opens a searchable branch list. Selecting a branch creates (or reuses) a dedicated worktree for it — your active task stays fully untouched. Perfect for reviewing a PR comment without stashing a thing.',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree create-multi"
-            thematicLabel="🌳 Grow Many Realms"
-            description="Create multiple worktrees at once from a shared base branch"
-            options={[
-              {
-                flag: '--base <ref>',
-                description: 'Base branch to create all branches from',
-              },
-              {
-                flag: '--source local|remote',
-                description: 'Source for the base branch lookup',
-              },
-              {
-                flag: '--no-bootstrap',
-                description: 'Skip automatic setup for all worktrees',
-              },
-            ]}
-            example={{
-              command: 'yggtree create-multi',
-              explanation:
-                'Prompts for a base branch, then accepts multiple branch names (space-separated) and creates an isolated worktree for each — all bootstrapped in one go',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree list"
-            thematicLabel="🗺️ Survey Realms"
-            description="List all worktrees with state and PR status"
-            options={[
-              {
-                flag: '--open',
-                description: 'Switch into "pick and open in IDE" mode',
-              },
-            ]}
-            example={{
-              command: 'yggtree list',
-              explanation:
-                'Shows all worktrees with their type, state, last activity, PR status (requires gh CLI), and branch',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree open [worktree]"
-            thematicLabel="🧭 Open Realm in IDE or Agent"
-            description="Open a worktree in an IDE or launch an Agent CLI — auto-detects what's installed"
-            options={[
-              {
-                flag: '--tool <command>',
-                description: 'Tool command to use (e.g. cursor, code, claude, codex)',
-              },
-            ]}
-            example={{
-              command: 'yggtree open feat/new-ui',
-              explanation:
-                'Detects installed IDEs (Cursor, VS Code, Zed, Antigravity, etc.) and Agent CLIs (Claude Code, Codex, Gemini, etc.) and lets you pick which one to launch in that worktree',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree enter [worktree]"
-            thematicLabel="🚪 Enter Realm Shell"
-            description="Enter a worktree using a sub-shell"
-            options={[
-              {
-                flag: '--exec "<command>"',
-                description: 'Execute command before entering',
-              },
-            ]}
-            example={{
-              command: 'yggtree enter feat/new-ui --exec "npm test"',
-              explanation: 'Runs tests then drops you into the worktree shell',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree close"
-            thematicLabel="🔒 Close Realm"
-            description="Exit a worktree sub-shell with an option to delete it on the way out"
-            example={{
-              command: 'yggtree close',
-              explanation:
-                'Asks if you want to delete the worktree before leaving the sub-shell — includes double-confirmation for safety',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree exec [worktree] -- <command>"
-            thematicLabel="🐚 Cast a Command"
-            description="Run a command inside a worktree without entering"
-            example={{
-              command: 'yggtree exec feat/new-ui -- npm test',
-              explanation: 'Executes the command in the worktree and returns',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree delete"
-            thematicLabel="🪓 Fell a Realm"
-            description="Interactively delete managed worktrees"
-            options={[
-              {
-                flag: '--all',
-                description: 'List all worktrees, including ones not created or managed by yggtree',
-              },
-            ]}
-            example={{
-              command: 'yggtree delete',
-              explanation: 'Opens an interactive prompt to select worktrees to remove',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree apply"
-            thematicLabel="✅ Graft Sandbox Changes"
-            description="Apply sandbox changes to origin directory"
-            example={{
-              command: 'yggtree apply',
-              explanation: 'Copies changed files from sandbox to origin with automatic backup',
-            }}
-          />
-
-          <AccordionCommand
-            command="yggtree unapply"
-            thematicLabel="↩️ Undo Sandbox Graft"
-            description="Undo applied changes in origin"
-            example={{
-              command: 'yggtree unapply',
-              explanation: 'Restores origin files to their state before the last apply',
-            }}
-          />
-
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="pt-4 flex justify-center"
-          >
-            <a
-              href="https://github.com/logbookfordevs/yggdrasil-worktree"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center gap-3 bg-deep-forest/60 border border-gold-rune/25 hover:border-gold-rune/60 rounded-xl px-6 py-4 transition-all duration-300 hover:bg-deep-forest/80 hover:shadow-lg hover:shadow-gold-rune/10"
+              description: 'Try a local-only approach and apply it back only if it wins.',
+            },
+          ].map((item, index) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.5, delay: index * 0.08 }}
+              className="rounded-xl border border-gold-rune/20 bg-deep-forest/55 p-6"
             >
-              <svg
-                className="w-5 h-5 text-parchment/60 group-hover:text-gold-rune transition-colors duration-300"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="text-parchment/70 group-hover:text-frost-white text-sm font-medium transition-colors duration-300">
-                Explore the full source & all commands on GitHub
-              </span>
-              <svg
-                className="w-4 h-4 text-parchment/40 group-hover:text-gold-rune group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
-            </a>
-          </motion.div>
+              <h3 className="font-display text-xl font-semibold text-gold-rune mb-3">{item.title}</h3>
+              <code className="block rounded-md bg-mist-green/50 px-3 py-2 font-mono text-sm text-frost-white">
+                {item.command}
+              </code>
+              <p className="mt-4 text-sm leading-relaxed text-parchment/70">{item.description}</p>
+            </motion.div>
+          ))}
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="pt-10 flex justify-center"
+        >
+          <a
+            href="/docs"
+            className="group inline-flex items-center gap-3 bg-deep-forest/60 border border-gold-rune/25 hover:border-gold-rune/60 rounded-xl px-6 py-4 transition-all duration-300 hover:bg-deep-forest/80 hover:shadow-lg hover:shadow-gold-rune/10"
+          >
+            <span className="text-parchment/70 group-hover:text-frost-white text-sm font-medium transition-colors duration-300">
+              Read the guided docs and full command reference
+            </span>
+            <svg
+              className="w-4 h-4 text-parchment/40 group-hover:text-gold-rune group-hover:translate-x-0.5 transition-all duration-300"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </motion.div>
       </Section>
 
       {/* Configuration Section */}

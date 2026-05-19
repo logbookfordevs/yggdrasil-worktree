@@ -3,7 +3,6 @@
 import { motion } from 'motion/react';
 import { CopyButton } from './CopyButton';
 import { TreeBranches } from './TreeBranches';
-import Image from 'next/image';
 
 export function Hero() {
   return (
@@ -47,41 +46,13 @@ export function Hero() {
           ideas can evolve independently without colliding.
         </motion.p>
 
-        {/* Badges */}
+        {/* Changelog */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.8 }}
           className="flex flex-wrap items-center justify-center gap-4 mb-12"
         >
-          <a
-            href="https://www.npmjs.com/package/yggtree"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block"
-          >
-            <Image
-              width={100}
-              height={24}
-              src="https://img.shields.io/npm/v/yggtree.svg?style=flat-square&color=D4A853"
-              alt="npm version"
-              className="h-6"
-            />
-          </a>
-          <a
-            href="https://www.npmjs.com/package/yggtree"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block"
-          >
-            <Image
-              width={100}
-              height={24}
-              src="https://img.shields.io/npm/l/yggtree.svg?style=flat-square&color=D4A853"
-              alt="license"
-              className="h-6"
-            />
-          </a>
           <a
             href="https://github.com/logbookfordevs/yggdrasil-worktree/blob/main/CHANGELOG.md"
             target="_blank"
@@ -112,18 +83,8 @@ export function Hero() {
           </div>
 
           <a
-            href="https://github.com/logbookfordevs/yggdrasil-worktree"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group px-8 py-4 bg-transparent border-2 border-gold-rune text-gold-rune rounded-lg font-semibold hover:bg-gold-rune hover:text-deep-forest transition-all duration-300"
-          >
-            View on GitHub
-            <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
-          </a>
-
-          <a
             href="/docs"
-            className="group px-8 py-4 bg-mist-green/70 border border-gold-rune/30 text-parchment rounded-lg font-semibold hover:border-gold-rune hover:text-frost-white transition-all duration-300"
+            className="group px-8 py-4 bg-transparent border-2 border-gold-rune text-gold-rune rounded-lg font-semibold hover:bg-gold-rune hover:text-deep-forest transition-all duration-300"
           >
             Read the docs
             <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
@@ -135,7 +96,7 @@ export function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 1.5 }}
-          className="absolute top-[640px] sm:top-[580px] left-1/2 -translate-x-1/2"
+          className="pointer-events-none mt-8 flex justify-center"
         >
           <motion.div
             animate={{ y: [0, 10, 0] }}

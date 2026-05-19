@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
 :root {
   /* Yggdrasil Color Palette */
@@ -16,6 +17,30 @@
   --accent: var(--gold-rune);
   --accent-secondary: var(--cosmic-purple);
   --text-muted: var(--parchment);
+
+  /* shadcn/ui tokens tuned to the Yggdrasil palette */
+  --radius-md: 0.5rem;
+  --border: rgb(212 168 83 / 0.22);
+  --input: rgb(212 168 83 / 0.25);
+  --ring: rgb(212 168 83 / 0.55);
+  --primary: var(--gold-rune);
+  --primary-foreground: var(--deep-forest);
+  --secondary: rgb(26 58 26 / 0.72);
+  --secondary-foreground: var(--frost-white);
+  --muted: rgb(26 58 26 / 0.55);
+  --muted-foreground: rgb(245 230 211 / 0.66);
+  --popover: #102610;
+  --popover-foreground: var(--frost-white);
+  --destructive: #f97373;
+  --destructive-foreground: var(--deep-forest);
+  --sidebar: #0d230d;
+  --sidebar-foreground: var(--parchment);
+  --sidebar-primary: var(--gold-rune);
+  --sidebar-primary-foreground: var(--deep-forest);
+  --sidebar-accent: rgb(212 168 83 / 0.14);
+  --sidebar-accent-foreground: var(--frost-white);
+  --sidebar-border: rgb(212 168 83 / 0.20);
+  --sidebar-ring: rgb(212 168 83 / 0.55);
 }
 
 @theme inline {
@@ -32,6 +57,27 @@
   --color-accent: var(--accent);
   --color-accent-secondary: var(--accent-secondary);
   --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 
   --font-display: var(--font-cinzel);
   --font-body: var(--font-source-serif);
@@ -84,6 +130,14 @@ html {
 
 .border-rune {
   border-image: linear-gradient(90deg, transparent, var(--gold-rune), transparent) 1;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 * button:hover {

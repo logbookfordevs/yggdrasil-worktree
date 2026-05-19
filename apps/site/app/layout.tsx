@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cinzel, Source_Serif_4, JetBrains_Mono } from "next/font/google";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 const cinzel = Cinzel({
@@ -52,7 +53,7 @@ export default function RootLayout({
       <body
         className={`${cinzel.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>
   );

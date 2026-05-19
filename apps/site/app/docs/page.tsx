@@ -1,6 +1,18 @@
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import { CommandBlock } from '@/app/components/CommandBlock';
 import { DocsMobileMenu } from '@/app/docs/DocsMobileMenu';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+} from '@/components/ui/sidebar';
 
 const navItems = [
   { href: '#start', label: 'Start' },
@@ -71,7 +83,14 @@ const commandGroups = [
 
 export default function DocsPage() {
   return (
-    <main className="min-h-screen bg-deep-forest text-frost-white">
+    <SidebarProvider
+      style={
+        {
+          '--sidebar-width': '220px',
+        } as CSSProperties
+      }
+    >
+      <main className="min-h-screen w-full bg-deep-forest text-frost-white">
         <div className="border-b border-gold-rune/20 bg-deep-forest/95 backdrop-blur-sm">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 md:px-12">
             <div className="flex min-w-0 items-center gap-3">
@@ -98,16 +117,29 @@ export default function DocsPage() {
 
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 md:px-12 md:py-12 lg:grid-cols-[220px_1fr]">
         <aside className="hidden lg:block">
-          <nav className="sticky top-8 border-l border-gold-rune/20 pl-5">
-            <p className="mb-4 text-xs font-mono uppercase text-parchment/40">Docs</p>
-            <div className="flex flex-col gap-3">
-              {navItems.map((item) => (
-                <a key={item.href} href={item.href} className="block text-sm text-parchment/70 hover:text-gold-rune">
-                  {item.label}
-                </a>
-              ))}
-            </div>
-          </nav>
+          <Sidebar collapsible="none" className="sticky top-8 h-auto w-auto bg-transparent text-parchment">
+            <SidebarContent className="overflow-visible border-l border-gold-rune/20 bg-transparent pl-5">
+              <SidebarGroup className="p-0">
+                <SidebarGroupLabel className="mb-4 h-auto px-0 font-mono text-xs uppercase tracking-normal text-parchment/40">
+                  Docs
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu className="gap-1.5">
+                    {navItems.map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          className="h-auto justify-start rounded-none border-0 bg-transparent px-0 py-1 font-body text-sm font-normal text-parchment/70 shadow-none hover:bg-transparent hover:text-gold-rune focus-visible:bg-transparent active:bg-transparent data-active:bg-transparent data-[active=true]:bg-transparent"
+                        >
+                          <a href={item.href}>{item.label}</a>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
         </aside>
 
         <article className="min-w-0 max-w-4xl">
@@ -213,6 +245,7 @@ export default function DocsPage() {
           </section>
         </article>
       </div>
-    </main>
+      </main>
+    </SidebarProvider>
   );
 }

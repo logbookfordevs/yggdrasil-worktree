@@ -6,7 +6,7 @@ try alternate approaches locally. Sandbox creates a local-only branch, writes
 to the origin realm.
 
 ```bash
-yggtree wt create-sandbox
+yggtree create-sandbox
 ```
 
 ## Core Patterns
@@ -14,7 +14,7 @@ yggtree wt create-sandbox
 Create a local-only experimental realm from current work:
 
 ```bash
-yggtree wt create-sandbox
+yggtree create-sandbox
 ```
 
 When prompted, keep `Carry uncommitted changes to sandbox?` enabled if the
@@ -23,13 +23,13 @@ experiment should begin from the current working state.
 Apply the winner back to the origin realm:
 
 ```bash
-yggtree wt apply
+yggtree apply
 ```
 
 Undo a previous apply:
 
 ```bash
-yggtree wt unapply
+yggtree unapply
 ```
 
 Run `unapply` only from inside the sandbox that recorded the apply backups.
@@ -41,13 +41,13 @@ Run `unapply` only from inside the sandbox that recorded the apply backups.
 Wrong:
 
 ```bash
-yggtree wt create feat/try-different-ui --base main --source remote
+yggtree create feat/try-different-ui --base main --source remote
 ```
 
 Correct:
 
 ```bash
-yggtree wt create-sandbox
+yggtree create-sandbox
 ```
 
 If the user wants to try different approaches inside an active task, sandbox is
@@ -60,15 +60,15 @@ Source: `src/commands/wt/create-sandbox.ts`
 Wrong:
 
 ```bash
-yggtree wt apply
-yggtree wt delete
+yggtree apply
+yggtree delete
 ```
 
 Correct:
 
 ```bash
-yggtree wt apply
-yggtree wt unapply
+yggtree apply
+yggtree unapply
 ```
 
 Apply stores backups in sandbox metadata, so deleting the sandbox removes the
@@ -81,13 +81,13 @@ Source: `src/commands/wt/apply.ts`
 Wrong:
 
 ```bash
-yggtree wt create-sandbox
+yggtree create-sandbox
 ```
 
 Correct:
 
 ```bash
-yggtree wt create-sandbox
+yggtree create-sandbox
 git diff --name-only
 ```
 
@@ -101,13 +101,13 @@ Source: `src/commands/wt/create-sandbox.ts`
 Wrong:
 
 ```bash
-yggtree wt create-sandbox --name "UI option A"
+yggtree create-sandbox --name "UI option A"
 ```
 
 Correct:
 
 ```bash
-yggtree wt create-sandbox --name ui-option-a
+yggtree create-sandbox --name ui-option-a
 ```
 
 Sandbox names are normalized into branch-safe `sandbox-*` slugs, so custom

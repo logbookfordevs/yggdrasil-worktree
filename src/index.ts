@@ -25,6 +25,137 @@ import { thorCommand } from './commands/thor.js';
 
 const program = new Command();
 
+function registerWorktreeCommands(parent: Command) {
+    parent.command('list')
+        .description('List all repo-linked worktrees')
+        .option('--open', 'Open a worktree in an IDE/agent tool instead of listing')
+        .action(async (options) => {
+            if (options.open) {
+                await openCommand();
+                return;
+            }
+            await listCommand();
+        });
+
+    parent.command('create [branch]')
+        .description('Create a new worktree (Smart branch detection)')
+        .option('-b, --branch <name>', 'Branch name (e.g. feat/new-ui)')
+        .option('--base <ref>', 'Base ref (e.g. main)')
+        .option('--source <type>', 'Base source (local or remote)')
+        .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .option('--open', 'Open a tool after creation (IDE or agent CLI)')
+        .option('--no-open', 'Skip opening a tool after creation')
+        .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
+        .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
+        .option('--exec <command>', 'Command to execute after creation')
+        .action(async (branch, options) => {
+            await createCommandNew({
+                ...options,
+                branch: branch || options.branch
+            });
+        });
+
+    parent.command('create-multi')
+        .description('Create multiple worktrees (Smart branch detection)')
+        .option('--base <ref>', 'Base ref (e.g. main)')
+        .option('--source <type>', 'Base source (local or remote)')
+        .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .action(async (options) => {
+            await createCommandMulti(options);
+        });
+
+    parent.command('worktree-checkout [name] [ref]')
+        .description('Create a checkout-style worktree from an existing branch')
+        .option('-n, --name <slug>', 'Worktree name (slug)')
+        .option('-r, --ref <ref>', 'Existing branch or ref')
+        .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .option('--open', 'Open a tool after creation (IDE or agent CLI)')
+        .option('--no-open', 'Skip opening a tool after creation')
+        .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
+        .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
+        .option('--exec <command>', 'Command to execute after creation')
+        .action(async (name, ref, options) => {
+            await createCommand({
+                ...options,
+                name: name || options.name,
+                ref: ref || options.ref
+            });
+        });
+
+    parent.command('delete')
+        .description('Delete managed worktrees')
+        .option('-a, --all', 'Include repo-linked worktrees outside ~/.yggtree (except main/current)')
+        .action(async (options) => {
+            await deleteCommand(options);
+        });
+
+    parent.command('open [worktree]')
+        .description('Open a worktree in an IDE or agent CLI')
+        .option('--tool <command>', 'Tool command to use (e.g. cursor, code, claude, codex)')
+        .action(async (worktree, options) => {
+            await openCommand(worktree, options);
+        });
+
+    parent.command('bootstrap')
+        .description('Bootstrap dependencies in a worktree')
+        .action(bootstrapCommand);
+
+    parent.command('prune')
+        .description('Prune stale worktree information')
+        .action(pruneCommand);
+
+    parent.command('exec')
+        .description('Execute a command in a worktree')
+        .argument('[worktree]', 'Worktree name or path')
+        .argument('[command...]', 'Command and arguments to execute')
+        .action(async (worktree, command) => {
+            await execCommand(worktree, command);
+        });
+
+    parent.command('enter')
+        .description('Enter a worktree sub-shell')
+        .argument('[worktree]', 'Worktree name or path')
+        .option('--exec <command>', 'Command to execute before entering')
+        .action(async (worktree, options) => {
+            await enterCommand(worktree, options);
+        });
+
+    parent.command('path [worktree]')
+        .description('Show the cd command for a specific worktree')
+        .action(async (worktree) => {
+            await pathCommand(worktree);
+        });
+
+    parent.command('create-sandbox')
+        .description('Create a sandbox worktree from current branch')
+        .option('-n, --name <name>', 'Optional sandbox name (auto-generated when omitted)')
+        .option('--carry', 'Carry uncommitted changes to sandbox')
+        .option('--no-carry', 'Do not carry uncommitted changes')
+        .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .option('--open', 'Open a tool after creation (IDE or agent CLI)')
+        .option('--no-open', 'Skip opening a tool after creation')
+        .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
+        .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
+        .option('--exec <command>', 'Command to execute after creation')
+        .action(async (options) => {
+            await createSandboxCommand(options);
+        });
+
+    parent.command('apply')
+        .description('Apply sandbox changes to origin directory')
+        .action(applyCommand);
+
+    parent.command('close')
+        .description('Exit the sub-shell with an option to delete the worktree')
+        .action(async () => {
+            await closeCommand();
+        });
+
+    parent.command('unapply')
+        .description('Undo applied sandbox changes in origin')
+        .action(unapplyCommand);
+}
+
 program
     .name('yggtree')
     .description('Interactive CLI for managing git worktrees and configs')
@@ -146,135 +277,8 @@ program
 
 // --- Worktree Commands ---
 const wt = program.command('wt').description('Manage git worktrees');
-
-wt.command('list')
-    .description('List all repo-linked worktrees')
-    .option('--open', 'Open a worktree in an IDE/agent tool instead of listing')
-    .action(async (options) => {
-        if (options.open) {
-            await openCommand();
-            return;
-        }
-        await listCommand();
-    });
-
-wt.command('create [branch]')
-    .description('Create a new worktree (Smart branch detection)')
-    .option('-b, --branch <name>', 'Branch name (e.g. feat/new-ui)')
-    .option('--base <ref>', 'Base ref (e.g. main)')
-    .option('--source <type>', 'Base source (local or remote)')
-    .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-    .option('--open', 'Open a tool after creation (IDE or agent CLI)')
-    .option('--no-open', 'Skip opening a tool after creation')
-    .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
-    .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
-    .option('--exec <command>', 'Command to execute after creation')
-    .action(async (branch, options) => {
-        await createCommandNew({ 
-            ...options, 
-            branch: branch || options.branch 
-        });
-    });
-
-wt.command('create-multi')
-    .description('Create multiple worktrees (Smart branch detection)')
-    .option('--base <ref>', 'Base ref (e.g. main)')
-    .option('--source <type>', 'Base source (local or remote)')
-    .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-    .action(async (options) => {
-        await createCommandMulti(options);
-    });
-
-wt.command('worktree-checkout [name] [ref]')
-    .description('Create a checkout-style worktree from an existing branch')
-    .option('-n, --name <slug>', 'Worktree name (slug)')
-    .option('-r, --ref <ref>', 'Existing branch or ref')
-    .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-    .option('--open', 'Open a tool after creation (IDE or agent CLI)')
-    .option('--no-open', 'Skip opening a tool after creation')
-    .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
-    .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
-    .option('--exec <command>', 'Command to execute after creation')
-    .action(async (name, ref, options) => {
-        await createCommand({ 
-            ...options, 
-            name: name || options.name,
-            ref: ref || options.ref
-        });
-    });
-
-wt.command('delete')
-    .description('Delete managed worktrees')
-    .option('-a, --all', 'Include repo-linked worktrees outside ~/.yggtree (except main/current)')
-    .action(async (options) => {
-        await deleteCommand(options);
-    });
-
-wt.command('open [worktree]')
-    .description('Open a worktree in an IDE or agent CLI')
-    .option('--tool <command>', 'Tool command to use (e.g. cursor, code, claude, codex)')
-    .action(async (worktree, options) => {
-        await openCommand(worktree, options);
-    });
-
-wt.command('bootstrap')
-    .description('Bootstrap dependencies in a worktree')
-    .action(bootstrapCommand);
-
-wt.command('prune')
-    .description('Prune stale worktree information')
-    .action(pruneCommand);
-
-wt.command('exec')
-    .description('Execute a command in a worktree')
-    .argument('[worktree]', 'Worktree name or path')
-    .argument('[command...]', 'Command and arguments to execute')
-    .action(async (worktree, command) => {
-        await execCommand(worktree, command);
-    });
-
-wt.command('enter')
-    .description('Enter a worktree sub-shell')
-    .argument('[worktree]', 'Worktree name or path')
-    .option('--exec <command>', 'Command to execute before entering')
-    .action(async (worktree, options) => {
-        await enterCommand(worktree, options);
-    });
-
-wt.command('path [worktree]')
-    .description('Show the cd command for a specific worktree')
-    .action(async (worktree) => {
-        await pathCommand(worktree);
-    });
-
-wt.command('create-sandbox')
-    .description('Create a sandbox worktree from current branch')
-    .option('-n, --name <name>', 'Optional sandbox name (auto-generated when omitted)')
-    .option('--carry', 'Carry uncommitted changes to sandbox')
-    .option('--no-carry', 'Do not carry uncommitted changes')
-    .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-    .option('--open', 'Open a tool after creation (IDE or agent CLI)')
-    .option('--no-open', 'Skip opening a tool after creation')
-    .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
-    .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
-    .option('--exec <command>', 'Command to execute after creation')
-    .action(async (options) => {
-        await createSandboxCommand(options);
-    });
-
-wt.command('apply')
-    .description('Apply sandbox changes to origin directory')
-    .action(applyCommand);
-
-wt.command('close')
-    .description('Exit the sub-shell with an option to delete the worktree')
-    .action(async () => {
-        await closeCommand();
-    });
-
-wt.command('unapply')
-    .description('Undo applied sandbox changes in origin')
-    .action(unapplyCommand);
+registerWorktreeCommands(program);
+registerWorktreeCommands(wt);
 
 program.command('bifrost')
     .description('Summon the Bifrost (Easter Egg)')

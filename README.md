@@ -36,10 +36,12 @@ yggtree
 Or use commands directly:
 
 ```bash
-yggtree wt create
-yggtree wt list
-yggtree wt enter my-feature
+yggtree create
+yggtree list
+yggtree enter my-feature
 ```
+
+The older `yggtree wt ...` form still works for compatibility, but direct commands are the preferred shape.
 
 ---
 
@@ -118,9 +120,9 @@ Use the interactive UI or drive everything through commands and flags.
 ## 🧠 Parallel Development, Done Right
 
 ```bash
-yggtree wt create feat/city-selection
-yggtree wt create fix/validation
-yggtree wt create chore/cleanup-api
+yggtree create feat/city-selection
+yggtree create fix/validation
+yggtree create chore/cleanup-api
 ```
 
 Each command creates:
@@ -142,8 +144,8 @@ Yggdrasil shines when paired with AI agents.
 Instead of running agents against the same directory, you can assign **one worktree per agent**.
 
 ```bash
-yggtree wt create feat/ai-refactor-a --exec "cursor ."
-yggtree wt create feat/ai-refactor-b --exec "codex"
+yggtree create feat/ai-refactor-a --exec "cursor ."
+yggtree create feat/ai-refactor-b --exec "codex"
 ```
 
 Each agent operates in its own realm:
@@ -162,10 +164,10 @@ Sometimes you don't want to "commit to a branch" yet. You just want to try somet
 
 **Sandboxes** are temporary, local-only worktrees designed for this:
 
-1.  **Create**: `yggtree wt create-sandbox` (creates something like `sandbox-a3f2_feature-branch`).
+1.  **Create**: `yggtree create-sandbox` (creates something like `sandbox-a3f2_feature-branch`).
 2.  **Experiment**: Change files, run tests, try that risky refactor.
-3.  **Apply**: `yggtree wt apply` to "push" those file changes back to your origin directory.
-4.  **Unapply**: Don't like it? `yggtree wt unapply` restores your origin to exactly how it was before.
+3.  **Apply**: `yggtree apply` to "push" those file changes back to your origin directory.
+4.  **Unapply**: Don't like it? `yggtree unapply` restores your origin to exactly how it was before.
 
 Sandboxes are **not pushed to remote** and their names are randomly generated because they are meant to be temporary playgrounds.
 
@@ -208,7 +210,7 @@ Open the interactive menu.
 
 ---
 
-### `yggtree wt create [branch]`
+### `yggtree create [branch]`
 
 Create a worktree from a branch.
 
@@ -230,14 +232,14 @@ Interactive flow:
 <summary>Example</summary>
 
 ```bash
-yggtree wt create feat/new-ui --base main --exec "cursor ."
+yggtree create feat/new-ui --base main --exec "cursor ."
 ```
 
 </details>
 
 ---
 
-### `yggtree wt worktree-checkout [name] [ref]`
+### `yggtree worktree-checkout [name] [ref]`
 
 Create a checkout-style worktree from an existing branch.
 
@@ -265,14 +267,14 @@ Interactive flow:
 <summary>Example</summary>
 
 ```bash
-yggtree wt worktree-checkout -n hotfix-auth -r main --no-open
+yggtree worktree-checkout -n hotfix-auth -r main --no-open
 ```
 
 </details>
 
 ---
 
-### `yggtree wt create-sandbox`
+### `yggtree create-sandbox`
 
 Create a temporary sandbox from your current local branch.
 
@@ -292,7 +294,7 @@ Interactive flow:
 
 ---
 
-### `yggtree wt apply`
+### `yggtree apply`
 
 Apply changes from the current sandbox back to the origin repository. 
 *   **Backs up** origin files before overwriting.
@@ -300,7 +302,7 @@ Apply changes from the current sandbox back to the origin repository.
 
 ---
 
-### `yggtree wt unapply`
+### `yggtree unapply`
 
 Undo a previous `apply` operation.
 *   Restores origin files from the sandbox's backup.
@@ -308,7 +310,7 @@ Undo a previous `apply` operation.
 
 ---
 
-### `yggtree wt create-multi`
+### `yggtree create-multi`
 
 Create multiple worktrees at once.
 
@@ -322,14 +324,14 @@ Options:
 <summary>Example</summary>
 
 ```bash
-yggtree wt create-multi --base main
+yggtree create-multi --base main
 ```
 
 </details>
 
 ---
 
-### `yggtree wt list`
+### `yggtree list`
 
 List all repo-linked worktrees with state.
 
@@ -351,7 +353,7 @@ Notes:
 
 ---
 
-### `yggtree wt enter [worktree]`
+### `yggtree enter [worktree]`
 
 Enter a worktree using a sub‑shell.
 
@@ -366,20 +368,20 @@ Optional:
 <summary>Example</summary>
 
 ```bash
-yggtree wt enter feat/new-ui --exec "npm test"
+yggtree enter feat/new-ui --exec "npm test"
 ```
 
 </details>
 
 ---
 
-### `yggtree wt close`
+### `yggtree close`
 
 Gracefully exit a worktree sub-shell with an option to delete it.
 
 Behavior:
 
-* Only works inside an Yggdrasil sub-shell (entered via `wt enter` or post-creation).
+* Only works inside an Yggdrasil sub-shell (entered via `yggtree enter` or post-creation).
 * Asks whether you want to delete the worktree before leaving.
 * Includes double-confirmation for safety.
 * Main worktree is never offered for deletion.
@@ -389,7 +391,7 @@ Behavior:
 
 ```bash
 # Inside a worktree sub-shell:
-yggtree wt close
+yggtree close
 # → "Delete this worktree before leaving? (y/N)"
 # → If yes: removes the worktree, then exits
 # → If no: exits normally
@@ -399,7 +401,7 @@ yggtree wt close
 
 ---
 
-### `yggtree wt open [worktree]`
+### `yggtree open [worktree]`
 
 Open a worktree in an IDE or agent CLI.
 
@@ -418,17 +420,17 @@ Options:
 <summary>Examples</summary>
 
 ```bash
-yggtree wt open
-yggtree wt open feat/new-ui --tool cursor
-yggtree wt open feat/new-ui --tool claude
-yggtree wt list --open
+yggtree open
+yggtree open feat/new-ui --tool cursor
+yggtree open feat/new-ui --tool claude
+yggtree list --open
 ```
 
 </details>
 
 ---
 
-### `yggtree wt exec [worktree] -- <command>`
+### `yggtree exec [worktree] -- <command>`
 
 Run a command inside a worktree **without entering**.
 
@@ -436,14 +438,14 @@ Run a command inside a worktree **without entering**.
 <summary>Example</summary>
 
 ```bash
-yggtree wt exec feat/new-ui -- npm test
+yggtree exec feat/new-ui -- npm test
 ```
 
 </details>
 
 ---
 
-### `yggtree wt path [worktree]`
+### `yggtree path [worktree]`
 
 Print a `cd` command for a worktree.
 
@@ -451,13 +453,13 @@ Useful for scripting and shell aliases.
 
 ---
 
-### `yggtree wt bootstrap`
+### `yggtree bootstrap`
 
 Re‑run bootstrap commands for a worktree.
 
 ---
 
-### `yggtree wt delete`
+### `yggtree delete`
 
 Interactively delete worktrees.
 
@@ -474,7 +476,7 @@ Optional:
 
 ---
 
-### `yggtree wt prune`
+### `yggtree prune`
 
 Clean up stale git worktree metadata.
 
@@ -500,7 +502,7 @@ Yggdrasil is ideal when:
 **Command:**
 
 ```
-yggtree wt create feat/login-flow
+yggtree create feat/login-flow
 ```
 
 **What happens:**
@@ -520,7 +522,7 @@ yggtree wt create feat/login-flow
 **Command:**
 
 ```
-yggtree wt create feat/cleanup-api --no-bootstrap --no-open
+yggtree create feat/cleanup-api --no-bootstrap --no-open
 ```
 
 **When to use:**
@@ -538,7 +540,7 @@ yggtree wt create feat/cleanup-api --no-bootstrap --no-open
 **Command:**
 
 ```
-yggtree wt create feat/ui-refactor --exec "cursor ."
+yggtree create feat/ui-refactor --exec "cursor ."
 ```
 
 Works with:
@@ -557,7 +559,7 @@ Works with:
 **Command:**
 
 ```
-yggtree wt exec test -- npm test
+yggtree exec test -- npm test
 ```
 
 **What this does:**
@@ -575,7 +577,7 @@ yggtree wt exec test -- npm test
 **Command:**
 
 ```
-yggtree wt enter test --exec "codex"
+yggtree enter test --exec "codex"
 ```
 
 **What happens:**
@@ -593,7 +595,7 @@ yggtree wt enter test --exec "codex"
 **Command:**
 
 ```
-yggtree wt path test
+yggtree path test
 ```
 
 **Output:**
@@ -614,7 +616,7 @@ Useful when you want to manually navigate or copy the path into scripts.
 **Command:**
 
 ```bash
-yggtree wt create-sandbox --carry
+yggtree create-sandbox --carry
 ```
 
 **Scenario:**
@@ -622,7 +624,7 @@ yggtree wt create-sandbox --carry
 1.  You have 5 files changed in your main repo but aren't sure about the direction.
 2.  Run `create-sandbox --carry` to move those changes into an isolated `sandbox-a3f2_feature-branch` folder.
 3.  Experiment freely.
-4.  If it works: `yggtree wt apply`.
+4.  If it works: `yggtree apply`.
 5.  If it fails: Just delete the sandbox or `unapply`.
 
 </details>

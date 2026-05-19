@@ -38,7 +38,7 @@ pnpm build
 - **Deployment:** [Vercel](https://vercel.com)
 
 When deploying from the main Yggtree repository, set the Vercel project
-**Root Directory** to `site`.
+**Root Directory** to `apps/site`.
 
 ---
 

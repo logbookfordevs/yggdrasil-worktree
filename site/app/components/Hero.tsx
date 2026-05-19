@@ -1,0 +1,153 @@
+'use client';
+
+import { motion } from 'motion/react';
+import { CopyButton } from './CopyButton';
+import { TreeBranches } from './TreeBranches';
+import Image from 'next/image';
+
+export function Hero() {
+  return (
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Animated background gradient */}
+      <div className="absolute inset-0 aurora-gradient opacity-10"></div>
+
+      {/* Decorative tree branches */}
+      <TreeBranches />
+
+      <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          {/* Logo/Title */}
+          <h1 className="font-display text-6xl md:text-8xl font-bold mb-6">
+            <span className="text-gradient">Yggdrasil</span>
+            <br />
+            <span className="text-frost-white">Worktree</span>
+          </h1>
+        </motion.div>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="text-2xl md:text-3xl font-display text-parchment mb-4 italic"
+        >
+          Grow many worlds. Merge what matters.
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="text-lg md:text-xl text-parchment/80 max-w-2xl mx-auto mb-12 leading-relaxed"
+        >
+          Like the mythical world tree connecting realms, Yggdrasil lets you grow isolated, parallel environments where
+          ideas can evolve independently without colliding.
+        </motion.p>
+
+        {/* Badges */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
+          className="flex flex-wrap items-center justify-center gap-4 mb-12"
+        >
+          <a
+            href="https://www.npmjs.com/package/yggtree"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block"
+          >
+            <Image
+              width={100}
+              height={24}
+              src="https://img.shields.io/npm/v/yggtree.svg?style=flat-square&color=D4A853"
+              alt="npm version"
+              className="h-6"
+            />
+          </a>
+          <a
+            href="https://www.npmjs.com/package/yggtree"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block"
+          >
+            <Image
+              width={100}
+              height={24}
+              src="https://img.shields.io/npm/l/yggtree.svg?style=flat-square&color=D4A853"
+              alt="license"
+              className="h-6"
+            />
+          </a>
+          <a
+            href="https://github.com/logbookfordevs/yggdrasil-worktree/blob/main/CHANGELOG.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 bg-mist-green/60 border border-gold-rune/30 hover:border-gold-rune/60 rounded-full px-3 py-1 text-xs font-mono text-gold-rune/80 hover:text-gold-rune transition-all duration-300"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
+            </svg>
+            Changelog
+          </a>
+        </motion.div>
+
+        {/* CTAs */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1 }}
+          className="flex flex-col sm:flex-row items-center justify-center gap-6"
+        >
+          <div className="flex items-center gap-6 bg-mist-green/50 backdrop-blur-sm border border-gold-rune/30 rounded-lg px-6 py-4">
+            <code className="font-mono text-frost-white text-lg">npx yggtree</code>
+            <CopyButton text="npx yggtree" />
+          </div>
+
+          <a
+            href="https://github.com/logbookfordevs/yggdrasil-worktree"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group px-8 py-4 bg-transparent border-2 border-gold-rune text-gold-rune rounded-lg font-semibold hover:bg-gold-rune hover:text-deep-forest transition-all duration-300"
+          >
+            View on GitHub
+            <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
+          </a>
+
+          <a
+            href="/docs"
+            className="group px-8 py-4 bg-mist-green/70 border border-gold-rune/30 text-parchment rounded-lg font-semibold hover:border-gold-rune hover:text-frost-white transition-all duration-300"
+          >
+            Read the docs
+            <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>
+          </a>
+        </motion.div>
+
+        {/* Scroll indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 1.5 }}
+          className="absolute top-[640px] sm:top-[580px] left-1/2 -translate-x-1/2"
+        >
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="text-gold-rune/50"
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}

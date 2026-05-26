@@ -6,6 +6,7 @@ import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { generateSandboxName, normalizeSandboxName, writeSandboxMeta } from '../../lib/sandbox.js';
+import { promptAndCopyEnvFiles } from '../../lib/env-files.js';
 import {
     detectInstalledOpenTools,
     launchOpenTool,
@@ -210,6 +211,7 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
         log.dim('This is a local sandbox - no remote branch will be pushed.');
 
         // 8. Bootstrap
+        await promptAndCopyEnvFiles(repoRoot, wtPath);
         if (shouldBootstrap) {
             await runBootstrap(wtPath, repoRoot);
         }

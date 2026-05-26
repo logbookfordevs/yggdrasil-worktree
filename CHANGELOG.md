@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - Moved the repository toward pnpm-managed project metadata, including a root `pnpm-lock.yaml` and package manager declaration.
 - `worktree-checkout` now treats opening a tool and entering the worktree shell as independent post-checkout choices, with `--open/--no-open` and `--enter/--no-enter` controlling each path explicitly.
 - Interactive `worktree-checkout` now asks whether to enter the worktree shell even when the user chooses not to open an IDE or agent tool; agent CLI selections skip the extra shell question because they already launch through the enter flow.
+- Worktree creation flows now offer to copy local `.env` files into the new worktree before bootstrap runs. The copy is opt-in, skips example/template env files, and covers `create`, `worktree-checkout`, `create-multi`, and `create-sandbox`.
 
 ## [1.4.2] - 2026-03-15
 

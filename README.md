@@ -69,7 +69,7 @@ If your agent supports targeted installs, you can also point the install to a
 specific agent runtime, for example:
 
 ```bash
-npx skills add leoreisdias/yggdrasil-worktree --agent claude-code
+npx skills add leoreisdias/yggdrasil-worktree --agent codex
 ```
 
 ### Basic Usage

@@ -4,7 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Next Release] - Unreleased
 
+### Added
+- **Yggtree agent skill**: Added a consolidated `yggtree` skill with focused references for creating task worktrees, checking out existing branches without stashing, managing realm lifecycle commands, and running sandbox experiments.
+- **Internal site app**: Added the `apps/site` Next.js app for the Yggtree website and docs experience, with Tailwind CSS 4, Motion, responsive docs navigation, and deployment notes for Vercel.
+- **GitHub Actions validation**: Added CI coverage for TypeScript checks and publish workflow support so release readiness is easier to verify from GitHub.
+- `yggtree wc` and `yggtree wt wc` now provide short aliases for the checkout-style `worktree-checkout` flow.
 
+### Changed
+- Worktree commands are now available directly at the top level, so users can run `yggtree list`, `yggtree create`, `yggtree worktree-checkout`, `yggtree delete`, and the rest of the worktree command set without the `wt` prefix.
+- The older `yggtree wt ...` command shape remains available as a compatibility alias for existing scripts and muscle memory.
+- Updated README and skill references to teach the direct command surface first, with `wt` documented as legacy-compatible behavior rather than the primary path.
+- Moved the repository toward pnpm-managed project metadata, including a root `pnpm-lock.yaml` and package manager declaration.
+- `worktree-checkout` now treats opening a tool and entering the worktree shell as independent post-checkout choices, with `--open/--no-open` and `--enter/--no-enter` controlling each path explicitly.
+- Interactive `worktree-checkout` now asks whether to enter the worktree shell even when the user chooses not to open an IDE or agent tool; agent CLI selections skip the extra shell question because they already launch through the enter flow.
 
 ## [1.4.2] - 2026-03-15
 

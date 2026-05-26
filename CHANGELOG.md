@@ -5,12 +5,16 @@ All notable changes to this project will be documented in this file.
 ## [Next Release] - Unreleased
 
 ### Added
+- **GitHub release installer**: Added `scripts/install.sh` so users can install Yggtree from GitHub release artifacts instead of npm, with release tag selection, SHA256 verification, and a local launcher written to `~/.local/bin`.
+- **Release artifact builder**: Added `scripts/build-release-artifact.sh` and the `pnpm run release:artifact` command to package the built CLI, production dependencies, and checksum into `dist-release/yggtree-vX.Y.Z.tar.gz` plus `.sha256`.
 - **Yggtree agent skill**: Added a consolidated `yggtree` skill with focused references for creating task worktrees, checking out existing branches without stashing, managing realm lifecycle commands, and running sandbox experiments.
 - **Internal site app**: Added the `apps/site` Next.js app for the Yggtree website and docs experience, with Tailwind CSS 4, Motion, responsive docs navigation, and deployment notes for Vercel.
 - **GitHub Actions validation**: Added CI coverage for TypeScript checks and publish workflow support so release readiness is easier to verify from GitHub.
 - `yggtree wc` and `yggtree wt wc` now provide short aliases for the checkout-style `worktree-checkout` flow.
 
 ### Changed
+- The publish workflow now creates or updates the GitHub Release for pushed `v*` tags, uploads the release tarball and `.sha256`, and attaches build provenance attestation before publishing to npm.
+- The website exposes the installer at `/install.sh` through `apps/site/public/install.sh`, so `https://yggtree.logbookfordevs.com/install.sh` can serve the same release installer.
 - Worktree commands are now available directly at the top level, so users can run `yggtree list`, `yggtree create`, `yggtree worktree-checkout`, `yggtree delete`, and the rest of the worktree command set without the `wt` prefix.
 - The older `yggtree wt ...` command shape remains available as a compatibility alias for existing scripts and muscle memory.
 - Updated README and skill references to teach the direct command surface first, with `wt` documented as legacy-compatible behavior rather than the primary path.

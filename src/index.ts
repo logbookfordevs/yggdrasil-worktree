@@ -24,6 +24,7 @@ import { bifrostCommand } from './commands/bifrost.js';
 import { thorCommand } from './commands/thor.js';
 
 const program = new Command();
+const argv = process.argv.map((arg) => arg === '-v' || arg === '—version' ? '--version' : arg);
 
 function registerWorktreeCommands(parent: Command) {
     parent.command('list')
@@ -64,23 +65,28 @@ function registerWorktreeCommands(parent: Command) {
             await createCommandMulti(options);
         });
 
-    parent.command('worktree-checkout [name] [ref]')
-        .description('Create a checkout-style worktree from an existing branch')
-        .option('-n, --name <slug>', 'Worktree name (slug)')
-        .option('-r, --ref <ref>', 'Existing branch or ref')
-        .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-        .option('--open', 'Open a tool after creation (IDE or agent CLI)')
-        .option('--no-open', 'Skip opening a tool after creation')
-        .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
-        .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
-        .option('--exec <command>', 'Command to execute after creation')
-        .action(async (name, ref, options) => {
-            await createCommand({
-                ...options,
-                name: name || options.name,
-                ref: ref || options.ref
+    const registerWorktreeCheckout = (commandName: string, description: string) => {
+        parent.command(`${commandName} [name] [ref]`)
+            .description(description)
+            .option('-n, --name <slug>', 'Worktree name (slug)')
+            .option('-r, --ref <ref>', 'Existing branch or ref')
+            .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+            .option('--open', 'Open a tool after creation (IDE or agent CLI)')
+            .option('--no-open', 'Skip opening a tool after creation')
+            .option('--enter', 'Enter the worktree sub-shell after checkout/opening')
+            .option('--no-enter', 'Do not enter the worktree sub-shell after checkout/opening')
+            .option('--exec <command>', 'Command to execute after creation')
+            .action(async (name, ref, options) => {
+                await createCommand({
+                    ...options,
+                    name: name || options.name,
+                    ref: ref || options.ref
+                });
             });
-        });
+    };
+
+    registerWorktreeCheckout('worktree-checkout', 'Create a checkout-style worktree from an existing branch');
+    registerWorktreeCheckout('wc', 'Alias for worktree-checkout');
 
     parent.command('delete')
         .description('Delete managed worktrees')
@@ -288,4 +294,4 @@ program.command('thor')
     .description('Consult the God of Thunder (Easter Egg)')
     .action(thorCommand);
 
-program.parse(process.argv);
+program.parse(argv);

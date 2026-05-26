@@ -5,6 +5,7 @@ import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch, ensure
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
+import { findLocalEnvFiles, promptAndCopyEnvFilesToWorktrees } from '../../lib/env-files.js';
 import { execa } from 'execa';
 import fs from 'fs-extra';
 
@@ -136,9 +137,18 @@ export async function createCommandMulti(options: MultiCreateOptions) {
                 ]);
             }
             createdWorktrees.push(wtPath);
+        }
 
-            // 4. Bootstrap
-            if (shouldBootstrap) {
+        const envFiles = await findLocalEnvFiles(repoRoot);
+        if (envFiles.length > 0 && createdWorktrees.length > 0) {
+            await promptAndCopyEnvFilesToWorktrees(repoRoot, createdWorktrees, envFiles, {
+                promptMessage: `Copy local env file${envFiles.length === 1 ? '' : 's'} to all created worktrees? (${envFiles.join(', ')})`,
+            });
+        }
+
+        // 4. Bootstrap
+        if (shouldBootstrap) {
+            for (const wtPath of createdWorktrees) {
                 await runBootstrap(wtPath, repoRoot);
             }
         }

@@ -30,54 +30,46 @@ npm install -g yggtree
 
 ### Agent Skills
 
-Skills are now available for your favorite agents.
+An agent skill is now available for your favorite agents.
 
-`yggtree` now ships a set of agent skills focused on the workflows that matter
-most when working with Git worktrees:
+`yggtree` ships one consolidated skill that helps agents choose the right
+worktree workflow first, then load the smallest reference they need:
 
 * **Create a task worktree**: start a brand-new branch-backed task in parallel.
 * **Branch off without stashing**: jump into another branch without disturbing
   the work already in progress.
 * **Bootstrap and enter a realm**: prepare a worktree, open it in your IDE, or
-  orchestrate non-interactive sub-agents inside it.
+  run commands inside it.
 * **Run sandbox experiments**: try alternative approaches locally and
   apply/unapply the winner safely.
-* **Orchestrate sub-agents in worktrees**: let one main agent create or choose
-  isolated realms, delegate work to other agents non-interactively, and review
-  the result before asking for another iteration.
 
-These skills are especially useful with agents like **Claude Code**,
+This skill is especially useful with agents like **Claude Code**,
 **Codex**, **Cursor**, **Gemini CLI**, and other tools that support the open
 Skills ecosystem.
 
-Install them with the Skills CLI:
+Install it with the Skills CLI:
 
 ```bash
 npx skills add leoreisdias/yggdrasil-worktree
 ```
 
-Install them globally for your user:
+Install it globally for your user:
 
 ```bash
 npx skills add leoreisdias/yggdrasil-worktree --global
 ```
 
-Install only specific `yggtree` skills:
+Install only the consolidated `yggtree` skill:
 
 ```bash
-npx skills add leoreisdias/yggdrasil-worktree \
-  --skill create-task-worktree \
-  --skill branch-off-without-stashing \
-  --skill bootstrap-and-enter-a-realm \
-  --skill run-sandbox-experiments \
-  --skill orchestrate-sub-agents-in-worktrees
+npx skills add leoreisdias/yggdrasil-worktree --skill yggtree
 ```
 
 If your agent supports targeted installs, you can also point the install to a
 specific agent runtime, for example:
 
 ```bash
-npx skills add leoreisdias/yggdrasil-worktree --agent claude-code
+npx skills add leoreisdias/yggdrasil-worktree --agent codex
 ```
 
 ### Basic Usage
@@ -94,6 +86,7 @@ Or use commands directly:
 yggtree create
 yggtree list
 yggtree enter my-feature
+yggtree -v
 ```
 
 The older `yggtree wt ...` form still works for compatibility, but direct commands are the preferred shape.
@@ -303,7 +296,8 @@ Behavior:
 * Prompts a searchable branch picker (type to filter in real time).
 * Attaches the new worktree directly to the selected branch (checkout-style).
 * If you select a remote-only branch (`origin/*`), yggtree creates the local branch in the new worktree automatically.
-* If that branch already has an active yggtree-managed worktree, yggtree falls back to entering that worktree instead of creating a duplicate.
+* If that branch already has an active yggtree-managed worktree, yggtree falls back to using that worktree instead of creating a duplicate.
+* `yggtree wc` is a short alias for the same flow.
 
 Options:
 
@@ -311,11 +305,14 @@ Options:
 * `-r, --ref <ref>`: skip picker and use a specific branch (`feature/x` or `origin/feature/x`)
 * `--no-bootstrap`
 * `--open / --no-open`
+* `--enter / --no-enter`: enter the worktree sub-shell after checkout/opening
 * `--exec "<command>"`
 
 Interactive flow:
 
 * Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
+* It also asks whether to enter the worktree shell after checkout, even when you do not open a tool.
+* If you open an agent CLI, yggtree skips the shell question because agent tools already launch through the enter flow.
 * `--exec` remains available as an advanced explicit override.
 
 <details>
@@ -323,6 +320,7 @@ Interactive flow:
 
 ```bash
 yggtree worktree-checkout -n hotfix-auth -r main --no-open
+yggtree wc hotfix-auth main --open --enter
 ```
 
 </details>

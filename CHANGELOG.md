@@ -19,6 +19,9 @@ All notable changes to this project will be documented in this file.
 - Interactive `worktree-checkout` now asks whether to enter the worktree shell even when the user chooses not to open an IDE or agent tool; agent CLI selections skip the extra shell question because they already launch through the enter flow.
 - Worktree creation flows now offer to copy local `.env` files into the new worktree before bootstrap runs. The copy is opt-in, skips example/template env files, and covers `create`, `worktree-checkout`, `create-multi`, and `create-sandbox`.
 
+### Fixed
+- Worktree creation commands no longer prompt for local `.env` copying in CI or other non-interactive runs, so scripted flows such as `--exec` continue without hanging when root `.env` files exist.
+
 ## [1.4.2] - 2026-03-15
 
 ### Added

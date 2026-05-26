@@ -24,6 +24,7 @@ import { bifrostCommand } from './commands/bifrost.js';
 import { thorCommand } from './commands/thor.js';
 
 const program = new Command();
+const argv = process.argv.map((arg) => arg === '-v' || arg === '—version' ? '--version' : arg);
 
 function registerWorktreeCommands(parent: Command) {
     parent.command('list')
@@ -293,4 +294,4 @@ program.command('thor')
     .description('Consult the God of Thunder (Easter Egg)')
     .action(thorCommand);
 
-program.parse(process.argv);
+program.parse(argv);

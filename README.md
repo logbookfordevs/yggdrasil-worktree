@@ -86,6 +86,7 @@ Or use commands directly:
 yggtree create
 yggtree list
 yggtree enter my-feature
+yggtree -v
 ```
 
 The older `yggtree wt ...` form still works for compatibility, but direct commands are the preferred shape.

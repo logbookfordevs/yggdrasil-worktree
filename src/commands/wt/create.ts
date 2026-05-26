@@ -6,6 +6,7 @@ import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { ensureAutocompletePrompt } from '../../lib/prompt.js';
+import { promptAndCopyEnvFiles } from '../../lib/env-files.js';
 import { enterCommand } from './enter.js';
 import {
     detectInstalledOpenTools,
@@ -279,6 +280,7 @@ export async function createCommand(options: CreateOptions) {
             return;
         }
 
+        await promptAndCopyEnvFiles(repoRoot, wtPath);
         if (shouldBootstrap) {
             await runBootstrap(wtPath, repoRoot);
         }

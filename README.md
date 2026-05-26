@@ -7,6 +7,9 @@
 
 Like the mythical world tree connecting realms, Yggdrasil lets you grow isolated, parallel environments where ideas can evolve independently without colliding.
 
+For guided workflows, command examples, and safety notes, read the full docs:
+**[yggtree.logbookfordevs.com/docs](https://yggtree.logbookfordevs.com/docs)**.
+
 ---
 
 ## 🚀 Quick Start

@@ -6,8 +6,9 @@ on:
       - "v*"
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
+  attestations: write
 
 jobs:
   publish:
@@ -31,6 +32,22 @@ jobs:
 
       - name: Build
         run: pnpm run build
+
+      - name: Build GitHub release artifact
+        run: pnpm run release:artifact
+
+      - name: Attest GitHub release artifact
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist-release/*.tar.gz
+
+      - name: Upload GitHub release artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
+            gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" dist-release/* --clobber
 
       - name: Publish to npm
         run: npm publish --access public

@@ -295,6 +295,7 @@ Behavior:
 
 * Prompts a searchable branch picker (type to filter in real time).
 * Attaches the new worktree directly to the selected branch (checkout-style).
+* If a branch exists both locally and on `origin`, the picker shows both `branch` (local) and `origin/branch` (remote tip, detached) as explicit choices.
 * If you select a remote-only branch (`origin/*`), yggtree creates the local branch in the new worktree automatically.
 * If that branch already has an active yggtree-managed worktree, yggtree falls back to using that worktree instead of creating a duplicate.
 * `yggtree wc` is a short alias for the same flow.

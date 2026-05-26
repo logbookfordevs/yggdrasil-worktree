@@ -68,6 +68,9 @@ yggtree worktree-checkout --ref main
 Checkout-style resolution expects a local branch name or `origin/<branch>`, so
 full ref-path strings do not resolve the way users expect.
 
+When a branch exists both locally and on `origin`, choose the local branch for a
+normal branch-attached worktree or `origin/<branch>` for the detached remote tip.
+
 Source: `src/commands/wt/create.ts`
 
 ### HIGH Expecting the same branch to be available in two worktrees

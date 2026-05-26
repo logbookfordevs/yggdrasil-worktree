@@ -22,7 +22,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsc --watch",
-    "test": "pnpm build && node scripts/test-env-files.mjs"
+    "test": "pnpm build && node scripts/test-env-files.mjs && node scripts/test-worktree-checkout-branches.mjs"
   },
   "keywords": [
     "cli",

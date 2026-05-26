@@ -31,6 +31,8 @@ interface BranchCandidate {
     checkoutRef: string;
     createLocalBranch: boolean;
     source: 'local' | 'remote';
+    attachedBranchName?: string;
+    sourceLabel: string;
 }
 
 function toSlug(value: string): string {
@@ -40,7 +42,7 @@ function toSlug(value: string): string {
         .replace(/\s+/g, '-');
 }
 
-async function listBranchCandidates(): Promise<BranchCandidate[]> {
+export async function listBranchCandidates(): Promise<BranchCandidate[]> {
     const [localRefs, remoteRefs] = await Promise.all([
         execa('git', ['for-each-ref', '--format=%(refname:short)', 'refs/heads']),
         execa('git', ['for-each-ref', '--format=%(refname:short)', 'refs/remotes/origin']),
@@ -59,24 +61,31 @@ async function listBranchCandidates(): Promise<BranchCandidate[]> {
         .map(ref => ref.replace(/^origin\//, ''));
 
     const localSet = new Set(localBranches);
-    const remoteOnly = [...new Set(remoteBranches)].filter(branch => !localSet.has(branch));
+    const uniqueRemoteBranches = [...new Set(remoteBranches)];
 
     const localCandidates: BranchCandidate[] = localBranches.map(branchName => ({
         branchName,
         checkoutRef: branchName,
         createLocalBranch: false,
         source: 'local',
+        attachedBranchName: branchName,
+        sourceLabel: 'local',
     }));
 
-    const remoteCandidates: BranchCandidate[] = remoteOnly.map(branchName => ({
+    const remoteCandidates: BranchCandidate[] = uniqueRemoteBranches.map(branchName => ({
         branchName,
         checkoutRef: `origin/${branchName}`,
-        createLocalBranch: true,
+        createLocalBranch: !localSet.has(branchName),
         source: 'remote',
+        attachedBranchName: localSet.has(branchName) ? undefined : branchName,
+        sourceLabel: localSet.has(branchName) ? 'remote tip, detached' : 'remote, creates local branch',
     }));
 
     return [...localCandidates, ...remoteCandidates]
-        .sort((a, b) => a.branchName.localeCompare(b.branchName));
+        .sort((a, b) =>
+            a.branchName.localeCompare(b.branchName) ||
+            a.checkoutRef.localeCompare(b.checkoutRef)
+        );
 }
 
 function resolveCandidateFromRef(ref: string, candidates: BranchCandidate[]): BranchCandidate | undefined {
@@ -85,7 +94,10 @@ function resolveCandidateFromRef(ref: string, candidates: BranchCandidate[]): Br
 
     if (trimmedRef.startsWith('origin/')) {
         const branchName = trimmedRef.replace(/^origin\//, '');
-        return candidates.find(candidate => candidate.branchName === branchName);
+        return candidates.find(candidate =>
+            candidate.branchName === branchName &&
+            candidate.checkoutRef === trimmedRef
+        );
     }
 
     return candidates.find(candidate =>
@@ -146,11 +158,14 @@ export async function createCommand(options: CreateOptions) {
                     source: async (_answers: unknown, input = '') => {
                         const term = input.trim().toLowerCase();
                         const filtered = term
-                            ? candidates.filter(candidate => candidate.branchName.toLowerCase().includes(term))
+                            ? candidates.filter(candidate =>
+                                candidate.branchName.toLowerCase().includes(term) ||
+                                candidate.checkoutRef.toLowerCase().includes(term)
+                            )
                             : candidates;
 
                         return filtered.map(candidate => ({
-                            name: `${chalk.yellow(candidate.branchName)} ${chalk.dim(`(${candidate.source})`)}`,
+                            name: `${chalk.yellow(candidate.checkoutRef)} ${chalk.dim(`(${candidate.sourceLabel})`)}`,
                             value: candidate,
                         }));
                     },
@@ -167,9 +182,11 @@ export async function createCommand(options: CreateOptions) {
         }
 
         const existingWorktrees = await listWorktrees();
-        const existingManagedWorktree = existingWorktrees.find(
-            wt => wt.branch === selectedBranch.branchName && wt.path.startsWith(WORKTREES_ROOT)
-        );
+        const existingManagedWorktree = selectedBranch.attachedBranchName
+            ? existingWorktrees.find(
+                wt => wt.branch === selectedBranch.attachedBranchName && wt.path.startsWith(WORKTREES_ROOT)
+            )
+            : undefined;
 
         if (existingManagedWorktree) {
             log.info(

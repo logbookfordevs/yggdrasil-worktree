@@ -300,7 +300,8 @@ Behavior:
 * Prompts a searchable branch picker (type to filter in real time).
 * Attaches the new worktree directly to the selected branch (checkout-style).
 * If you select a remote-only branch (`origin/*`), yggtree creates the local branch in the new worktree automatically.
-* If that branch already has an active yggtree-managed worktree, yggtree falls back to entering that worktree instead of creating a duplicate.
+* If that branch already has an active yggtree-managed worktree, yggtree falls back to using that worktree instead of creating a duplicate.
+* `yggtree wc` is a short alias for the same flow.
 
 Options:
 
@@ -308,11 +309,14 @@ Options:
 * `-r, --ref <ref>`: skip picker and use a specific branch (`feature/x` or `origin/feature/x`)
 * `--no-bootstrap`
 * `--open / --no-open`
+* `--enter / --no-enter`: enter the worktree sub-shell after checkout/opening
 * `--exec "<command>"`
 
 Interactive flow:
 
 * Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
+* It also asks whether to enter the worktree shell after checkout, even when you do not open a tool.
+* If you open an agent CLI, yggtree skips the shell question because agent tools already launch through the enter flow.
 * `--exec` remains available as an advanced explicit override.
 
 <details>
@@ -320,6 +324,7 @@ Interactive flow:
 
 ```bash
 yggtree worktree-checkout -n hotfix-auth -r main --no-open
+yggtree wc hotfix-auth main --open --enter
 ```
 
 </details>

@@ -7,6 +7,9 @@
 
 Like the mythical world tree connecting realms, Yggdrasil lets you grow isolated, parallel environments where ideas can evolve independently without colliding.
 
+For guided workflows, command examples, and safety notes, read the full docs:
+**[yggtree.logbookfordevs.com/docs](https://yggtree.logbookfordevs.com/docs)**.
+
 ---
 
 ## 🚀 Quick Start
@@ -27,54 +30,46 @@ npm install -g yggtree
 
 ### Agent Skills
 
-Skills are now available for your favorite agents.
+An agent skill is now available for your favorite agents.
 
-`yggtree` now ships a set of agent skills focused on the workflows that matter
-most when working with Git worktrees:
+`yggtree` ships one consolidated skill that helps agents choose the right
+worktree workflow first, then load the smallest reference they need:
 
 * **Create a task worktree**: start a brand-new branch-backed task in parallel.
 * **Branch off without stashing**: jump into another branch without disturbing
   the work already in progress.
 * **Bootstrap and enter a realm**: prepare a worktree, open it in your IDE, or
-  orchestrate non-interactive sub-agents inside it.
+  run commands inside it.
 * **Run sandbox experiments**: try alternative approaches locally and
   apply/unapply the winner safely.
-* **Orchestrate sub-agents in worktrees**: let one main agent create or choose
-  isolated realms, delegate work to other agents non-interactively, and review
-  the result before asking for another iteration.
 
-These skills are especially useful with agents like **Claude Code**,
+This skill is especially useful with agents like **Claude Code**,
 **Codex**, **Cursor**, **Gemini CLI**, and other tools that support the open
 Skills ecosystem.
 
-Install them with the Skills CLI:
+Install it with the Skills CLI:
 
 ```bash
 npx skills add leoreisdias/yggdrasil-worktree
 ```
 
-Install them globally for your user:
+Install it globally for your user:
 
 ```bash
 npx skills add leoreisdias/yggdrasil-worktree --global
 ```
 
-Install only specific `yggtree` skills:
+Install only the consolidated `yggtree` skill:
 
 ```bash
-npx skills add leoreisdias/yggdrasil-worktree \
-  --skill create-task-worktree \
-  --skill branch-off-without-stashing \
-  --skill bootstrap-and-enter-a-realm \
-  --skill run-sandbox-experiments \
-  --skill orchestrate-sub-agents-in-worktrees
+npx skills add leoreisdias/yggdrasil-worktree --skill yggtree
 ```
 
 If your agent supports targeted installs, you can also point the install to a
 specific agent runtime, for example:
 
 ```bash
-npx skills add leoreisdias/yggdrasil-worktree --agent claude-code
+npx skills add leoreisdias/yggdrasil-worktree --agent codex
 ```
 
 ### Basic Usage

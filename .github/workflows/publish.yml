@@ -35,6 +35,8 @@ jobs:
 
       - name: Build GitHub release artifact
         run: pnpm run release:artifact
+        env:
+          YGGTREE_RELEASE_TAG: ${{ github.ref_name }}
 
       - name: Attest GitHub release artifact
         uses: actions/attest-build-provenance@v2

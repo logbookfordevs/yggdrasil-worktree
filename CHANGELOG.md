@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Worktree creation flows now offer to copy local `.env` files into the new worktree before bootstrap runs. The copy is opt-in, skips example/template env files, and covers `create`, `worktree-checkout`, `create-multi`, and `create-sandbox`.
 
 ### Fixed
+- GitHub release artifact names now derive from the pushed release tag instead of only `package.json`, keeping installer downloads aligned with the GitHub Release tag even during manual or hotfix tag workflows.
 - Worktree creation commands no longer prompt for local `.env` copying in CI or other non-interactive runs, so scripted flows such as `--exec` continue without hanging when root `.env` files exist.
 
 ## [1.4.2] - 2026-03-15

@@ -5,8 +5,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RELEASE_DIR="${ROOT_DIR}/dist-release"
 PACKAGE_DIR="${RELEASE_DIR}/package"
 
-version="$(node -p "JSON.parse(require('fs').readFileSync('${ROOT_DIR}/package.json', 'utf8')).version")"
-tag="v${version}"
+package_version="$(node -p "JSON.parse(require('fs').readFileSync('${ROOT_DIR}/package.json', 'utf8')).version")"
+tag="${YGGTREE_RELEASE_TAG:-${GITHUB_REF_NAME:-v${package_version}}}"
+tag="${tag#refs/tags/}"
 artifact_name="yggtree-${tag}.tar.gz"
 artifact_path="${RELEASE_DIR}/${artifact_name}"
 
@@ -15,6 +16,10 @@ mkdir -p "${PACKAGE_DIR}/yggtree"
 
 cd "${ROOT_DIR}"
 pnpm run build
+
+if [ "${tag}" != "v${package_version}" ]; then
+  echo "Warning: building ${artifact_name} from package.json version ${package_version}" >&2
+fi
 
 cp -R dist bin package.json README.md LICENSE pnpm-lock.yaml "${PACKAGE_DIR}/yggtree/"
 

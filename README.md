@@ -28,6 +28,22 @@ Or install globally:
 npm install -g yggtree
 ```
 
+Or install from the latest GitHub release without npm:
+
+```bash
+curl -fsSL https://yggtree.logbookfordevs.com/install.sh | sh
+```
+
+The release installer downloads the published `yggtree-vX.Y.Z.tar.gz`
+artifact, verifies its SHA256 checksum, installs it under
+`~/.local/share/yggtree`, and writes a launcher to `~/.local/bin/yggtree`.
+
+Install a specific release:
+
+```bash
+curl -fsSL https://yggtree.logbookfordevs.com/install.sh | sh -s -- --version v1.4.2
+```
+
 ### Agent Skills
 
 An agent skill is now available for your favorite agents.

@@ -52,6 +52,16 @@ const OPEN_TOOL_CANDIDATES: OpenToolOption[] = [
     { id: 'opencode', name: 'OpenCode', command: 'opencode', kind: 'agent', aliases: ['opencode'] },
 ];
 
+const CUSTOM_AGENT_COMMANDS = new Set([
+    ...OPEN_TOOL_CANDIDATES
+        .filter(tool => tool.kind === 'agent')
+        .map(tool => tool.command),
+    'cursor-agent',
+    'droid',
+    'gemini',
+    'pi',
+]);
+
 function truncateEnd(value: string, maxLen: number): string {
     if (maxLen <= 0) return '';
     if (value.length <= maxLen) return value;
@@ -143,7 +153,12 @@ export function isAgentTool(tool: OpenToolOption): boolean {
 }
 
 export function buildAgentExecCommand(tool: OpenToolOption): string {
-    return tool.command;
+    const args = tool.args ?? [];
+    if (args.length === 0) {
+        return tool.command;
+    }
+
+    return [tool.command, ...args.map(quoteShellArg)].join(' ');
 }
 
 function splitCommandLine(input: string): string[] {
@@ -200,13 +215,23 @@ export function parseCustomOpenCommand(input: string): OpenToolOption | undefine
         return undefined;
     }
 
+    const normalizedCommand = path.basename(command).toLowerCase();
+
     return {
         id: 'custom',
         name: input.trim(),
         command,
-        kind: 'ide',
+        kind: CUSTOM_AGENT_COMMANDS.has(normalizedCommand) ? 'agent' : 'ide',
         args,
     };
+}
+
+function quoteShellArg(arg: string): string {
+    if (/^[A-Za-z0-9_/:=.,@%+-]+$/.test(arg)) {
+        return arg;
+    }
+
+    return `'${arg.replace(/'/g, `'\\''`)}'`;
 }
 
 export function buildIdeOpenArgs(tool: OpenToolOption, wtPath: string): string[] {

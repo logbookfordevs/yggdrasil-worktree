@@ -465,6 +465,7 @@ Behavior:
 * Detects available tool commands in your `PATH` (for example: IDEs like `cursor`, `code`, `zed`; agents like `agy`, `claude`, `codex`, `opencode`).
 * Lets you choose one interactively, pick `Other command...`, or pass `--tool`.
 * Custom commands can include arguments. Use `.` as the worktree placeholder, as in `zed .` or `open -a Cursor .`; if you omit `.`, yggtree appends the worktree path.
+* Custom agent commands such as `codex --model gpt-5`, `cursor-agent`, `droid`, `pi`, or `claude --dangerously-skip-permissions` keep the agent sub-shell path instead of being launched as silent IDE openers.
 * If an agent CLI is selected, yggtree opens a sub-shell and launches it there.
 
 Options:
@@ -478,6 +479,8 @@ Options:
 yggtree open
 yggtree open feat/new-ui --tool cursor
 yggtree open feat/new-ui --tool "zed ."
+yggtree open feat/new-ui --tool "codex --model gpt-5"
+yggtree open feat/new-ui --tool "cursor-agent --force"
 yggtree open feat/new-ui --tool agy
 yggtree list --open
 ```

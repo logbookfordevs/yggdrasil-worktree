@@ -46,10 +46,42 @@ assert.deepEqual(
 );
 
 const customDroidTool = openModule.parseCustomOpenCommand('droid --profile warm');
-assert.deepEqual(
-    openModule.buildIdeOpenArgs(customDroidTool, '/tmp/yggtree/example-worktree'),
-    ['--profile', 'warm', '/tmp/yggtree/example-worktree'],
-    'appends the selected worktree path when the custom command has no dot placeholder'
+assert.equal(customDroidTool.kind, 'agent', 'preserves TTY handling for custom Droid commands');
+assert.equal(
+    openModule.buildAgentExecCommand(customDroidTool),
+    'droid --profile warm',
+    'passes custom Droid arguments through the enter command path'
 );
+
+const customGeminiTool = openModule.parseCustomOpenCommand('gemini --model "gemini-2.5-pro"');
+assert.equal(customGeminiTool.kind, 'agent', 'preserves TTY handling for custom Gemini commands');
+assert.equal(
+    openModule.buildAgentExecCommand(customGeminiTool),
+    "gemini --model gemini-2.5-pro",
+    'passes custom agent arguments through the enter command path'
+);
+
+const customClaudeTool = openModule.parseCustomOpenCommand('claude --dangerously-skip-permissions');
+assert.equal(customClaudeTool.kind, 'agent', 'preserves TTY handling for custom Claude commands');
+assert.equal(
+    openModule.buildAgentExecCommand(customClaudeTool),
+    'claude --dangerously-skip-permissions'
+);
+
+const customCodexTool = openModule.parseCustomOpenCommand('codex --model "gpt 5"');
+assert.equal(customCodexTool.kind, 'agent', 'preserves TTY handling for custom Codex commands');
+assert.equal(
+    openModule.buildAgentExecCommand(customCodexTool),
+    "codex --model 'gpt 5'",
+    'quotes custom agent arguments that need shell escaping'
+);
+
+const customPiTool = openModule.parseCustomOpenCommand('pi --mode fast');
+assert.equal(customPiTool.kind, 'agent', 'preserves TTY handling for custom Pi commands');
+assert.equal(openModule.buildAgentExecCommand(customPiTool), 'pi --mode fast');
+
+const customCursorAgentTool = openModule.parseCustomOpenCommand('cursor-agent --force');
+assert.equal(customCursorAgentTool.kind, 'agent', 'preserves TTY handling for custom Cursor Agent commands');
+assert.equal(openModule.buildAgentExecCommand(customCursorAgentTool), 'cursor-agent --force');
 
 console.log('open tool options tests passed');

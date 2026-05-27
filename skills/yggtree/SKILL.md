@@ -49,6 +49,7 @@ yggtree create-sandbox
 yggtree bootstrap
 yggtree enter
 yggtree open my-feature --tool cursor
+yggtree open my-feature --tool "zed ."
 yggtree exec my-feature codex --approval-mode auto
 ```
 

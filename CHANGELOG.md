@@ -9,8 +9,10 @@ All notable changes to this project will be documented in this file.
 - **Internal site app**: Added the `apps/site` Next.js app for the Yggtree website and docs experience, with Tailwind CSS 4, Motion, responsive docs navigation, and deployment notes for Vercel.
 - **GitHub Actions validation**: Added CI coverage for TypeScript checks and publish workflow support so release readiness is easier to verify from GitHub.
 - `yggtree wc` and `yggtree wt wc` now provide short aliases for the checkout-style `worktree-checkout` flow.
+- `yggtree open` now includes an interactive `Other command...` option for custom IDE or opener commands such as `zed .`, `droid .`, or `open -a Cursor .`.
 
 ### Changed
+- Open-tool detection now treats `agy` / Antigravity CLI as an agent CLI and no longer lists deprecated Gemini CLI as a built-in open option.
 - Worktree commands are now available directly at the top level, so users can run `yggtree list`, `yggtree create`, `yggtree worktree-checkout`, `yggtree delete`, and the rest of the worktree command set without the `wt` prefix.
 - The older `yggtree wt ...` command shape remains available as a compatibility alias for existing scripts and muscle memory.
 - Updated README and skill references to teach the direct command surface first, with `wt` documented as legacy-compatible behavior rather than the primary path.

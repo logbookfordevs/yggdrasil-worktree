@@ -33,20 +33,22 @@ export interface OpenToolOption {
     command: string;
     kind: 'ide' | 'agent';
     aliases?: string[];
+    args?: string[];
 }
+
+const CUSTOM_OPEN_TOOL_VALUE = '__custom_open_tool__';
 
 const OPEN_TOOL_CANDIDATES: OpenToolOption[] = [
     { id: 'cursor', name: 'Cursor', command: 'cursor', kind: 'ide', aliases: ['cursor'] },
     { id: 'code', name: 'VS Code', command: 'code', kind: 'ide', aliases: ['vscode', 'code'] },
     { id: 'windsurf', name: 'Windsurf', command: 'windsurf', kind: 'ide', aliases: ['windsurf'] },
     { id: 'zed', name: 'Zed', command: 'zed', kind: 'ide', aliases: ['zed'] },
-    { id: 'agy', name: 'Agy', command: 'agy', kind: 'ide', aliases: ['agy'] },
     { id: 'idea', name: 'IntelliJ IDEA', command: 'idea', kind: 'ide', aliases: ['idea', 'intellij'] },
     { id: 'webstorm', name: 'WebStorm', command: 'webstorm', kind: 'ide', aliases: ['webstorm'] },
     { id: 'subl', name: 'Sublime Text', command: 'subl', kind: 'ide', aliases: ['subl', 'sublime'] },
+    { id: 'agy', name: 'Agy (Antigravity CLI)', command: 'agy', kind: 'agent', aliases: ['agy', 'antigravity'] },
     { id: 'claude', name: 'Claude Code', command: 'claude', kind: 'agent', aliases: ['claude', 'claude-code'] },
     { id: 'codex', name: 'Codex', command: 'codex', kind: 'agent', aliases: ['codex'] },
-    { id: 'gemini', name: 'Gemini CLI', command: 'gemini', kind: 'agent', aliases: ['gemini'] },
     { id: 'opencode', name: 'OpenCode', command: 'opencode', kind: 'agent', aliases: ['opencode'] },
 ];
 
@@ -144,6 +146,114 @@ export function buildAgentExecCommand(tool: OpenToolOption): string {
     return tool.command;
 }
 
+function splitCommandLine(input: string): string[] {
+    const parts: string[] = [];
+    let current = '';
+    let quote: '"' | "'" | undefined;
+
+    for (let index = 0; index < input.length; index += 1) {
+        const character = input[index];
+
+        if (character === '\\' && index + 1 < input.length) {
+            index += 1;
+            current += input[index];
+            continue;
+        }
+
+        if ((character === '"' || character === "'") && quote === undefined) {
+            quote = character;
+            continue;
+        }
+
+        if (character === quote) {
+            quote = undefined;
+            continue;
+        }
+
+        if (/\s/.test(character) && quote === undefined) {
+            if (current.length > 0) {
+                parts.push(current);
+                current = '';
+            }
+            continue;
+        }
+
+        current += character;
+    }
+
+    if (quote !== undefined) {
+        return [];
+    }
+
+    if (current.length > 0) {
+        parts.push(current);
+    }
+
+    return parts;
+}
+
+export function parseCustomOpenCommand(input: string): OpenToolOption | undefined {
+    const parts = splitCommandLine(input.trim());
+    const [command, ...args] = parts;
+
+    if (!command) {
+        return undefined;
+    }
+
+    return {
+        id: 'custom',
+        name: input.trim(),
+        command,
+        kind: 'ide',
+        args,
+    };
+}
+
+export function buildIdeOpenArgs(tool: OpenToolOption, wtPath: string): string[] {
+    const args = tool.args ?? [];
+
+    if (args.length === 0) {
+        return [wtPath];
+    }
+
+    let hasWorktreePlaceholder = false;
+    const resolvedArgs = args.map(arg => {
+        if (arg === '.') {
+            hasWorktreePlaceholder = true;
+            return wtPath;
+        }
+
+        return arg;
+    });
+
+    return hasWorktreePlaceholder
+        ? resolvedArgs
+        : [...resolvedArgs, wtPath];
+}
+
+async function promptCustomOpenTool(): Promise<OpenToolOption> {
+    const { commandLine } = await inquirer.prompt<{ commandLine: string }>([
+        {
+            type: 'input',
+            name: 'commandLine',
+            message: 'Command to run:',
+            suffix: chalk.dim(' (examples: zed ., droid ., open -a Cursor .)'),
+            validate: async (input: string) => {
+                const customTool = parseCustomOpenCommand(input);
+                if (!customTool) {
+                    return 'Enter a command to run.';
+                }
+
+                return await commandExists(customTool.command)
+                    ? true
+                    : `Command "${customTool.command}" was not found in PATH.`;
+            },
+        },
+    ]);
+
+    return parseCustomOpenCommand(commandLine) as OpenToolOption;
+}
+
 export async function promptOpenToolSelection(
     installedTools: OpenToolOption[],
     message = 'Select tool to open:'
@@ -172,8 +282,13 @@ export async function promptOpenToolSelection(
         choices.push(new inquirer.Separator(chalk.dim('── Agent CLIs ──')));
         choices.push(...agentChoices);
     }
+    if (choices.length > 0) choices.push(new inquirer.Separator(" "));
+    choices.push({
+        name: `Other command... ${chalk.dim('(type a custom opener)')}`,
+        value: CUSTOM_OPEN_TOOL_VALUE,
+    });
 
-    const { selectedTool } = await inquirer.prompt<{ selectedTool: OpenToolOption }>([
+    const { selectedTool } = await inquirer.prompt<{ selectedTool: OpenToolOption | typeof CUSTOM_OPEN_TOOL_VALUE }>([
         {
             type: 'list',
             name: 'selectedTool',
@@ -184,7 +299,9 @@ export async function promptOpenToolSelection(
         },
     ]);
 
-    return selectedTool;
+    return selectedTool === CUSTOM_OPEN_TOOL_VALUE
+        ? promptCustomOpenTool()
+        : selectedTool;
 }
 
 export async function launchOpenTool(tool: OpenToolOption, wtPath: string): Promise<void> {
@@ -193,7 +310,7 @@ export async function launchOpenTool(tool: OpenToolOption, wtPath: string): Prom
         return;
     }
 
-    await execa(tool.command, [wtPath], {
+    await execa(tool.command, buildIdeOpenArgs(tool, wtPath), {
         cwd: wtPath,
         stdio: 'ignore',
     });
@@ -270,13 +387,9 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
 
         if (requestedTool) {
             chosenTool = resolveOpenToolOption(requestedTool, installedTools);
-            if (!chosenTool && await commandExists(requestedTool)) {
-                chosenTool = {
-                    id: 'custom',
-                    name: requestedTool,
-                    command: requestedTool,
-                    kind: 'ide',
-                };
+            const customTool = parseCustomOpenCommand(requestedTool);
+            if (!chosenTool && customTool && await commandExists(customTool.command)) {
+                chosenTool = customTool;
             }
 
             if (!chosenTool) {
@@ -286,12 +399,6 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
                 return;
             }
         } else {
-            if (installedTools.length === 0) {
-                log.error('No supported open tool command was detected in PATH.');
-                log.dim('Try: yggtree wt open --tool <command> (e.g. --tool cursor, --tool claude)');
-                return;
-            }
-
             chosenTool = await promptOpenToolSelection(installedTools);
         }
 

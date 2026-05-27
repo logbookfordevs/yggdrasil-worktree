@@ -97,7 +97,7 @@ function registerWorktreeCommands(parent: Command) {
 
     parent.command('open [worktree]')
         .description('Open a worktree in an IDE or agent CLI')
-        .option('--tool <command>', 'Tool command to use (e.g. cursor, code, claude, codex)')
+        .option('--tool <command>', 'Tool command to use (e.g. cursor, zed ., agy, codex)')
         .action(async (worktree, options) => {
             await openCommand(worktree, options);
         });

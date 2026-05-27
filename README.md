@@ -44,7 +44,7 @@ worktree workflow first, then load the smallest reference they need:
   apply/unapply the winner safely.
 
 This skill is especially useful with agents like **Claude Code**,
-**Codex**, **Cursor**, **Gemini CLI**, and other tools that support the open
+**Codex**, **Cursor**, **Agy (Antigravity CLI)**, and other tools that support the open
 Skills ecosystem.
 
 Install it with the Skills CLI:
@@ -462,8 +462,9 @@ Open a worktree in an IDE or agent CLI.
 Behavior:
 
 * If `[worktree]` is omitted, you can pick from the worktree list with type-to-filter search.
-* Detects available tool commands in your `PATH` (for example: IDEs like `cursor`, `code`, `zed`; agents like `claude`, `codex`, `gemini`, `opencode`).
-* Lets you choose one interactively, or pass `--tool`.
+* Detects available tool commands in your `PATH` (for example: IDEs like `cursor`, `code`, `zed`; agents like `agy`, `claude`, `codex`, `opencode`).
+* Lets you choose one interactively, pick `Other command...`, or pass `--tool`.
+* Custom commands can include arguments. Use `.` as the worktree placeholder, as in `zed .` or `open -a Cursor .`; if you omit `.`, yggtree appends the worktree path.
 * If an agent CLI is selected, yggtree opens a sub-shell and launches it there.
 
 Options:
@@ -476,7 +477,8 @@ Options:
 ```bash
 yggtree open
 yggtree open feat/new-ui --tool cursor
-yggtree open feat/new-ui --tool claude
+yggtree open feat/new-ui --tool "zed ."
+yggtree open feat/new-ui --tool agy
 yggtree list --open
 ```
 

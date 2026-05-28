@@ -4,7 +4,7 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
-import { listBranchCandidates } from '../dist/commands/wt/create.js';
+import { findExistingBranchWorktree, listBranchCandidates } from '../dist/commands/wt/create.js';
 
 const exec = promisify(execFile);
 
@@ -88,6 +88,15 @@ try {
     candidate.checkoutRef === 'origin/local-only'
   );
   assert.equal(localOnlyRemote, undefined);
+
+  const existingBranchWorktree = findExistingBranchWorktree(
+    [
+      { path: repo, HEAD: 'main-head', branch: 'main' },
+      { path: path.join(tmp, 'external-development'), HEAD: 'development-head', branch: 'development' },
+    ],
+    'development'
+  );
+  assert.equal(existingBranchWorktree?.path, path.join(tmp, 'external-development'));
 
   console.log('worktree checkout branch candidate tests passed');
 } finally {

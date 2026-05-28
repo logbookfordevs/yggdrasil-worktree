@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 - **Yggtree agent skill**: Added a consolidated `yggtree` skill with focused references for creating task worktrees, checking out existing branches without stashing, managing realm lifecycle commands, and running sandbox experiments.
 - **Internal site app**: Added the `apps/site` Next.js app for the Yggtree website and docs experience, with Tailwind CSS 4, Motion, responsive docs navigation, and deployment notes for Vercel.
 - **GitHub Actions validation**: Added CI coverage for TypeScript checks and publish workflow support so release readiness is easier to verify from GitHub.
+- **Vitest test runner**: Migrated CLI helper coverage from ad hoc `.mjs` scripts to named Vitest suites for env-file handling and worktree checkout behavior.
+- **PR validation workflow**: GitHub Actions now runs the full `pnpm test` pipeline on pull requests and pushes to `main`.
 - `yggtree wc` and `yggtree wt wc` now provide short aliases for the checkout-style `worktree-checkout` flow.
 - `yggtree open` now includes an interactive `Other command...` option for custom IDE or opener commands such as `zed .`, `droid .`, or `open -a Cursor .`.
 
@@ -24,6 +26,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Worktree creation commands no longer prompt for local `.env` copying in CI or other non-interactive runs, so scripted flows such as `--exec` continue without hanging when root `.env` files exist.
 - `worktree-checkout` now shows both local and `origin/*` choices when a branch exists in both places, so users can explicitly choose the local branch or the remote tip.
+- `worktree-checkout` now reuses any existing worktree for the selected branch, including linked worktrees outside the managed `~/.yggtree` directory, instead of trying to create a duplicate checkout.
+- `worktree-checkout` now ignores prunable or missing-path worktree entries when deciding whether an existing checkout can be reused.
 - Custom `open --tool` agent commands such as `gemini`, `codex --model ...`, `cursor-agent`, `droid`, `pi`, and `claude --dangerously-skip-permissions` now keep the interactive agent sub-shell path instead of being launched with ignored stdio as IDE openers.
 
 ## [1.4.2] - 2026-03-15

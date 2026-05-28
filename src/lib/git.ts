@@ -10,6 +10,7 @@ export interface GitWorktree {
     path: string;
     HEAD: string;
     branch?: string;
+    prunable?: string;
 }
 
 let cachedRepoRoot: string | null = null;
@@ -68,6 +69,10 @@ export async function removeWorktree(wtPath: string): Promise<void> {
 
 export async function listWorktrees(): Promise<GitWorktree[]> {
     const { stdout } = await execa('git', ['worktree', 'list', '--porcelain']);
+    return parseWorktreeList(stdout);
+}
+
+export function parseWorktreeList(stdout: string): GitWorktree[] {
     const worktrees: GitWorktree[] = [];
     
     let currentWt: any = {};
@@ -85,6 +90,7 @@ export async function listWorktrees(): Promise<GitWorktree[]> {
         if (key === 'worktree') currentWt.path = value;
         if (key === 'HEAD') currentWt.HEAD = value;
         if (key === 'branch') currentWt.branch = value.replace('refs/heads/', '');
+        if (key === 'prunable') currentWt.prunable = value;
     }
     
     // Push the last one if active

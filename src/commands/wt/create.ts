@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { getRepoRoot, getRepoName, createWorktree, fetchAll, listWorktrees } from '../../lib/git.js';
+import { GitWorktree, getRepoRoot, getRepoName, createWorktree, fetchAll, listWorktrees } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
@@ -106,6 +106,15 @@ function resolveCandidateFromRef(ref: string, candidates: BranchCandidate[]): Br
     );
 }
 
+export function findExistingBranchWorktree(worktrees: GitWorktree[], branchName?: string): GitWorktree | undefined {
+    if (!branchName) return undefined;
+    return worktrees.find(wt =>
+        wt.branch === branchName &&
+        !wt.prunable &&
+        fs.pathExistsSync(wt.path)
+    );
+}
+
 async function promptShouldEnterShell(message: string): Promise<boolean> {
     const { shouldEnterShell } = await inquirer.prompt<{ shouldEnterShell: boolean }>([
         {
@@ -182,20 +191,16 @@ export async function createCommand(options: CreateOptions) {
         }
 
         const existingWorktrees = await listWorktrees();
-        const existingManagedWorktree = selectedBranch.attachedBranchName
-            ? existingWorktrees.find(
-                wt => wt.branch === selectedBranch.attachedBranchName && wt.path.startsWith(WORKTREES_ROOT)
-            )
-            : undefined;
+        const existingBranchWorktree = findExistingBranchWorktree(existingWorktrees, selectedBranch.attachedBranchName);
 
-        if (existingManagedWorktree) {
+        if (existingBranchWorktree) {
             log.info(
-                `Branch ${chalk.cyan(selectedBranch.branchName)} is already active in ${ui.path(existingManagedWorktree.path)}.`
+                `Branch ${chalk.cyan(selectedBranch.branchName)} is already active in ${ui.path(existingBranchWorktree.path)}.`
             );
 
             if (options.exec && options.exec.trim()) {
                 log.info('Reusing the existing worktree and running the requested command...');
-                await enterCommand(existingManagedWorktree.path, { exec: options.exec });
+                await enterCommand(existingBranchWorktree.path, { exec: options.exec });
                 return;
             }
 
@@ -216,10 +221,10 @@ export async function createCommand(options: CreateOptions) {
                     : await promptShouldEnterShell('Enter the existing worktree shell now?');
 
                 if (shouldEnterExisting) {
-                    await enterCommand(existingManagedWorktree.path);
+                    await enterCommand(existingBranchWorktree.path);
                     return;
                 }
-                log.header(`cd "${existingManagedWorktree.path}"`);
+                log.header(`cd "${existingBranchWorktree.path}"`);
                 return;
             }
 
@@ -230,21 +235,21 @@ export async function createCommand(options: CreateOptions) {
                     ? options.enter
                     : await promptShouldEnterShell('Enter the existing worktree shell now?');
                 if (shouldEnterExisting) {
-                    await enterCommand(existingManagedWorktree.path);
+                    await enterCommand(existingBranchWorktree.path);
                     return;
                 }
-                log.header(`cd "${existingManagedWorktree.path}"`);
+                log.header(`cd "${existingBranchWorktree.path}"`);
                 return;
             }
 
             const selectedTool = await promptOpenToolSelection(installedTools, 'Select tool to open in the existing worktree:');
             log.info('Opening existing worktree instead of creating a duplicate...');
-            await launchOpenTool(selectedTool, existingManagedWorktree.path);
+            await launchOpenTool(selectedTool, existingBranchWorktree.path);
             const shouldEnterExisting = options.enter !== undefined
                 ? options.enter
                 : !isAgentTool(selectedTool) && await promptShouldEnterShell('Enter the existing worktree shell too?');
             if (shouldEnterExisting && !isAgentTool(selectedTool)) {
-                await enterCommand(existingManagedWorktree.path);
+                await enterCommand(existingBranchWorktree.path);
             }
             log.success('Existing worktree opened.');
             return;

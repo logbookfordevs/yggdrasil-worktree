@@ -108,7 +108,11 @@ function resolveCandidateFromRef(ref: string, candidates: BranchCandidate[]): Br
 
 export function findExistingBranchWorktree(worktrees: GitWorktree[], branchName?: string): GitWorktree | undefined {
     if (!branchName) return undefined;
-    return worktrees.find(wt => wt.branch === branchName);
+    return worktrees.find(wt =>
+        wt.branch === branchName &&
+        !wt.prunable &&
+        fs.pathExistsSync(wt.path)
+    );
 }
 
 async function promptShouldEnterShell(message: string): Promise<boolean> {

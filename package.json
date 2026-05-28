@@ -22,7 +22,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsc --watch",
-    "test": "pnpm build && node scripts/test-env-files.mjs && node scripts/test-worktree-checkout-branches.mjs"
+    "test": "pnpm build && pnpm test:typecheck && vitest run",
+    "test:typecheck": "tsc --noEmit -p tsconfig.test.json"
   },
   "keywords": [
     "cli",
@@ -50,6 +51,7 @@
     "@types/gradient-string": "^1.1.6",
     "@types/inquirer": "^9.0.7",
     "@types/node": "^20.11.19",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.7"
   }
 }

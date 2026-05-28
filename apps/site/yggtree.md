@@ -369,6 +369,7 @@ Works with:
 
 * `cursor .`
 * `code .`
+* `zed .`
 * `codex`
 * Any custom command available in your shell
 

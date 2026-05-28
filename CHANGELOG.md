@@ -11,8 +11,10 @@ All notable changes to this project will be documented in this file.
 - **Vitest test runner**: Migrated CLI helper coverage from ad hoc `.mjs` scripts to named Vitest suites for env-file handling and worktree checkout behavior.
 - **PR validation workflow**: GitHub Actions now runs the full `pnpm test` pipeline on pull requests and pushes to `main`.
 - `yggtree wc` and `yggtree wt wc` now provide short aliases for the checkout-style `worktree-checkout` flow.
+- `yggtree open` now includes an interactive `Other command...` option for custom IDE or opener commands such as `zed .`, `droid .`, or `open -a Cursor .`.
 
 ### Changed
+- Open-tool detection now treats `agy` / Antigravity CLI as an agent CLI and no longer lists deprecated Gemini CLI as a built-in open option.
 - Worktree commands are now available directly at the top level, so users can run `yggtree list`, `yggtree create`, `yggtree worktree-checkout`, `yggtree delete`, and the rest of the worktree command set without the `wt` prefix.
 - The older `yggtree wt ...` command shape remains available as a compatibility alias for existing scripts and muscle memory.
 - Updated README and skill references to teach the direct command surface first, with `wt` documented as legacy-compatible behavior rather than the primary path.
@@ -26,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - `worktree-checkout` now shows both local and `origin/*` choices when a branch exists in both places, so users can explicitly choose the local branch or the remote tip.
 - `worktree-checkout` now reuses any existing worktree for the selected branch, including linked worktrees outside the managed `~/.yggtree` directory, instead of trying to create a duplicate checkout.
 - `worktree-checkout` now ignores prunable or missing-path worktree entries when deciding whether an existing checkout can be reused.
+- Custom `open --tool` agent commands such as `gemini`, `codex --model ...`, `cursor-agent`, `droid`, `pi`, and `claude --dangerously-skip-permissions` now keep the interactive agent sub-shell path instead of being launched with ignored stdio as IDE openers.
 
 ## [1.4.2] - 2026-03-15
 

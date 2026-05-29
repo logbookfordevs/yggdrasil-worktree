@@ -244,6 +244,59 @@ describe('worktree checkout CLI', () => {
         }
     }, 15_000);
 
+    it('fails instead of prompting when outside a repo with multiple registered repos and no TTY', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-multi-repo-no-tty-'));
+
+        try {
+            const repo = await createBranchCandidateRepo(tmp);
+            const otherRepo = path.join(tmp, 'other-repo');
+            const home = path.join(tmp, 'home');
+            const outsideRepo = path.join(tmp, 'outside');
+            await mkdir(otherRepo);
+            await mkdir(path.join(home, '.yggtree'), { recursive: true });
+            await mkdir(outsideRepo);
+            await writeFile(
+                path.join(home, '.yggtree', 'registry.json'),
+                JSON.stringify({ repos: { repo, otherRepo } }),
+            );
+
+            try {
+                await exec(
+                    'node',
+                    [
+                        path.resolve('dist/index.js'),
+                        'wc',
+                        '--ref',
+                        'remote-only',
+                        '--name',
+                        'outside-repo-checkout',
+                        '--no-open',
+                        '--no-enter',
+                        '--no-bootstrap',
+                    ],
+                    {
+                        cwd: outsideRepo,
+                        env: {
+                            ...process.env,
+                            CI: 'true',
+                            HOME: home,
+                        },
+                        timeout: 15_000,
+                    },
+                );
+                throw new Error('Expected worktree checkout to fail before prompting');
+            } catch (error) {
+                const output = error instanceof Error && 'stdout' in error
+                    ? String(error.stdout)
+                    : '';
+                expect(output).toContain('multiple registered realms are available');
+                expect(output).toContain('Run yggtree from the repo you want to use');
+            }
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    }, 15_000);
+
     it('can checkout and open a requested tool non-interactively without the open prompt', async () => {
         const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-tool-cli-'));
 

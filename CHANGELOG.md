@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - `yggtree help` and `yggtree help <command>` now reach Commander’s help renderer instead of being rejected by the removed-command guard.
 - `worktree-checkout` now shows both local and `origin/*` choices when a branch exists in both places, so users can explicitly choose the local branch or the remote tip.
 - `worktree-checkout` now falls back to registered Yggtree repos when run outside a git repo, matching the shell-entry flow instead of failing immediately.
+- `worktree-checkout` now exits with an actionable error instead of prompting when a non-interactive caller runs outside a repo with multiple registered repos.
 - `worktree-checkout` now reuses any existing worktree for the selected branch, including linked worktrees outside the managed `~/.yggtree` directory, instead of trying to create a duplicate checkout.
 - `worktree-checkout` now ignores prunable or missing-path worktree entries when deciding whether an existing checkout can be reused.
 

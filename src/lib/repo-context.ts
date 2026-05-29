@@ -24,6 +24,13 @@ export async function ensureRepoContext(): Promise<string> {
             return await getRepoRoot();
         }
 
+        if (!process.stdin.isTTY) {
+            log.error('Not inside a git repository and multiple registered realms are available.');
+            log.dim('Run yggtree from the repo you want to use, or run interactive mode from a real terminal to choose one.');
+            log.dim(`Available realms: ${repoEntries.map(([name]) => name).join(', ')}`);
+            process.exit(1);
+        }
+
         console.log(chalk.bold('\n  Not inside a realm. Pick a known one:'));
         const { selectedRepoPath } = await inquirer.prompt<{ selectedRepoPath: string }>([
             {

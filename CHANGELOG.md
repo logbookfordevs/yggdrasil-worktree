@@ -20,8 +20,8 @@ All notable changes to this project will be documented in this file.
 - Moved the repository toward pnpm-managed project metadata, including a root `pnpm-lock.yaml` and package manager declaration.
 - `worktree-checkout` now defaults to ending inside the worktree shell; use `--no-enter` to keep the command fire-and-forget.
 - `worktree-checkout` / `wc` now accepts `--tool <command>` to open a specific editor/app after checkout while skipping the open prompt.
-- `open` stays editor-focused and returns by default; use `--enter` when opening should continue into the worktree shell.
-- Interactive open flows now use a grouped multi-action picker for editor/app launches, and `Other command...` is available when the flow will enter the normal Yggtree sub-shell.
+- `open` stays editor-focused and returns by default; use `wc --open` when opening should continue into the worktree shell.
+- Interactive open flows now use a grouped multi-action picker for editor/app launches, and `Other command...` is available from shell-oriented checkout flows.
 - The open picker now uses a calmer Yggtree-styled left-rail layout with accent section headers, command labels, and clearer shell/no-action choices.
 - Agent CLIs are no longer first-class `open` options; use `Other command...` for custom foreground commands until the dedicated agent workflow lands.
 - `wc` / `worktree-checkout` is now the primary path for branch-to-shell navigation, including non-interactive `--ref --name --no-open --no-enter` automation.

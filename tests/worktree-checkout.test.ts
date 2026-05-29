@@ -247,4 +247,13 @@ describe('worktree checkout CLI', () => {
             "unknown command 'close'",
         );
     });
+
+    it('preserves Commander implicit help commands', async () => {
+        const help = await exec('node', [path.resolve('dist/index.js'), 'help']);
+        expect(help.stdout).toContain('Usage: yggtree');
+
+        const openHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'open']);
+        expect(openHelp.stdout).toContain('Usage: yggtree open');
+        expect(openHelp.stdout).toContain('Open a worktree in an editor or supported app');
+    });
 });

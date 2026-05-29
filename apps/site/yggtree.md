@@ -13,16 +13,16 @@ Like the mythical world tree connecting realms, Yggdrasil lets you grow isolated
 
 ### Installation
 
-Run without installing:
-
-```bash
-npx yggtree
-```
-
-Or install globally:
+Install globally:
 
 ```bash
 npm install -g yggtree
+```
+
+Or try it without installing:
+
+```bash
+npx yggtree
 ```
 
 ### Basic Usage
@@ -243,7 +243,7 @@ Columns:
 
 ### `yggtree exec [worktree] -- <command>`
 
-Run a command inside a worktree **without entering**.
+Run a command inside a worktree without changing your current terminal.
 
 <details>
 <summary>Example</summary>
@@ -328,7 +328,7 @@ yggtree create feat/cleanup-api --no-bootstrap --no-open
 **When to use:**
 
 * You just want the folder ready
-* You’ll open it or move into its shell later if needed
+* You’ll open it or use its path later if needed
 * You don’t want installs running automatically
 
 </details>
@@ -364,7 +364,7 @@ yggtree exec test -- npm test
 **What this does:**
 
 * Runs the command inside the selected worktree
-* Does not enter a sub-shell
+* Keeps your current terminal where it is
 * Ideal for CI-like checks, scripts, or quick validations
 
 </details>
@@ -384,7 +384,7 @@ yggtree wc --ref test --open
 * Checks out or reuses the branch worktree
 * Lets you choose an editor, supported app, or `Other command...`
 * Use `--tool <command>` to skip the open prompt and launch one editor/app directly
-* Drops you into the worktree shell unless you pass `--no-enter`
+* Starts a worktree shell unless you pass `--no-enter`
 
 </details>
 ---

@@ -16,16 +16,16 @@ For guided workflows, command examples, and safety notes, read the full docs:
 
 ### Installation
 
-Run without installing:
-
-```bash
-npx yggtree
-```
-
-Or install globally:
+Install globally:
 
 ```bash
 npm install -g yggtree
+```
+
+Or try it without installing:
+
+```bash
+npx yggtree
 ```
 
 ### Agent Skills
@@ -306,17 +306,17 @@ Options:
 * `-n, --name <slug>`
 * `-r, --ref <ref>`: skip picker and use a specific branch (`feature/x` or `origin/feature/x`)
 * `--no-bootstrap`
-* `--open / --no-open`: choose whether to open editors or run a startup command before entering
+* `--open / --no-open`: choose whether to open editors or run a startup command before the worktree shell starts
 * `--tool <command>`: open a specific editor/app and skip the open prompt (`cursor`, `code`, `codex-app`)
-* `--no-enter`: finish without entering the worktree shell
+* `--no-enter`: finish after create/open and return to the caller
 * `--exec "<command>"`
 
 Interactive flow:
 
-* Yggtree asks what to open before entering the shell.
+* Yggtree asks what to open before starting the worktree shell.
 * Editor choices can be selected together.
 * Use `--tool` to skip the open prompt and launch one editor/app directly.
-* `Other command...` runs a command in the Yggtree sub-shell first, then leaves you there.
+* `Other command...` runs a command in the Yggtree shell first, then leaves you there.
 * Use `--no-enter` when you only want the worktree created/opened and the command to return.
 * `--exec` remains available as an advanced explicit override.
 
@@ -423,14 +423,12 @@ Behavior:
 * Detects available editor commands in your `PATH` (for example: `cursor`, `code`, `zed`, `webstorm`).
 * Detects Codex App on macOS and launches it with `open -b com.openai.codex`.
 * Lets you choose one or more editors/apps interactively, or pass `--tool`.
-* By default, `open` launches editors/apps and returns without entering a shell.
-* Use `--enter` to enter the worktree shell after launching editors/apps.
-* With `--enter`, `Other command...` runs a command in the Yggtree sub-shell first, then leaves you there.
+* By default, `open` launches editors/apps and returns.
+* Use `wc --open` when you want to open a worktree and continue in its shell.
 
 Options:
 
 * `--tool <command>` (for example: `cursor`, `code`, `codex`, or `codex-app`)
-* `--enter`: enter the worktree shell after opening
 
 <details>
 <summary>Examples</summary>
@@ -439,7 +437,6 @@ Options:
 yggtree open
 yggtree open feat/new-ui --tool cursor
 yggtree open feat/new-ui --tool codex-app
-yggtree open feat/new-ui --tool cursor --enter
 yggtree list --open
 ```
 
@@ -449,7 +446,7 @@ yggtree list --open
 
 ### `yggtree exec [worktree] -- <command>`
 
-Run a command inside a worktree **without entering**.
+Run a command inside a worktree without changing your current terminal.
 
 <details>
 <summary>Example</summary>
@@ -581,7 +578,7 @@ yggtree exec test -- npm test
 **What this does:**
 
 * Runs the command inside the selected worktree
-* Does not enter a sub-shell
+* Keeps your current terminal where it is
 * Ideal for CI-like checks, scripts, or quick validations
 
 </details>
@@ -600,7 +597,7 @@ yggtree wc --ref test --open
 
 * Checks out or reuses the branch worktree
 * Lets you choose an editor, supported app, or `Other command...`
-* Drops you into the worktree shell unless you pass `--no-enter`
+* Starts a worktree shell unless you pass `--no-enter`
 * Type `exit` to return to your original directory
 
 </details>

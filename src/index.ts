@@ -17,6 +17,7 @@ import { openCommand } from './commands/wt/open.js';
 import { applyCommand } from './commands/wt/apply.js';
 import { unapplyCommand } from './commands/wt/unapply.js';
 import { getVersion } from './lib/version.js';
+import { notifyIfUpdateAvailable } from './lib/update-check.js';
 import { findSandboxRoot } from './lib/sandbox.js';
 import { bifrostCommand } from './commands/bifrost.js';
 import { thorCommand } from './commands/thor.js';
@@ -169,6 +170,7 @@ program
     .action(async () => {
         // Interactive Menu if no command is provided
         await welcome();
+        await notifyIfUpdateAvailable();
         const isInSandbox = Boolean(await findSandboxRoot(process.cwd()));
 
         const realmChoices = [

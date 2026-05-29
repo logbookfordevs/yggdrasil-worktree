@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
     buildOpenToolLaunchCommand,
     buildOpenActionsFromSelection,
+    formatOpenSpecialChoice,
+    formatOpenToolChoice,
     OPEN_TOOL_CANDIDATES,
     OpenToolOption,
     resolveOpenToolOption,
@@ -85,5 +87,15 @@ describe('open action selection', () => {
     it('resolves codex aliases to Codex App when the app is installed', () => {
         expect(resolveOpenToolOption('codex', [codexAppTool])).toBe(codexAppTool);
         expect(resolveOpenToolOption('codex-app', [codexAppTool])).toBe(codexAppTool);
+    });
+
+    it('formats open picker rows with a left-rail layout', () => {
+        expect(formatOpenToolChoice(codexAppTool)).toContain('Codex App');
+        expect(formatOpenToolChoice(codexAppTool)).toContain('codex-app');
+        expect(formatOpenToolChoice(codexAppTool)).not.toContain(' app');
+        expect(formatOpenToolChoice(codexAppTool)).toContain('│');
+        expect(formatOpenSpecialChoice('__other_command__', true)).toContain('Other command');
+        expect(formatOpenSpecialChoice('__no_open__', true)).toContain('just enter the shell');
+        expect(formatOpenSpecialChoice('__no_open__', false)).toContain('Do not open');
     });
 });

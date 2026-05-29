@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - `worktree-checkout` / `wc` now accepts `--tool <command>` to open a specific editor/app after checkout while skipping the open prompt.
 - `open` stays editor-focused and returns by default; use `--enter` when opening should continue into the worktree shell.
 - Interactive open flows now use a grouped multi-action picker for editor/app launches, and `Other command...` is available when the flow will enter the normal Yggtree sub-shell.
+- The open picker now uses a calmer Yggtree-styled left-rail layout with accent section headers, command labels, and clearer shell/no-action choices.
 - Agent CLIs are no longer first-class `open` options; use `Other command...` for custom foreground commands until the dedicated agent workflow lands.
 - `wc` / `worktree-checkout` is now the primary path for branch-to-shell navigation, including non-interactive `--ref --name --no-open --no-enter` automation.
 - Worktree creation flows now offer to copy local `.env` files into the new worktree before bootstrap runs. The copy is opt-in, skips example/template env files, and covers `create`, `worktree-checkout`, `create-multi`, and `create-sandbox`.

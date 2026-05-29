@@ -63,6 +63,7 @@ export const OPEN_TOOL_CANDIDATES: OpenToolOption[] = [
 
 const OTHER_COMMAND_ACTION = '__other_command__';
 const NO_OPEN_ACTION = '__no_open__';
+const yggtreeAccent = chalk.hex('#DEADED');
 
 function truncateEnd(value: string, maxLen: number): string {
     if (maxLen <= 0) return '';
@@ -89,6 +90,35 @@ function formatWorktreeChoiceLabel(type: WorktreeType, branchName: string, displ
     const pathText = truncateStart(displayPath, pathWidth);
     const typeText = formatWorktreeType(type);
     return `${typeText} ${chalk.yellow(branchText)} ${chalk.cyan(pathText)}`;
+}
+
+function openRail(): string {
+    return yggtreeAccent('│');
+}
+
+function openSectionLabel(label: string): string {
+    return `${yggtreeAccent('┌')} ${chalk.bold(label)}`;
+}
+
+function formatOpenColumns(name: string, command: string, detail: string): string {
+    const paddedName = name.padEnd(16);
+    const paddedCommand = command.padEnd(13);
+    const row = `${openRail()}  ${chalk.bold(paddedName)} ${chalk.cyan(paddedCommand)}`;
+    return detail ? `${row} ${chalk.dim(detail)}` : row;
+}
+
+export function formatOpenToolChoice(tool: OpenToolOption): string {
+    return formatOpenColumns(tool.name, tool.command, '');
+}
+
+export function formatOpenSpecialChoice(value: typeof OTHER_COMMAND_ACTION | typeof NO_OPEN_ACTION, allowShellAction: boolean): string {
+    if (value === OTHER_COMMAND_ACTION) {
+        return formatOpenColumns('Other command', 'custom', 'run first, then stay in shell');
+    }
+
+    return allowShellAction
+        ? formatOpenColumns('Nothing', 'skip', 'just enter the shell')
+        : formatOpenColumns('Do not open', 'skip', 'return after selection');
 }
 
 export async function commandExists(command: string): Promise<boolean> {
@@ -191,24 +221,24 @@ export async function promptOpenToolSelection(
     const ideChoices = installedTools
         .filter(tool => tool.kind === 'editor')
         .map(tool => ({
-            name: `${tool.name} ${chalk.dim(`(${tool.command})`)}`,
+            name: formatOpenToolChoice(tool),
             value: tool,
         }));
 
     const appChoices = installedTools
         .filter(tool => tool.kind === 'app')
         .map(tool => ({
-            name: `${tool.name} ${chalk.dim(`(${tool.command})`)}`,
+            name: formatOpenToolChoice(tool),
             value: tool,
         }));
 
     const choices: any[] = [];
     if (ideChoices.length > 0) {
-        choices.push(new inquirer.Separator(chalk.dim('── Editors ──')));
+        choices.push(new inquirer.Separator(openSectionLabel('Editors & IDEs')));
         choices.push(...ideChoices);
     }
     if (appChoices.length > 0) {
-        choices.push(new inquirer.Separator(chalk.dim('── Apps ──')));
+        choices.push(new inquirer.Separator(openSectionLabel('Apps')));
         choices.push(...appChoices);
     }
 
@@ -265,17 +295,17 @@ export async function promptOpenActions(
         const appTools = installedTools.filter(tool => tool.kind === 'app');
 
         if (editorTools.length > 0) {
-            choices.push(new inquirer.Separator(chalk.dim('── Editors ──')));
+            choices.push(new inquirer.Separator(openSectionLabel('Editors & IDEs')));
             choices.push(...editorTools.map(tool => ({
-                name: `${tool.name} ${chalk.dim(`(${tool.command})`)}`,
+                name: formatOpenToolChoice(tool),
                 value: `tool:${tool.id}`,
             })));
         }
 
         if (appTools.length > 0) {
-            choices.push(new inquirer.Separator(chalk.dim('── Apps ──')));
+            choices.push(new inquirer.Separator(openSectionLabel('Apps')));
             choices.push(...appTools.map(tool => ({
-                name: `${tool.name} ${chalk.dim(`(${tool.command})`)}`,
+                name: formatOpenToolChoice(tool),
                 value: `tool:${tool.id}`,
             })));
         }
@@ -283,16 +313,16 @@ export async function promptOpenActions(
 
     if (allowShellAction) {
         if (choices.length > 0) choices.push(new inquirer.Separator(' '));
-        choices.push(new inquirer.Separator(chalk.dim('── Shell ──')));
+        choices.push(new inquirer.Separator(openSectionLabel('Shell')));
         choices.push({
-            name: `Other command... ${chalk.dim('(run first, then stay in shell)')}`,
+            name: formatOpenSpecialChoice(OTHER_COMMAND_ACTION, allowShellAction),
             value: OTHER_COMMAND_ACTION,
         });
     }
 
     if (choices.length > 0) choices.push(new inquirer.Separator(' '));
     choices.push({
-        name: allowShellAction ? 'Nothing, just enter the shell' : 'Do not open anything',
+        name: formatOpenSpecialChoice(NO_OPEN_ACTION, allowShellAction),
         value: NO_OPEN_ACTION,
     });
 

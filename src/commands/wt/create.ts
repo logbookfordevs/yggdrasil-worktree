@@ -1,12 +1,13 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import path from 'path';
-import { GitWorktree, getRepoRoot, getRepoName, createWorktree, fetchAll, listWorktrees } from '../../lib/git.js';
+import { GitWorktree, getRepoName, createWorktree, fetchAll, listWorktrees } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
 import { WORKTREES_ROOT } from '../../lib/paths.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { ensureAutocompletePrompt } from '../../lib/prompt.js';
 import { promptAndCopyEnvFiles } from '../../lib/env-files.js';
+import { ensureRepoContext } from '../../lib/repo-context.js';
 import { enterCommand } from './enter.js';
 import {
     detectInstalledOpenTools,
@@ -119,7 +120,7 @@ export function findExistingBranchWorktree(worktrees: GitWorktree[], branchName?
 
 export async function createCommand(options: CreateOptions) {
     try {
-        const repoRoot = await getRepoRoot();
+        const repoRoot = await ensureRepoContext();
         log.info(`Repo: ${chalk.dim(repoRoot)}`);
 
         // 1. Load branches

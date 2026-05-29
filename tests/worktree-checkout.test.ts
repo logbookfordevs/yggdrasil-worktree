@@ -198,6 +198,52 @@ describe('worktree checkout CLI', () => {
         }
     });
 
+    it('can checkout from outside a repo by using the registered repo reference', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-registered-repo-'));
+
+        try {
+            const repo = await createBranchCandidateRepo(tmp);
+            const home = path.join(tmp, 'home');
+            const outsideRepo = path.join(tmp, 'outside');
+            await mkdir(path.join(home, '.yggtree'), { recursive: true });
+            await mkdir(outsideRepo);
+            await writeFile(
+                path.join(home, '.yggtree', 'registry.json'),
+                JSON.stringify({ repos: { repo } }),
+            );
+
+            await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'wc',
+                    '--ref',
+                    'remote-only',
+                    '--name',
+                    'outside-repo-checkout',
+                    '--no-open',
+                    '--no-enter',
+                    '--no-bootstrap',
+                ],
+                {
+                    cwd: outsideRepo,
+                    env: {
+                        ...process.env,
+                        CI: 'true',
+                        HOME: home,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            const worktreePath = path.join(home, '.yggtree', 'repo', 'outside-repo-checkout');
+            const { stdout } = await exec('git', ['branch', '--show-current'], { cwd: worktreePath });
+            expect(stdout.trim()).toBe('remote-only');
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    }, 15_000);
+
     it('can checkout and open a requested tool non-interactively without the open prompt', async () => {
         const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-tool-cli-'));
 

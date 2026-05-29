@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Worktree creation commands no longer prompt for local `.env` copying in CI or other non-interactive runs, so scripted flows such as `--exec` continue without hanging when root `.env` files exist.
 - `worktree-checkout` now shows both local and `origin/*` choices when a branch exists in both places, so users can explicitly choose the local branch or the remote tip.
+- `worktree-checkout` now falls back to registered Yggtree repos when run outside a git repo, matching the shell-entry flow instead of failing immediately.
 - `worktree-checkout` now reuses any existing worktree for the selected branch, including linked worktrees outside the managed `~/.yggtree` directory, instead of trying to create a duplicate checkout.
 - `worktree-checkout` now ignores prunable or missing-path worktree entries when deciding whether an existing checkout can be reused.
 

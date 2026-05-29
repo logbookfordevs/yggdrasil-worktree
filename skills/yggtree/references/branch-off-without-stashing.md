@@ -22,6 +22,12 @@ Branch off cleanly from a base branch without stash pressure:
 yggtree worktree-checkout --ref main --name fresh-main
 ```
 
+Checkout and open a specific editor/app without the open prompt:
+
+```bash
+yggtree wc --ref main --name fresh-main --tool codex-app
+```
+
 Reuse an existing managed worktree if the branch is already active:
 
 ```bash

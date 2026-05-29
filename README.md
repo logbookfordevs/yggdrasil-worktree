@@ -38,13 +38,13 @@ worktree workflow first, then load the smallest reference they need:
 * **Create a task worktree**: start a brand-new branch-backed task in parallel.
 * **Branch off without stashing**: jump into another branch without disturbing
   the work already in progress.
-* **Bootstrap and enter a realm**: prepare a worktree, open it in your IDE, or
+* **Bootstrap and use a realm**: prepare a worktree, open it in your IDE, or
   run commands inside it.
 * **Run sandbox experiments**: try alternative approaches locally and
   apply/unapply the winner safely.
 
 This skill is especially useful with agents like **Claude Code**,
-**Codex**, **Cursor**, **Agy (Antigravity CLI)**, and other tools that support the open
+**Codex**, **Cursor**, **Gemini CLI**, and other tools that support the open
 Skills ecosystem.
 
 Install it with the Skills CLI:
@@ -85,7 +85,7 @@ Or use commands directly:
 ```bash
 yggtree create
 yggtree list
-yggtree enter my-feature
+yggtree wc --ref my-feature
 yggtree -v
 ```
 
@@ -273,7 +273,7 @@ Options:
 
 Interactive flow:
 
-* Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
+* Instead of asking for a free-form `exec` command, yggtree now asks if you want to open an editor after creation.
 * `--exec` remains available as an advanced explicit override.
 
 <details>
@@ -297,7 +297,8 @@ Behavior:
 * Attaches the new worktree directly to the selected branch (checkout-style).
 * If a branch exists both locally and on `origin`, the picker shows both `branch` (local) and `origin/branch` (remote tip, detached) as explicit choices.
 * If you select a remote-only branch (`origin/*`), yggtree creates the local branch in the new worktree automatically.
-* If that branch already has an active yggtree-managed worktree, yggtree falls back to using that worktree instead of creating a duplicate.
+* If that branch already has an active worktree, yggtree falls back to using that worktree instead of creating a duplicate.
+* By default, yggtree ends the flow inside the worktree shell.
 * `yggtree wc` is a short alias for the same flow.
 
 Options:
@@ -305,15 +306,18 @@ Options:
 * `-n, --name <slug>`
 * `-r, --ref <ref>`: skip picker and use a specific branch (`feature/x` or `origin/feature/x`)
 * `--no-bootstrap`
-* `--open / --no-open`
-* `--enter / --no-enter`: enter the worktree sub-shell after checkout/opening
+* `--open / --no-open`: choose whether to open editors or run a startup command before entering
+* `--tool <command>`: open a specific editor/app and skip the open prompt (`cursor`, `code`, `codex-app`)
+* `--no-enter`: finish without entering the worktree shell
 * `--exec "<command>"`
 
 Interactive flow:
 
-* Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
-* It also asks whether to enter the worktree shell after checkout, even when you do not open a tool.
-* If you open an agent CLI, yggtree skips the shell question because agent tools already launch through the enter flow.
+* Yggtree asks what to open before entering the shell.
+* Editor choices can be selected together.
+* Use `--tool` to skip the open prompt and launch one editor/app directly.
+* `Other command...` runs a command in the Yggtree sub-shell first, then leaves you there.
+* Use `--no-enter` when you only want the worktree created/opened and the command to return.
 * `--exec` remains available as an advanced explicit override.
 
 <details>
@@ -321,7 +325,9 @@ Interactive flow:
 
 ```bash
 yggtree worktree-checkout -n hotfix-auth -r main --no-open
-yggtree wc hotfix-auth main --open --enter
+yggtree wc hotfix-auth main --open
+yggtree wc hotfix-auth main --tool codex-app
+yggtree wc hotfix-auth main --open --no-enter
 ```
 
 </details>
@@ -343,7 +349,7 @@ Options:
 Interactive flow:
 
 * Prompts for an optional sandbox name (leave empty to auto-generate one from current branch).
-* Instead of asking for a free-form `exec` command, yggtree now asks if you want to open a tool after creation (IDE or agent CLI).
+* Instead of asking for a free-form `exec` command, yggtree now asks if you want to open an editor after creation.
 * `--exec` remains available as an advanced explicit override.
 
 ---
@@ -407,70 +413,24 @@ Notes:
 
 ---
 
-### `yggtree enter [worktree]`
-
-Enter a worktree using a sub‑shell.
-
-* Uses your default shell
-* Type `exit` to return
-
-Optional:
-
-* `--exec "<command>"`
-
-<details>
-<summary>Example</summary>
-
-```bash
-yggtree enter feat/new-ui --exec "npm test"
-```
-
-</details>
-
----
-
-### `yggtree close`
-
-Gracefully exit a worktree sub-shell with an option to delete it.
-
-Behavior:
-
-* Only works inside an Yggdrasil sub-shell (entered via `yggtree enter` or post-creation).
-* Asks whether you want to delete the worktree before leaving.
-* Includes double-confirmation for safety.
-* Main worktree is never offered for deletion.
-
-<details>
-<summary>Example</summary>
-
-```bash
-# Inside a worktree sub-shell:
-yggtree close
-# → "Delete this worktree before leaving? (y/N)"
-# → If yes: removes the worktree, then exits
-# → If no: exits normally
-```
-
-</details>
-
----
-
 ### `yggtree open [worktree]`
 
-Open a worktree in an IDE or agent CLI.
+Open a worktree in an editor or supported desktop app.
 
 Behavior:
 
 * If `[worktree]` is omitted, you can pick from the worktree list with type-to-filter search.
-* Detects available tool commands in your `PATH` (for example: IDEs like `cursor`, `code`, `zed`; agents like `agy`, `claude`, `codex`, `opencode`).
-* Lets you choose one interactively, pick `Other command...`, or pass `--tool`.
-* Custom commands can include arguments. Use `.` as the worktree placeholder, as in `zed .` or `open -a Cursor .`; if you omit `.`, yggtree appends the worktree path.
-* Custom agent commands such as `codex --model gpt-5`, `cursor-agent`, `droid`, `pi`, or `claude --dangerously-skip-permissions` keep the agent sub-shell path instead of being launched as silent IDE openers.
-* If an agent CLI is selected, yggtree opens a sub-shell and launches it there.
+* Detects available editor commands in your `PATH` (for example: `cursor`, `code`, `zed`, `webstorm`).
+* Detects Codex App on macOS and launches it with `open -b com.openai.codex`.
+* Lets you choose one or more editors/apps interactively, or pass `--tool`.
+* By default, `open` launches editors/apps and returns without entering a shell.
+* Use `--enter` to enter the worktree shell after launching editors/apps.
+* With `--enter`, `Other command...` runs a command in the Yggtree sub-shell first, then leaves you there.
 
 Options:
 
-* `--tool <command>`
+* `--tool <command>` (for example: `cursor`, `code`, `codex`, or `codex-app`)
+* `--enter`: enter the worktree shell after opening
 
 <details>
 <summary>Examples</summary>
@@ -478,10 +438,8 @@ Options:
 ```bash
 yggtree open
 yggtree open feat/new-ui --tool cursor
-yggtree open feat/new-ui --tool "zed ."
-yggtree open feat/new-ui --tool "codex --model gpt-5"
-yggtree open feat/new-ui --tool "cursor-agent --force"
-yggtree open feat/new-ui --tool agy
+yggtree open feat/new-ui --tool codex-app
+yggtree open feat/new-ui --tool cursor --enter
 yggtree list --open
 ```
 
@@ -569,7 +527,7 @@ yggtree create feat/login-flow
 * Creates a new branch if it doesn’t exist (without inheriting base tracking), then publishes it to `origin` when possible
 * Creates a dedicated worktree
 * Runs bootstrap if enabled
-* Lets you choose whether to open an IDE or agent after creation
+* Lets you choose whether to open an editor after creation
 
 
 </details>
@@ -587,7 +545,7 @@ yggtree create feat/cleanup-api --no-bootstrap --no-open
 **When to use:**
 
 * You just want the folder ready
-* You’ll open or enter it later if needed
+* You’ll open it or move into its shell later if needed
 * You don’t want installs running automatically
 
 </details>
@@ -606,7 +564,6 @@ Works with:
 
 * `cursor .`
 * `code .`
-* `codex`
 * Any custom command available in your shell
 
 </details>
@@ -631,18 +588,19 @@ yggtree exec test -- npm test
 ---
 
 <details>
-<summary>Enter a worktree and run a command before entering</summary>
+<summary>Checkout a branch and run a startup command</summary>
 
 **Command:**
 
 ```
-yggtree enter test --exec "codex"
+yggtree wc --ref test --open
 ```
 
 **What happens:**
 
-* Executes the command inside the worktree
-* Then drops you into a sub-shell
+* Checks out or reuses the branch worktree
+* Lets you choose an editor, supported app, or `Other command...`
+* Drops you into the worktree shell unless you pass `--no-enter`
 * Type `exit` to return to your original directory
 
 </details>

@@ -10,9 +10,10 @@ import { promptAndCopyEnvFiles } from '../../lib/env-files.js';
 import { enterCommand } from './enter.js';
 import {
     detectInstalledOpenTools,
-    isAgentTool,
-    launchOpenTool,
-    promptOpenToolSelection,
+    OpenAction,
+    promptOpenActions,
+    resolveOpenToolAction,
+    runOpenActions,
 } from './open.js';
 import { execa } from 'execa';
 import fs from 'fs-extra';
@@ -22,6 +23,7 @@ interface CreateOptions {
     ref?: string;
     bootstrap?: boolean;
     open?: boolean;
+    tool?: string;
     enter?: boolean;
     exec?: string;
 }
@@ -115,19 +117,6 @@ export function findExistingBranchWorktree(worktrees: GitWorktree[], branchName?
     );
 }
 
-async function promptShouldEnterShell(message: string): Promise<boolean> {
-    const { shouldEnterShell } = await inquirer.prompt<{ shouldEnterShell: boolean }>([
-        {
-            type: 'confirm',
-            name: 'shouldEnterShell',
-            message,
-            default: true,
-        },
-    ]);
-
-    return shouldEnterShell;
-}
-
 export async function createCommand(options: CreateOptions) {
     try {
         const repoRoot = await getRepoRoot();
@@ -192,6 +181,7 @@ export async function createCommand(options: CreateOptions) {
 
         const existingWorktrees = await listWorktrees();
         const existingBranchWorktree = findExistingBranchWorktree(existingWorktrees, selectedBranch.attachedBranchName);
+        const shouldEnterShell = options.enter !== false;
 
         if (existingBranchWorktree) {
             log.info(
@@ -204,23 +194,23 @@ export async function createCommand(options: CreateOptions) {
                 return;
             }
 
-            const shouldOpenExisting = options.open !== undefined
+            const shouldOpenExisting = options.tool
+                ? true
+                : options.open !== undefined
                 ? options.open
                 : (await inquirer.prompt([
                         {
                             type: 'confirm',
                             name: 'shouldOpenTool',
-                            message: 'Open a tool in the existing worktree now? (IDE or agent CLI)',
+                            message: shouldEnterShell
+                                ? 'Open anything before entering the existing worktree shell?'
+                                : 'Open anything in the existing worktree?',
                             default: true,
                         },
                     ])).shouldOpenTool;
 
             if (!shouldOpenExisting) {
-                const shouldEnterExisting = options.enter !== undefined
-                    ? options.enter
-                    : await promptShouldEnterShell('Enter the existing worktree shell now?');
-
-                if (shouldEnterExisting) {
+                if (shouldEnterShell) {
                     await enterCommand(existingBranchWorktree.path);
                     return;
                 }
@@ -229,28 +219,22 @@ export async function createCommand(options: CreateOptions) {
             }
 
             const installedTools = await detectInstalledOpenTools();
-            if (installedTools.length === 0) {
-                log.warning('No IDE/agent tool detected in PATH. Skipping open step.');
-                const shouldEnterExisting = options.enter !== undefined
-                    ? options.enter
-                    : await promptShouldEnterShell('Enter the existing worktree shell now?');
-                if (shouldEnterExisting) {
-                    await enterCommand(existingBranchWorktree.path);
-                    return;
-                }
-                log.header(`cd "${existingBranchWorktree.path}"`);
+            log.info('Opening existing worktree instead of creating a duplicate...');
+            const actions: OpenAction[] = options.tool
+                ? [await resolveOpenToolAction(options.tool, installedTools)].filter((action): action is OpenAction => Boolean(action))
+                : await promptOpenActions(installedTools, {
+                    allowShellAction: shouldEnterShell,
+                    message: shouldEnterShell
+                        ? 'Open anything before entering the existing worktree shell?'
+                        : 'Open anything in the existing worktree?',
+                });
+            if (options.tool && actions.length === 0) {
+                const available = installedTools.map(tool => tool.command).join(', ') || 'none detected';
+                log.error(`Tool "${options.tool}" not found.`);
+                log.dim(`Detected tool commands: ${available}`);
                 return;
             }
-
-            const selectedTool = await promptOpenToolSelection(installedTools, 'Select tool to open in the existing worktree:');
-            log.info('Opening existing worktree instead of creating a duplicate...');
-            await launchOpenTool(selectedTool, existingBranchWorktree.path);
-            const shouldEnterExisting = options.enter !== undefined
-                ? options.enter
-                : !isAgentTool(selectedTool) && await promptShouldEnterShell('Enter the existing worktree shell too?');
-            if (shouldEnterExisting && !isAgentTool(selectedTool)) {
-                await enterCommand(existingBranchWorktree.path);
-            }
+            await runOpenActions(actions, existingBranchWorktree.path, { enter: shouldEnterShell });
             log.success('Existing worktree opened.');
             return;
         }
@@ -277,32 +261,42 @@ export async function createCommand(options: CreateOptions) {
             {
                 type: 'confirm',
                 name: 'shouldOpenTool',
-                message: 'Open a tool after creation? (IDE or agent CLI)',
+                message: shouldEnterShell
+                    ? 'Open anything before entering the worktree shell?'
+                    : 'Open anything after creation?',
                 default: false,
-                when: options.exec === undefined && options.open === undefined,
+                when: options.exec === undefined && options.open === undefined && options.tool === undefined,
             },
         ]);
 
         const name = options.name || answers.name;
         const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
-        const shouldOpenTool = options.open !== undefined
+        const shouldOpenTool = options.tool
+            ? true
+            : options.open !== undefined
             ? options.open
             : Boolean(answers.shouldOpenTool);
-        let selectedTool: Awaited<ReturnType<typeof promptOpenToolSelection>> | undefined;
+        let openActions: Awaited<ReturnType<typeof promptOpenActions>> = [];
         if (options.exec === undefined && shouldOpenTool) {
             const installedTools = await detectInstalledOpenTools();
-            if (installedTools.length === 0) {
-                log.warning('No IDE/agent tool detected in PATH. Skipping open step.');
+            if (options.tool) {
+                const toolAction = await resolveOpenToolAction(options.tool, installedTools);
+                if (!toolAction) {
+                    const available = installedTools.map(tool => tool.command).join(', ') || 'none detected';
+                    log.error(`Tool "${options.tool}" not found.`);
+                    log.dim(`Detected tool commands: ${available}`);
+                    return;
+                }
+                openActions = [toolAction];
             } else {
-                selectedTool = await promptOpenToolSelection(installedTools, 'Select tool to open:');
+                openActions = await promptOpenActions(installedTools, {
+                    allowShellAction: shouldEnterShell,
+                    message: shouldEnterShell
+                        ? 'Open anything before entering the worktree shell?'
+                        : 'Open anything after creation?',
+                });
             }
         }
-
-        const shouldEnterShell = options.exec === undefined
-            ? options.enter !== undefined
-                ? options.enter
-                : !(selectedTool && isAgentTool(selectedTool)) && await promptShouldEnterShell('Enter the worktree shell after checkout?')
-            : false;
         
         const slug = toSlug(name);
         const repoName = await getRepoName();
@@ -355,18 +349,12 @@ export async function createCommand(options: CreateOptions) {
                     'Check your command syntax and environment variables'
                 ]);
             }
-        } else if (selectedTool) {
+        } else {
             try {
-                log.info(`Opening ${ui.path(wtPath)} in ${chalk.cyan(selectedTool.name)}...`);
-                await launchOpenTool(selectedTool, wtPath);
-                if (shouldEnterShell && !isAgentTool(selectedTool)) {
-                    await enterCommand(wtPath);
-                }
+                await runOpenActions(openActions, wtPath, { enter: shouldEnterShell });
             } catch (error: any) {
-                log.warning(`Could not open ${selectedTool.name}: ${error.message}`);
+                log.warning(`Could not complete post-checkout action: ${error.message}`);
             }
-        } else if (shouldEnterShell) {
-            await enterCommand(wtPath);
         }
 
         // 7. Final Output

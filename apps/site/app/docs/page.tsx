@@ -32,8 +32,8 @@ const workflows = [
   {
     title: 'Jump to an existing branch',
     description: 'Use this when you are interrupted and do not want to stash current work.',
-    command: 'yggtree worktree-checkout --ref hotfix/payment-timeout',
-    note: 'Leaves your current checkout alone and opens the selected ref in another realm.',
+    command: 'yggtree wc --ref hotfix/payment-timeout',
+    note: 'Leaves your current checkout alone and lands you in the selected branch realm.',
   },
   {
     title: 'Try a disposable idea',
@@ -49,6 +49,7 @@ const commandGroups = [
     commands: [
       ['yggtree create [branch]', 'Create a branch-backed task worktree.'],
       ['yggtree worktree-checkout [name] [ref]', 'Create a worktree from an existing branch or ref.'],
+      ['yggtree wc [name] [ref]', 'Short alias for worktree-checkout. Supports --tool to skip the open prompt.'],
       ['yggtree create-sandbox', 'Create a local-only sandbox for experiments.'],
       ['yggtree create-multi', 'Create multiple official task worktrees when explicitly needed.'],
     ],
@@ -57,8 +58,8 @@ const commandGroups = [
     title: 'Move around',
     commands: [
       ['yggtree list', 'Show repo-linked worktrees and their current state.'],
-      ['yggtree open [worktree]', 'Open a worktree in an IDE or agent CLI.'],
-      ['yggtree enter [worktree]', 'Enter a worktree sub-shell.'],
+      ['yggtree open [worktree]', 'Open a worktree in an editor or supported desktop app.'],
+      ['yggtree open [worktree] --tool codex-app', 'Open the worktree in Codex App on macOS.'],
       ['yggtree path [worktree]', 'Print the cd command for a worktree.'],
     ],
   },
@@ -67,7 +68,6 @@ const commandGroups = [
     commands: [
       ['yggtree exec [worktree] -- <command>', 'Run a command inside a chosen worktree.'],
       ['yggtree bootstrap', 'Run the configured setup commands again.'],
-      ['yggtree close', 'Exit an Yggdrasil sub-shell and optionally delete the worktree.'],
       ['yggtree delete', 'Delete managed worktrees interactively.'],
       ['yggtree prune', 'Clean stale Git worktree metadata.'],
     ],
@@ -150,11 +150,15 @@ export default function DocsPage() {
             </h1>
             <p className="max-w-3xl text-lg leading-relaxed text-parchment/80 sm:text-xl">
               Yggtree is small enough to learn quickly, but it changes a habit that is easy to get wrong: switching
-              contexts while work is already in motion. Start with the command below, then pick the workflow that
+              contexts while work is already in motion. Install the CLI first, then pick the workflow that
               matches what you are trying to protect.
             </p>
-            <div className="mt-8 max-w-2xl">
-              <CommandBlock command="npx yggtree" output="Open the guided menu from any Git repository." />
+            <div className="mt-8 grid max-w-2xl gap-4">
+              <CommandBlock command="npm install -g yggtree" output="Install the CLI globally once." />
+              <CommandBlock command="yggtree" output="Open the guided menu from any Git repository." />
+              <p className="text-sm text-parchment/60">
+                Prefer a one-off run? Use <code className="text-gold-rune">npx yggtree</code> without installing.
+              </p>
             </div>
           </section>
 

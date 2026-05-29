@@ -27,12 +27,14 @@ All notable changes to this project will be documented in this file.
 - Agent CLIs are no longer first-class `open` options; use `Other command...` for custom foreground commands until the dedicated agent workflow lands.
 - `wc` / `worktree-checkout` is now the primary path for branch-to-shell navigation, including non-interactive `--ref --name --no-open --no-enter` automation.
 - Worktree creation flows now offer to copy local `.env` files into the new worktree before bootstrap runs. The copy is opt-in, skips example/template env files, and covers `create`, `worktree-checkout`, `create-multi`, and `create-sandbox`.
+- README and website docs now lead with global installation, keep `npx yggtree` as a secondary option, and align examples with the current `wc` and `open` flows.
 
 ### Removed
 - Removed the public `enter` and `close` commands from the CLI, menus, and current docs. The shell-entry primitive remains internal for checkout and open flows.
 
 ### Fixed
 - Worktree creation commands no longer prompt for local `.env` copying in CI or other non-interactive runs, so scripted flows such as `--exec` continue without hanging when root `.env` files exist.
+- `yggtree help` and `yggtree help <command>` now reach Commander’s help renderer instead of being rejected by the removed-command guard.
 - `worktree-checkout` now shows both local and `origin/*` choices when a branch exists in both places, so users can explicitly choose the local branch or the remote tip.
 - `worktree-checkout` now falls back to registered Yggtree repos when run outside a git repo, matching the shell-entry flow instead of failing immediately.
 - `worktree-checkout` now reuses any existing worktree for the selected branch, including linked worktrees outside the managed `~/.yggtree` directory, instead of trying to create a duplicate checkout.

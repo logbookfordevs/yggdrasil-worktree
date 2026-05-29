@@ -153,6 +153,7 @@ function registerWorktreeCommands(parent: Command) {
 function rejectUnknownTopLevelCommand(args: string[]) {
     const commandArg = args.slice(2).find(arg => !arg.startsWith('-'));
     if (!commandArg) return;
+    if (commandArg === 'help') return;
 
     const knownCommands = new Set(
         program.commands.flatMap(command => [command.name(), ...command.aliases()])
@@ -279,6 +280,7 @@ program
 const wt = program.command('wt').description('Manage git worktrees');
 registerWorktreeCommands(program);
 registerWorktreeCommands(wt);
+program.addHelpCommand(true);
 
 program.command('bifrost')
     .description('Summon the Bifrost (Easter Egg)')

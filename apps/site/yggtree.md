@@ -38,7 +38,7 @@ Or use commands directly:
 ```bash
 yggtree create
 yggtree list
-yggtree enter my-feature
+yggtree wc --ref my-feature
 ```
 
 ---
@@ -241,28 +241,6 @@ Columns:
 
 ---
 
-### `yggtree enter [worktree]`
-
-Enter a worktree using a sub‑shell.
-
-* Uses your default shell
-* Type `exit` to return
-
-Optional:
-
-* `--exec "<command>"`
-
-<details>
-<summary>Example</summary>
-
-```bash
-yggtree enter feat/new-ui --exec "npm test"
-```
-
-</details>
-
----
-
 ### `yggtree exec [worktree] -- <command>`
 
 Run a command inside a worktree **without entering**.
@@ -333,7 +311,7 @@ yggtree create feat/login-flow
 * Auto-publishes to origin with correct upstream when possible
 * Creates a dedicated worktree
 * Runs bootstrap if enabled
-* Lets you choose whether to open an IDE or agent after creation
+* Lets you choose whether to open an editor after creation
 
 </details>
 ---
@@ -350,7 +328,7 @@ yggtree create feat/cleanup-api --no-bootstrap --no-open
 **When to use:**
 
 * You just want the folder ready
-* You’ll open or enter it later if needed
+* You’ll open it or move into its shell later if needed
 * You don’t want installs running automatically
 
 </details>
@@ -369,7 +347,6 @@ Works with:
 
 * `cursor .`
 * `code .`
-* `codex`
 * Any custom command available in your shell
 
 </details>
@@ -394,19 +371,20 @@ yggtree exec test -- npm test
 ---
 
 <details>
-<summary>Enter a worktree and run a command before entering</summary>
+<summary>Checkout a branch and run a startup command</summary>
 
 **Command:**
 
 ```
-yggtree enter test --exec "codex"
+yggtree wc --ref test --open
 ```
 
 **What happens:**
 
-* Executes the command inside the worktree
-* Then drops you into a sub-shell
-* Type `exit` to return to your original directory
+* Checks out or reuses the branch worktree
+* Lets you choose an editor, supported app, or `Other command...`
+* Use `--tool <command>` to skip the open prompt and launch one editor/app directly
+* Drops you into the worktree shell unless you pass `--no-enter`
 
 </details>
 ---

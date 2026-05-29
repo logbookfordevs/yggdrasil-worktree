@@ -19,6 +19,7 @@ import { enterCommand } from './enter.js';
 
 interface OpenOptions {
     tool?: string;
+    enter?: boolean;
 }
 
 interface OpenWorktreeCandidate {
@@ -31,24 +32,37 @@ export interface OpenToolOption {
     id: string;
     name: string;
     command: string;
-    kind: 'ide' | 'agent';
+    kind: 'editor' | 'app';
     aliases?: string[];
+    bundleId?: string;
 }
 
-const OPEN_TOOL_CANDIDATES: OpenToolOption[] = [
-    { id: 'cursor', name: 'Cursor', command: 'cursor', kind: 'ide', aliases: ['cursor'] },
-    { id: 'code', name: 'VS Code', command: 'code', kind: 'ide', aliases: ['vscode', 'code'] },
-    { id: 'windsurf', name: 'Windsurf', command: 'windsurf', kind: 'ide', aliases: ['windsurf'] },
-    { id: 'zed', name: 'Zed', command: 'zed', kind: 'ide', aliases: ['zed'] },
-    { id: 'agy', name: 'Agy', command: 'agy', kind: 'ide', aliases: ['agy'] },
-    { id: 'idea', name: 'IntelliJ IDEA', command: 'idea', kind: 'ide', aliases: ['idea', 'intellij'] },
-    { id: 'webstorm', name: 'WebStorm', command: 'webstorm', kind: 'ide', aliases: ['webstorm'] },
-    { id: 'subl', name: 'Sublime Text', command: 'subl', kind: 'ide', aliases: ['subl', 'sublime'] },
-    { id: 'claude', name: 'Claude Code', command: 'claude', kind: 'agent', aliases: ['claude', 'claude-code'] },
-    { id: 'codex', name: 'Codex', command: 'codex', kind: 'agent', aliases: ['codex'] },
-    { id: 'gemini', name: 'Gemini CLI', command: 'gemini', kind: 'agent', aliases: ['gemini'] },
-    { id: 'opencode', name: 'OpenCode', command: 'opencode', kind: 'agent', aliases: ['opencode'] },
+export interface OpenAction {
+    type: 'tool' | 'other-command';
+    tool?: OpenToolOption;
+    command?: string;
+}
+
+export const OPEN_TOOL_CANDIDATES: OpenToolOption[] = [
+    { id: 'cursor', name: 'Cursor', command: 'cursor', kind: 'editor', aliases: ['cursor'] },
+    { id: 'code', name: 'VS Code', command: 'code', kind: 'editor', aliases: ['vscode', 'code'] },
+    { id: 'windsurf', name: 'Windsurf', command: 'windsurf', kind: 'editor', aliases: ['windsurf'] },
+    { id: 'zed', name: 'Zed', command: 'zed', kind: 'editor', aliases: ['zed'] },
+    { id: 'idea', name: 'IntelliJ IDEA', command: 'idea', kind: 'editor', aliases: ['idea', 'intellij'] },
+    { id: 'webstorm', name: 'WebStorm', command: 'webstorm', kind: 'editor', aliases: ['webstorm'] },
+    { id: 'subl', name: 'Sublime Text', command: 'subl', kind: 'editor', aliases: ['subl', 'sublime'] },
+    {
+        id: 'codex-app',
+        name: 'Codex App',
+        command: 'codex-app',
+        kind: 'app',
+        aliases: ['codex', 'codex-app'],
+        bundleId: 'com.openai.codex',
+    },
 ];
+
+const OTHER_COMMAND_ACTION = '__other_command__';
+const NO_OPEN_ACTION = '__no_open__';
 
 function truncateEnd(value: string, maxLen: number): string {
     if (maxLen <= 0) return '';
@@ -110,11 +124,31 @@ export async function commandExists(command: string): Promise<boolean> {
     return false;
 }
 
+export async function macOSAppBundleExists(bundleId: string): Promise<boolean> {
+    if (process.platform !== 'darwin') return false;
+
+    try {
+        const result = await execa('/usr/bin/mdfind', [`kMDItemCFBundleIdentifier == '${bundleId}'`]);
+        if (result.stdout.trim().length > 0) return true;
+    } catch {
+        // Fall back to common application roots when Spotlight is unavailable.
+    }
+
+    const commonAppPaths = [
+        '/Applications/Codex.app',
+        path.join(process.env.HOME || '', 'Applications', 'Codex.app'),
+    ];
+
+    return commonAppPaths.some(appPath => fs.existsSync(appPath));
+}
+
 export async function detectInstalledOpenTools(): Promise<OpenToolOption[]> {
     const checks = await Promise.all(
         OPEN_TOOL_CANDIDATES.map(async tool => ({
             tool,
-            exists: await commandExists(tool.command),
+            exists: tool.bundleId
+                ? await macOSAppBundleExists(tool.bundleId)
+                : await commandExists(tool.command),
         }))
     );
 
@@ -136,12 +170,18 @@ export function resolveOpenToolOption(input: string, installed: OpenToolOption[]
     );
 }
 
-export function isAgentTool(tool: OpenToolOption): boolean {
-    return tool.kind === 'agent';
-}
+export async function resolveOpenToolAction(input: string, installed: OpenToolOption[]): Promise<OpenAction | undefined> {
+    let chosenTool = resolveOpenToolOption(input, installed);
+    if (!chosenTool && await commandExists(input)) {
+        chosenTool = {
+            id: 'custom',
+            name: input,
+            command: input,
+            kind: 'editor',
+        };
+    }
 
-export function buildAgentExecCommand(tool: OpenToolOption): string {
-    return tool.command;
+    return chosenTool ? { type: 'tool', tool: chosenTool } : undefined;
 }
 
 export async function promptOpenToolSelection(
@@ -149,14 +189,14 @@ export async function promptOpenToolSelection(
     message = 'Select tool to open:'
 ): Promise<OpenToolOption> {
     const ideChoices = installedTools
-        .filter(tool => tool.kind === 'ide')
+        .filter(tool => tool.kind === 'editor')
         .map(tool => ({
             name: `${tool.name} ${chalk.dim(`(${tool.command})`)}`,
             value: tool,
         }));
 
-    const agentChoices = installedTools
-        .filter(tool => tool.kind === 'agent')
+    const appChoices = installedTools
+        .filter(tool => tool.kind === 'app')
         .map(tool => ({
             name: `${tool.name} ${chalk.dim(`(${tool.command})`)}`,
             value: tool,
@@ -164,13 +204,12 @@ export async function promptOpenToolSelection(
 
     const choices: any[] = [];
     if (ideChoices.length > 0) {
-        choices.push(new inquirer.Separator(chalk.dim('── IDEs ──')));
+        choices.push(new inquirer.Separator(chalk.dim('── Editors ──')));
         choices.push(...ideChoices);
     }
-    if (agentChoices.length > 0) {
-        if (choices.length > 0) choices.push(new inquirer.Separator(" "));
-        choices.push(new inquirer.Separator(chalk.dim('── Agent CLIs ──')));
-        choices.push(...agentChoices);
+    if (appChoices.length > 0) {
+        choices.push(new inquirer.Separator(chalk.dim('── Apps ──')));
+        choices.push(...appChoices);
     }
 
     const { selectedTool } = await inquirer.prompt<{ selectedTool: OpenToolOption }>([
@@ -187,16 +226,144 @@ export async function promptOpenToolSelection(
     return selectedTool;
 }
 
-export async function launchOpenTool(tool: OpenToolOption, wtPath: string): Promise<void> {
-    if (isAgentTool(tool)) {
-        await enterCommand(wtPath, { exec: buildAgentExecCommand(tool) });
-        return;
+export function buildOpenActionsFromSelection(
+    selectedValues: string[],
+    installedTools: OpenToolOption[],
+    otherCommand?: string,
+): OpenAction[] {
+    if (selectedValues.includes(NO_OPEN_ACTION)) return [];
+
+    const actions: OpenAction[] = selectedValues
+        .filter(value => value.startsWith('tool:'))
+        .map(value => installedTools.find(tool => `tool:${tool.id}` === value))
+        .filter((tool): tool is OpenToolOption => Boolean(tool))
+        .map(tool => ({ type: 'tool', tool }));
+
+    if (selectedValues.includes(OTHER_COMMAND_ACTION) && otherCommand?.trim()) {
+        actions.push({ type: 'other-command', command: otherCommand.trim() });
     }
 
-    await execa(tool.command, [wtPath], {
+    return actions;
+}
+
+export function validateOpenActionSelection(selectedValues: string[]): true | string {
+    if (selectedValues.includes(NO_OPEN_ACTION) && selectedValues.length > 1) {
+        return 'Choose either "Nothing" or one or more actions, not both.';
+    }
+    return true;
+}
+
+export async function promptOpenActions(
+    installedTools: OpenToolOption[],
+    options: { message?: string; allowShellAction?: boolean } = {},
+): Promise<OpenAction[]> {
+    const allowShellAction = options.allowShellAction ?? true;
+    const choices: any[] = [];
+
+    if (installedTools.length > 0) {
+        const editorTools = installedTools.filter(tool => tool.kind === 'editor');
+        const appTools = installedTools.filter(tool => tool.kind === 'app');
+
+        if (editorTools.length > 0) {
+            choices.push(new inquirer.Separator(chalk.dim('── Editors ──')));
+            choices.push(...editorTools.map(tool => ({
+                name: `${tool.name} ${chalk.dim(`(${tool.command})`)}`,
+                value: `tool:${tool.id}`,
+            })));
+        }
+
+        if (appTools.length > 0) {
+            choices.push(new inquirer.Separator(chalk.dim('── Apps ──')));
+            choices.push(...appTools.map(tool => ({
+                name: `${tool.name} ${chalk.dim(`(${tool.command})`)}`,
+                value: `tool:${tool.id}`,
+            })));
+        }
+    }
+
+    if (allowShellAction) {
+        if (choices.length > 0) choices.push(new inquirer.Separator(' '));
+        choices.push(new inquirer.Separator(chalk.dim('── Shell ──')));
+        choices.push({
+            name: `Other command... ${chalk.dim('(run first, then stay in shell)')}`,
+            value: OTHER_COMMAND_ACTION,
+        });
+    }
+
+    if (choices.length > 0) choices.push(new inquirer.Separator(' '));
+    choices.push({
+        name: allowShellAction ? 'Nothing, just enter the shell' : 'Do not open anything',
+        value: NO_OPEN_ACTION,
+    });
+
+    const { selectedValues } = await inquirer.prompt<{ selectedValues: string[] }>([
+        {
+            type: 'checkbox',
+            name: 'selectedValues',
+            message: options.message || 'Open anything before entering the shell?',
+            choices,
+            loop: false,
+            pageSize: 10,
+            validate: validateOpenActionSelection,
+        },
+    ]);
+
+    let otherCommand: string | undefined;
+    if (selectedValues.includes(OTHER_COMMAND_ACTION)) {
+        const answer = await inquirer.prompt<{ otherCommand: string }>([
+            {
+                type: 'input',
+                name: 'otherCommand',
+                message: 'Command to run in the worktree shell:',
+                validate: (input: string) => input.trim().length > 0 || 'Command is required',
+            },
+        ]);
+        otherCommand = answer.otherCommand;
+    }
+
+    return buildOpenActionsFromSelection(selectedValues, installedTools, otherCommand);
+}
+
+export async function launchOpenTool(tool: OpenToolOption, wtPath: string): Promise<void> {
+    const { executable, args } = buildOpenToolLaunchCommand(tool, wtPath);
+
+    await execa(executable, args, {
         cwd: wtPath,
         stdio: 'ignore',
     });
+}
+
+export function buildOpenToolLaunchCommand(tool: OpenToolOption, wtPath: string): { executable: string; args: string[] } {
+    if (tool.bundleId) {
+        return {
+            executable: '/usr/bin/open',
+            args: ['-b', tool.bundleId, wtPath],
+        };
+    }
+
+    return {
+        executable: tool.command,
+        args: [wtPath],
+    };
+}
+
+export async function runOpenActions(actions: OpenAction[], wtPath: string, options: { enter?: boolean } = {}): Promise<void> {
+    for (const action of actions) {
+        if (action.type === 'tool' && action.tool) {
+            log.info(`Opening ${ui.path(wtPath)} in ${chalk.cyan(action.tool.name)}...`);
+            await launchOpenTool(action.tool, wtPath);
+        }
+    }
+
+    const shellAction = actions.find(action => action.type === 'other-command');
+    if (shellAction?.command) {
+        await enterCommand(wtPath, { exec: shellAction.command });
+        return;
+    }
+
+    if (options.enter !== false) {
+        await enterCommand(wtPath);
+    }
 }
 
 export async function openCommand(wtName?: string, options: OpenOptions = {}) {
@@ -265,39 +432,36 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
 
         const installedTools = await detectInstalledOpenTools();
 
-        let chosenTool: OpenToolOption | undefined;
         const requestedTool = options.tool;
+        const shouldEnter = options.enter === true;
 
         if (requestedTool) {
-            chosenTool = resolveOpenToolOption(requestedTool, installedTools);
-            if (!chosenTool && await commandExists(requestedTool)) {
-                chosenTool = {
-                    id: 'custom',
-                    name: requestedTool,
-                    command: requestedTool,
-                    kind: 'ide',
-                };
-            }
+            const toolAction = await resolveOpenToolAction(requestedTool, installedTools);
 
-            if (!chosenTool) {
+            if (!toolAction) {
                 const available = installedTools.map(tool => tool.command).join(', ') || 'none detected';
                 log.error(`Tool "${requestedTool}" not found.`);
                 log.dim(`Detected tool commands: ${available}`);
                 return;
             }
+
+            await runOpenActions([toolAction], targetWt.path, { enter: shouldEnter });
+            log.success('Worktree opened.');
+            return;
         } else {
-            if (installedTools.length === 0) {
-                log.error('No supported open tool command was detected in PATH.');
-                log.dim('Try: yggtree wt open --tool <command> (e.g. --tool cursor, --tool claude)');
+            if (installedTools.length === 0 && !shouldEnter) {
+                log.error('No supported editor command or app was detected.');
+                log.dim('Try: yggtree open --tool <command> (e.g. --tool cursor or --tool codex-app), or yggtree open --enter');
                 return;
             }
 
-            chosenTool = await promptOpenToolSelection(installedTools);
+            const actions = await promptOpenActions(installedTools, {
+                allowShellAction: shouldEnter,
+                message: shouldEnter ? 'Open anything before entering the shell?' : 'Open anything?',
+            });
+            await runOpenActions(actions, targetWt.path, { enter: shouldEnter });
         }
-
-        log.info(`Opening ${ui.path(targetWt.path)} in ${chalk.cyan(chosenTool.name)}...`);
-        await launchOpenTool(chosenTool, targetWt.path);
-        log.success(isAgentTool(chosenTool) ? 'Agent launched.' : 'IDE launched.');
+        log.success('Worktree opened.');
     } catch (error: any) {
         log.error(error.message);
     }

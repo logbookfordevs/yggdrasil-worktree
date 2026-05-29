@@ -28,18 +28,31 @@ Define setup explicitly if the repo does not want the fallback `npm install`.
 }
 ```
 
-## Enter, Open, Exec
+## Shell Entry, Open, Exec
 
-Use `enter` for an interactive shell:
+Use `worktree-checkout` when you want to land in a branch worktree shell:
 
 ```bash
-yggtree enter
+yggtree wc --ref my-feature
+```
+
+Use `open --enter` when the worktree is already known and editor launch should
+continue into a shell:
+
+```bash
+yggtree open my-feature --tool cursor --enter
 ```
 
 Use `open` for IDE-style opening:
 
 ```bash
 yggtree open my-feature --tool cursor
+```
+
+Use `codex-app` to open the Codex desktop app on macOS:
+
+```bash
+yggtree open my-feature --tool codex-app
 ```
 
 Use `exec` for simple non-interactive commands inside a chosen worktree:
@@ -96,12 +109,12 @@ that require SSH credentials or interactive authentication.
 
 Source: `src/lib/config.ts`
 
-### HIGH Opening another interactive agent with `open`
+### HIGH Treating desktop app openers like agent orchestration
 
 Wrong:
 
 ```bash
-yggtree open orchestrator-branch --tool codex
+yggtree open orchestrator-branch --tool "codex --approval-mode auto"
 ```
 
 Correct:
@@ -110,7 +123,8 @@ Correct:
 yggtree exec orchestrator-branch codex --approval-mode auto
 ```
 
-Treat `open` as IDE-oriented. Use the separate orchestration skill when a main
+Treat `open` as editor/app-oriented. `codex-app` opens the desktop app with the
+worktree folder; use `exec` or the separate orchestration skill when a main
 agent needs to coordinate non-interactive agents across worktrees.
 
 Source: `src/commands/wt/open.ts`
@@ -127,7 +141,6 @@ Correct:
 
 ```bash
 yggtree open my-branch --tool cursor
-cd ~/.yggtree/<repo>/<worktree>
 infisical run --env=local npm run dev
 ```
 

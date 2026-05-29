@@ -12,11 +12,9 @@ import { deleteCommand } from './commands/wt/delete.js';
 import { bootstrapCommand } from './commands/wt/bootstrap.js';
 import { pruneCommand } from './commands/wt/prune.js';
 import { execCommand } from './commands/wt/exec.js';
-import { enterCommand } from './commands/wt/enter.js';
 import { pathCommand } from './commands/wt/path.js';
 import { openCommand } from './commands/wt/open.js';
 import { applyCommand } from './commands/wt/apply.js';
-import { closeCommand } from './commands/wt/close.js';
 import { unapplyCommand } from './commands/wt/unapply.js';
 import { getVersion } from './lib/version.js';
 import { findSandboxRoot } from './lib/sandbox.js';
@@ -44,8 +42,8 @@ function registerWorktreeCommands(parent: Command) {
         .option('--base <ref>', 'Base ref (e.g. main)')
         .option('--source <type>', 'Base source (local or remote)')
         .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-        .option('--open', 'Open a tool after creation (IDE or agent CLI)')
-        .option('--no-open', 'Skip opening a tool after creation')
+        .option('--open', 'Open an editor after creation')
+        .option('--no-open', 'Skip opening an editor after creation')
         .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
         .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
         .option('--exec <command>', 'Command to execute after creation')
@@ -71,9 +69,10 @@ function registerWorktreeCommands(parent: Command) {
             .option('-n, --name <slug>', 'Worktree name (slug)')
             .option('-r, --ref <ref>', 'Existing branch or ref')
             .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-            .option('--open', 'Open a tool after creation (IDE or agent CLI)')
-            .option('--no-open', 'Skip opening a tool after creation')
-            .option('--enter', 'Enter the worktree sub-shell after checkout/opening')
+            .option('--open', 'Open editors or run a startup command before entering')
+            .option('--no-open', 'Skip opening editors or startup commands before entering')
+            .option('--tool <command>', 'Editor or app command to open after checkout (skips open prompt)')
+            .addOption(new Option('--enter', 'Enter the worktree sub-shell after checkout/opening').hideHelp())
             .option('--no-enter', 'Do not enter the worktree sub-shell after checkout/opening')
             .option('--exec <command>', 'Command to execute after creation')
             .action(async (name, ref, options) => {
@@ -96,8 +95,10 @@ function registerWorktreeCommands(parent: Command) {
         });
 
     parent.command('open [worktree]')
-        .description('Open a worktree in an IDE or agent CLI')
-        .option('--tool <command>', 'Tool command to use (e.g. cursor, code, claude, codex)')
+        .description('Open a worktree in an editor or supported app')
+        .option('--tool <command>', 'Editor or app command to use (e.g. cursor, code, codex-app)')
+        .option('--enter', 'Enter the worktree sub-shell after opening')
+        .addOption(new Option('--no-enter', 'Do not enter the worktree sub-shell after opening').hideHelp())
         .action(async (worktree, options) => {
             await openCommand(worktree, options);
         });
@@ -118,14 +119,6 @@ function registerWorktreeCommands(parent: Command) {
             await execCommand(worktree, command);
         });
 
-    parent.command('enter')
-        .description('Enter a worktree sub-shell')
-        .argument('[worktree]', 'Worktree name or path')
-        .option('--exec <command>', 'Command to execute before entering')
-        .action(async (worktree, options) => {
-            await enterCommand(worktree, options);
-        });
-
     parent.command('path [worktree]')
         .description('Show the cd command for a specific worktree')
         .action(async (worktree) => {
@@ -138,8 +131,8 @@ function registerWorktreeCommands(parent: Command) {
         .option('--carry', 'Carry uncommitted changes to sandbox')
         .option('--no-carry', 'Do not carry uncommitted changes')
         .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
-        .option('--open', 'Open a tool after creation (IDE or agent CLI)')
-        .option('--no-open', 'Skip opening a tool after creation')
+        .option('--open', 'Open an editor after creation')
+        .option('--no-open', 'Skip opening an editor after creation')
         .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
         .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
         .option('--exec <command>', 'Command to execute after creation')
@@ -151,21 +144,28 @@ function registerWorktreeCommands(parent: Command) {
         .description('Apply sandbox changes to origin directory')
         .action(applyCommand);
 
-    parent.command('close')
-        .description('Exit the sub-shell with an option to delete the worktree')
-        .action(async () => {
-            await closeCommand();
-        });
-
     parent.command('unapply')
         .description('Undo applied sandbox changes in origin')
         .action(unapplyCommand);
+}
+
+function rejectUnknownTopLevelCommand(args: string[]) {
+    const commandArg = args.slice(2).find(arg => !arg.startsWith('-'));
+    if (!commandArg) return;
+
+    const knownCommands = new Set(
+        program.commands.flatMap(command => [command.name(), ...command.aliases()])
+    );
+    if (!knownCommands.has(commandArg)) {
+        program.error(`error: unknown command '${commandArg}'`);
+    }
 }
 
 program
     .name('yggtree')
     .description('Interactive CLI for managing git worktrees and configs')
     .version(getVersion())
+    .allowExcessArguments(false)
     .action(async () => {
         // Interactive Menu if no command is provided
         await welcome();
@@ -177,14 +177,12 @@ program
             { name: `🌳 Grow Many Realms ${chalk.dim('(create multiple worktrees)')}`, value: 'create-multi' },
             { name: `🧪 Forge Sandbox Realm ${chalk.dim('(create sandbox worktree)')}`, value: 'create-sandbox' },
             { name: `🗺️  Survey Realms ${chalk.dim('(list worktrees)')}`, value: 'list' },
-            { name: `🧭 Open Realm in Tool ${chalk.dim('(open worktree in IDE/agent)')}`, value: 'open' },
+            { name: `🧭 Open Realm in Editor ${chalk.dim('(open worktree in editor)')}`, value: 'open' },
             { name: `🪓 Fell a Realm ${chalk.dim('(delete worktree)')}`, value: 'delete' },
             { name: `🚀 Bless Realm Setup ${chalk.dim('(bootstrap worktree)')}`, value: 'bootstrap' },
             { name: `🧹 Prune Withered Realms ${chalk.dim('(prune stale worktrees)')}`, value: 'prune' },
             { name: `🐚 Cast a Command ${chalk.dim('(exec command in worktree)')}`, value: 'exec' },
-            { name: `🚪 Enter Realm Shell ${chalk.dim('(enter worktree)')}`, value: 'enter' },
             { name: `📍 Reveal Realm Path ${chalk.dim('(show worktree path)')}`, value: 'path' },
-            { name: `🔒 Close Realm ${chalk.dim('(exit & optionally delete worktree)')}`, value: 'close' },
         ];
 
         const sandboxChoices = [
@@ -251,9 +249,6 @@ program
             case 'exec':
                 await execCommand();
                 break;
-            case 'enter':
-                await enterCommand();
-                break;
             case 'path':
                 await pathCommand();
                 break;
@@ -271,9 +266,6 @@ program
                 break;
             case 'thor':
                 await thorCommand();
-                break;
-            case 'close':
-                await closeCommand();
                 break;
             case 'exit':
                 log.info('Bye! 👋');
@@ -294,4 +286,5 @@ program.command('thor')
     .description('Consult the God of Thunder (Easter Egg)')
     .action(thorCommand);
 
+rejectUnknownTopLevelCommand(argv);
 program.parse(argv);

@@ -86,7 +86,7 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
             {
                 type: 'confirm',
                 name: 'shouldOpenTool',
-                message: 'Open a tool after creation? (IDE or agent CLI)',
+                message: 'Open an editor after creation?',
                 default: false,
                 when: options.exec === undefined && options.open === undefined && options.enter === undefined,
             },

@@ -156,3 +156,95 @@ describe('worktree checkout reuse', () => {
         }
     });
 });
+
+describe('worktree checkout CLI', () => {
+    it('can checkout a branch non-interactively with explicit ref, name, and no shell entry', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-cli-'));
+
+        try {
+            const repo = await createBranchCandidateRepo(tmp);
+            const home = path.join(tmp, 'home');
+            await mkdir(home);
+
+            await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'wc',
+                    '--ref',
+                    'remote-only',
+                    '--name',
+                    'remote-only-checkout',
+                    '--no-open',
+                    '--no-enter',
+                    '--no-bootstrap',
+                ],
+                {
+                    cwd: repo,
+                    env: {
+                        ...process.env,
+                        CI: 'true',
+                        HOME: home,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            const worktreePath = path.join(home, '.yggtree', 'repo', 'remote-only-checkout');
+            const { stdout } = await exec('git', ['branch', '--show-current'], { cwd: worktreePath });
+            expect(stdout.trim()).toBe('remote-only');
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    });
+
+    it('can checkout and open a requested tool non-interactively without the open prompt', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-tool-cli-'));
+
+        try {
+            const repo = await createBranchCandidateRepo(tmp);
+            const home = path.join(tmp, 'home');
+            await mkdir(home);
+
+            await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'wc',
+                    '--ref',
+                    'remote-only',
+                    '--name',
+                    'remote-only-with-tool',
+                    '--tool',
+                    'true',
+                    '--no-enter',
+                    '--no-bootstrap',
+                ],
+                {
+                    cwd: repo,
+                    env: {
+                        ...process.env,
+                        CI: 'true',
+                        HOME: home,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            const worktreePath = path.join(home, '.yggtree', 'repo', 'remote-only-with-tool');
+            const { stdout } = await exec('git', ['branch', '--show-current'], { cwd: worktreePath });
+            expect(stdout.trim()).toBe('remote-only');
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    }, 15_000);
+
+    it('does not treat removed enter or close commands as interactive menu aliases', async () => {
+        await expect(exec('node', [path.resolve('dist/index.js'), 'enter'])).rejects.toThrow(
+            "unknown command 'enter'",
+        );
+        await expect(exec('node', [path.resolve('dist/index.js'), 'close'])).rejects.toThrow(
+            "unknown command 'close'",
+        );
+    });
+});

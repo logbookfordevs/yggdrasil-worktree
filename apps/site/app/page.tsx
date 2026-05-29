@@ -91,7 +91,7 @@ export default function Home() {
         >
           <h2 className="font-display text-4xl md:text-5xl font-bold text-frost-white mb-6">Quick Start</h2>
           <p className="text-parchment/80 text-lg max-w-2xl mx-auto">
-            Get started in seconds. No installation required.
+            Install once, then open the guided workflow from any Git repository.
           </p>
         </motion.div>
 
@@ -105,12 +105,12 @@ export default function Home() {
             <h3 className="text-2xl font-display font-semibold text-frost-white mb-4">Installation</h3>
             <div className="space-y-4">
               <div>
-                <p className="text-parchment/70 mb-2">Run without installing:</p>
-                <CommandBlock command="npx yggtree" />
+                <p className="text-parchment/70 mb-2">Install globally:</p>
+                <CommandBlock command="npm install -g yggtree" />
               </div>
               <div>
-                <p className="text-parchment/70 mb-2">Or install globally:</p>
-                <CommandBlock command="npm install -g yggtree" />
+                <p className="text-parchment/70 mb-2">Or try it without installing:</p>
+                <CommandBlock command="npx yggtree" />
               </div>
             </div>
           </motion.div>
@@ -498,7 +498,7 @@ export default function Home() {
             },
             {
               title: 'Existing branch',
-              command: 'yggtree worktree-checkout --ref main',
+              command: 'yggtree wc --ref main',
               description: 'Review or fix another branch without stashing your current work.',
             },
             {

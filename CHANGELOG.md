@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - `wc` / `worktree-checkout` is now the primary path for branch-to-shell navigation, including non-interactive `--ref --name --no-open --no-enter` automation.
 - Worktree creation flows now offer to copy local `.env` files into the new worktree before bootstrap runs. The copy is opt-in, skips example/template env files, and covers `create`, `worktree-checkout`, `create-multi`, and `create-sandbox`.
 - README and website docs now lead with global installation, keep `npx yggtree` as a secondary option, and align examples with the current `wc` and `open` flows.
+- Expanded the website docs page with scenario-based workflows, current command flags, sandbox guidance, configuration notes, and troubleshooting.
 
 ### Removed
 - Removed the public `enter` and `close` commands from the CLI, menus, and current docs. The shell-entry primitive remains internal for checkout and open flows.

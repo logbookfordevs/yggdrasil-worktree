@@ -87,8 +87,26 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-body), serif;
+  font-family: var(--font-source-serif), Georgia, serif;
+  font-optical-sizing: auto;
   position: relative;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+}
+
+.ygg-body {
+  font-family: var(--font-source-serif), Georgia, serif;
+}
+
+.ygg-mono {
+  font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
 }
 
 /* Grain texture overlay */
@@ -108,6 +126,8 @@ body::before {
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
 }
 
 /* Selection colors */

@@ -33,6 +33,10 @@ All notable changes to this project will be documented in this file.
 - Refined the website docs typography with stronger heading hierarchy, controlled prose measure, and a more scannable command flag reference.
 - Tightened the docs page type system with clearer text roles, improved command-reference rhythm, and site-wide font rendering refinements.
 - Reduced the docs hero headline scale so the page opens with a calmer documentation rhythm.
+- Aligned the website docs page with the upcoming CLI release by covering agent-skill installation, Codex App tool aliases, update notices, and local env-file copy behavior.
+- Updated README and website docs install examples to use the `logbookfordevs/yggdrasil-worktree` repository slug.
+- Expanded the website docs command reference so it covers the latest open-tool flow, checkout behavior, list metadata, and sandbox transfer details from the README.
+- Widened docs prose measures so card notes and section intros use the available desktop reading column more naturally.
 - Documented the website design system in `DESIGN.md` and `.impeccable/design.json` so future Impeccable work can preserve the existing visual identity.
 - Polished the website docs touch targets for mobile navigation and command-copy controls.
 

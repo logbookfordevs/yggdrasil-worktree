@@ -50,26 +50,26 @@ Skills ecosystem.
 Install it with the Skills CLI:
 
 ```bash
-npx skills add leoreisdias/yggdrasil-worktree
+npx skills add logbookfordevs/yggdrasil-worktree
 ```
 
 Install it globally for your user:
 
 ```bash
-npx skills add leoreisdias/yggdrasil-worktree --global
+npx skills add logbookfordevs/yggdrasil-worktree --global
 ```
 
 Install only the consolidated `yggtree` skill:
 
 ```bash
-npx skills add leoreisdias/yggdrasil-worktree --skill yggtree
+npx skills add logbookfordevs/yggdrasil-worktree --skill yggtree
 ```
 
 If your agent supports targeted installs, you can also point the install to a
 specific agent runtime, for example:
 
 ```bash
-npx skills add leoreisdias/yggdrasil-worktree --agent codex
+npx skills add logbookfordevs/yggdrasil-worktree --agent codex
 ```
 
 ### Basic Usage

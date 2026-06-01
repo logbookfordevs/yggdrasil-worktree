@@ -16,8 +16,10 @@ import {
 const navItems = [
   { href: '#start', label: 'Start' },
   { href: '#workflows', label: 'Workflows' },
+  { href: '#agents', label: 'Agents' },
   { href: '#creation', label: 'Create Worktrees' },
   { href: '#navigation', label: 'Navigate' },
+  { href: '#tools', label: 'Open Tools' },
   { href: '#sandbox', label: 'Sandbox' },
   { href: '#commands', label: 'Commands' },
   { href: '#configuration', label: 'Configuration' },
@@ -37,12 +39,12 @@ const kickerClass = `${monoFaceClass} text-[0.8125rem] font-medium leading-5 tex
 const sectionTitleClass =
   'font-display text-[clamp(2rem,1.45vw+1.5rem,2.85rem)] font-semibold leading-[1.08] tracking-[-0.008em] [text-wrap:balance]';
 const sectionIntroClass =
-  'mt-3 max-w-[66ch] text-[1.0625rem] leading-8 text-parchment/75 [text-wrap:pretty]';
+  'mt-3 max-w-[75ch] text-[1.0625rem] leading-8 text-parchment/75 [text-wrap:pretty]';
 const exampleTitleClass =
   'font-display text-[clamp(1.25rem,0.35vw+1.12rem,1.45rem)] font-semibold leading-[1.16] text-frost-white [text-wrap:balance]';
-const bodyCopyClass = 'max-w-[64ch] text-base leading-7 text-parchment/72 [text-wrap:pretty]';
+const bodyCopyClass = 'max-w-[72ch] text-base leading-7 text-parchment/72 [text-wrap:pretty]';
 const bodyPanelClass = 'text-base leading-7 text-parchment/75 [text-wrap:pretty]';
-const noteClass = 'max-w-[62ch] text-[0.9375rem] leading-6 text-parchment/62 [text-wrap:pretty]';
+const noteClass = 'max-w-[74ch] text-[0.9375rem] leading-6 text-parchment/62 [text-wrap:pretty]';
 const referenceHeadingClass =
   'mb-4 font-display text-[clamp(1.35rem,0.6vw+1.12rem,1.65rem)] font-semibold leading-[1.12] text-gold-rune [text-wrap:balance]';
 const commandCodeClass =
@@ -71,11 +73,30 @@ const workflows = [
   },
 ];
 
+const agentExamples = [
+  {
+    title: 'Install the full skill pack',
+    command: 'npx skills add logbookfordevs/yggdrasil-worktree',
+    detail: 'Adds the consolidated Yggtree skill plus its focused references for worktree creation, checkout, lifecycle, and sandbox workflows.',
+  },
+  {
+    title: 'Install the Yggtree skill only',
+    command: 'npx skills add logbookfordevs/yggdrasil-worktree --skill yggtree',
+    detail: 'Use this when your agent runtime supports targeted skill installs and you want the compact Yggtree workflow guide.',
+  },
+  {
+    title: 'Target Codex directly',
+    command: 'npx skills add logbookfordevs/yggdrasil-worktree --agent codex',
+    detail: 'Useful for Codex setups that support agent-specific skill installation.',
+  },
+];
+
 const creationExamples = [
   {
     title: 'Create from the default interactive flow',
     command: 'yggtree create',
-    detail: 'Yggtree asks for the branch, base ref, bootstrap preference, and whether to open an editor.',
+    detail:
+      'Yggtree asks for the branch, base ref, optional local env-file copy, bootstrap preference, and whether to open an editor.',
   },
   {
     title: 'Create a named branch from a known base',
@@ -109,12 +130,39 @@ const checkoutExamples = [
     title: 'Open a specific tool after checkout',
     command: 'yggtree wc hotfix-auth main --tool codex-app',
     detail:
-      '`--tool` implies opening, skips the picker, and still enters the worktree shell unless `--no-enter` is set.',
+      '`--tool` accepts detected editors and app aliases such as `codex` or `codex-app`, skips the picker, and still enters the worktree shell unless `--no-enter` is set.',
   },
   {
     title: 'Open editors but stay in the current shell',
     command: 'yggtree wc hotfix-auth main --open --no-enter',
-    detail: 'Use this when the command should prepare a worktree and return.',
+    detail:
+      'Use this when the command should prepare a worktree and return. The interactive open picker can select multiple tools or run `Other command...` before the shell starts.',
+  },
+];
+
+const openExamples = [
+  {
+    title: 'Pick a worktree and open tools',
+    command: 'yggtree open',
+    detail:
+      'Pick from a type-to-filter worktree list, then choose one or more detected editors or apps. Yggtree detects common tools such as Cursor, VS Code, Zed, WebStorm, and Codex App on macOS.',
+  },
+  {
+    title: 'Open Codex App directly',
+    command: 'yggtree open feat/new-ui --tool codex-app',
+    detail:
+      '`--tool` skips the picker. Codex App can be addressed as `codex` or `codex-app` when it is detected.',
+  },
+  {
+    title: 'Open tools and continue in the shell',
+    command: 'yggtree open feat/new-ui --tool code --enter',
+    detail:
+      '`open` returns by default. Add `--enter` when opening should continue into the worktree shell.',
+  },
+  {
+    title: 'Open from the worktree list',
+    command: 'yggtree list --open',
+    detail: 'Switches the list command into the same pick-and-open flow without printing the table first.',
   },
 ];
 
@@ -147,7 +195,8 @@ const commandGroups = [
     commands: [
       {
         command: 'yggtree create [branch]',
-        description: 'Create a branch-backed task worktree.',
+        description:
+          'Create a branch-backed task worktree. Interactive creation asks whether to open an editor, while `--exec` remains the explicit startup-command override.',
         flags: [
           flag('-b, --branch <name>', 'Branch name when not passed positionally.'),
           flag('--base <ref>', 'Base ref such as main.'),
@@ -159,13 +208,14 @@ const commandGroups = [
       },
       {
         command: 'yggtree worktree-checkout [name] [ref]',
-        description: 'Create or reuse a checkout-style worktree from an existing branch or ref.',
+        description:
+          'Create or reuse a checkout-style worktree from an existing branch or ref. The picker shows local and `origin/*` choices separately, creates local branches for remote-only refs, reuses active worktrees, and enters the shell by default.',
         flags: [
           flag('-n, --name <slug>', 'Worktree name.'),
           flag('-r, --ref <ref>', 'Branch or ref to use without the picker.'),
           flag('--no-bootstrap', 'Skip setup commands.'),
           flag('--open / --no-open', 'Choose whether to open tools before entering.'),
-          flag('--tool <command>', 'Open one editor or app directly, such as cursor, code, or codex-app.'),
+          flag('--tool <command>', 'Open one editor or app directly, such as cursor, code, codex, or codex-app.'),
           flag('--no-enter', 'Do not enter the worktree shell after checkout.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
         ],
@@ -191,14 +241,16 @@ const commandGroups = [
     commands: [
       {
         command: 'yggtree list',
-        description: 'Show repo-linked worktrees, grouped by type, with state and activity.',
+        description:
+          'Show repo-linked worktrees grouped by `MAIN`, `MANAGED`, `LINKED`, and `SANDBOX`, with clean/dirty state, last activity, branch, and an optional PR column when GitHub CLI is available.',
         flags: [flag('--open', 'Switch from list output into the open-worktree flow.')],
       },
       {
         command: 'yggtree open [worktree]',
-        description: 'Open a worktree in an editor or supported desktop app.',
+        description:
+          'Open a worktree in an editor or supported desktop app. Without a worktree argument, pick from a type-to-filter list. The interactive picker supports multiple tools; the command returns by default.',
         flags: [
-          flag('--tool <command>', 'Use a specific editor or app such as cursor, code, zed, webstorm, or codex-app.'),
+          flag('--tool <command>', 'Use a specific editor or app such as cursor, code, zed, webstorm, codex, or codex-app.'),
           flag('--enter', 'Enter the worktree shell after opening.'),
         ],
       },
@@ -248,7 +300,8 @@ const commandGroups = [
     commands: [
       {
         command: 'yggtree create-sandbox',
-        description: 'Create a local-only sandbox for experiments.',
+        description:
+          'Create a local-only sandbox for experiments. The interactive flow can name it, carry staged/unstaged/untracked edits, and ask whether to open an editor after creation.',
         flags: [
           flag('-n, --name <name>', 'Optional sandbox name.'),
           flag('--carry / --no-carry', 'Choose whether to move uncommitted changes into the sandbox.'),
@@ -259,14 +312,15 @@ const commandGroups = [
       },
       {
         command: 'yggtree apply',
-        description: 'Apply sandbox file changes back to the origin checkout.',
+        description:
+          'Apply sandbox file changes back to the origin checkout, backing up overwritten files and offering to delete the sandbox afterward.',
         flags: [
           flag('Run location', 'Run from inside the sandbox. Yggtree creates backups before overwriting origin files.'),
         ],
       },
       {
         command: 'yggtree unapply',
-        description: 'Restore origin files from the sandbox backup.',
+        description: 'Restore origin files from the sandbox backup created by `apply`.',
         flags: [flag('Constraint', 'Only works while the sandbox and its backup metadata still exist.')],
       },
     ],
@@ -373,7 +427,10 @@ export default function DocsPage() {
               </p>
               <div className="mt-8 grid max-w-2xl gap-4">
                 <CommandBlock command="npm install -g yggtree" output="Install the CLI globally once." />
-                <CommandBlock command="yggtree" output="Open the guided menu from any Git repository." />
+                <CommandBlock
+                  command="yggtree"
+                  output="Open the guided menu from any Git repository. If your global install is behind npm, the menu points you to the update command."
+                />
                 <p className={noteClass}>
                   Prefer a one-off run? Use{' '}
                   <code className={`${monoFaceClass} text-[0.875rem] text-gold-rune`}>npx yggtree</code> without
@@ -401,6 +458,31 @@ export default function DocsPage() {
                       <CommandBlock command={workflow.command} />
                     </div>
                     <p className={`mt-4 ${noteClass}`}>{workflow.note}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section id="agents" className="border-t border-gold-rune/15 py-10 sm:py-14">
+              <div className="mb-8">
+                <h2 className={sectionTitleClass}>Use Yggtree from agent workflows</h2>
+                <p className={sectionIntroClass}>
+                  The consolidated Yggtree skill helps agents choose the right worktree workflow before loading the
+                  smallest reference they need: create a task worktree, branch off without stashing, manage a realm, or
+                  run a sandbox experiment.
+                </p>
+              </div>
+              <div className="grid gap-5">
+                {agentExamples.map((example) => (
+                  <div
+                    key={example.command}
+                    className="min-w-0 border-l border-gold-rune/30 bg-mist-green/15 p-4 sm:p-5"
+                  >
+                    <h3 className={exampleTitleClass}>{example.title}</h3>
+                    <div className="mt-4">
+                      <CommandBlock command={example.command} />
+                    </div>
+                    <p className={`mt-3 ${noteClass}`}>{example.detail}</p>
                   </div>
                 ))}
               </div>
@@ -442,6 +524,32 @@ export default function DocsPage() {
               </div>
               <div className="grid gap-5">
                 {checkoutExamples.map((example) => (
+                  <div
+                    key={example.command}
+                    className="min-w-0 border-l border-gold-rune/30 bg-mist-green/15 p-4 sm:p-5"
+                  >
+                    <h3 className={exampleTitleClass}>{example.title}</h3>
+                    <div className="mt-4">
+                      <CommandBlock command={example.command} />
+                    </div>
+                    <p className={`mt-3 ${noteClass}`}>{example.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section id="tools" className="border-t border-gold-rune/15 py-10 sm:py-14">
+              <div className="mb-8">
+                <h2 className={sectionTitleClass}>Open worktrees in editors and apps</h2>
+                <p className={sectionIntroClass}>
+                  Opening tools is separate from creating or checking out a worktree. Use{' '}
+                  <code className={`${monoFaceClass} text-sm text-gold-rune`}>open</code> when you want to launch
+                  editors and return, and use <code className={`${monoFaceClass} text-sm text-gold-rune`}>wc --open</code>{' '}
+                  when you want the checkout flow to open tools before entering the worktree shell.
+                </p>
+              </div>
+              <div className="grid gap-5">
+                {openExamples.map((example) => (
                   <div
                     key={example.command}
                     className="min-w-0 border-l border-gold-rune/30 bg-mist-green/15 p-4 sm:p-5"
@@ -526,7 +634,9 @@ export default function DocsPage() {
               <h2 className={sectionTitleClass}>Configuration</h2>
               <p className={sectionIntroClass}>
                 If a repository needs something other than the fallback `npm install`, define setup commands once and
-                let every new realm inherit the same ritual.
+                let every new realm inherit the same ritual. When local env files such as `.env` or `.env.local` exist,
+                interactive creation flows offer to copy them into the new worktree. Example and template env files are
+                skipped, and CI or other non-interactive runs skip the prompt entirely.
               </p>
               <div className="mt-6 min-w-0 rounded-lg border border-gold-rune/20 bg-mist-green/25 p-4 sm:p-6">
                 <p className={`scrollbar-none mb-4 overflow-x-auto whitespace-nowrap ${kickerClass}`}>

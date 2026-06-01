@@ -19,10 +19,8 @@ export function CopyButton({ text, className = '' }: CopyButtonProps) {
   return (
     <button
       onClick={handleCopy}
-      className={`px-3 py-1 text-sm font-mono transition-all duration-200 ${
-        copied
-          ? 'bg-gold-rune text-deep-forest'
-          : 'bg-mist-green text-parchment hover:bg-surface hover:text-gold-rune'
+      className={`min-h-11 px-3 py-2 text-sm font-mono transition-all duration-200 ${
+        copied ? 'bg-gold-rune text-deep-forest' : 'bg-mist-green text-parchment hover:bg-surface hover:text-gold-rune'
       } rounded border border-gold-rune/30 ${className}`}
       aria-label="Copy to clipboard"
     >

@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-01T10:53:23-03:00",
+  "title": "Design System: Yggdrasil Worktree",
+  "extensions": {
+    "colorMeta": {
+      "deep-forest": {
+        "role": "primary",
+        "displayName": "Deep Forest",
+        "canonical": "#0b1d0b",
+        "tonalRamp": ["#020602", "#071207", "#0b1d0b", "#123012", "#1a431a", "#2f6a2f", "#75a875", "#d9ead9"]
+      },
+      "mist-green": {
+        "role": "secondary",
+        "displayName": "Mist Green",
+        "canonical": "#1a3a1a",
+        "tonalRamp": ["#071007", "#102410", "#1a3a1a", "#265626", "#367536", "#5b985b", "#96c196", "#e1efe1"]
+      },
+      "gold-rune": {
+        "role": "primary",
+        "displayName": "Gold Rune",
+        "canonical": "#d4a853",
+        "tonalRamp": ["#2c1d06", "#5d3f0c", "#8d681d", "#b88e36", "#d4a853", "#e2c27d", "#f0dcae", "#fbf2dc"]
+      },
+      "parchment": {
+        "role": "neutral",
+        "displayName": "Parchment",
+        "canonical": "#f5e6d3",
+        "tonalRamp": ["#23180e", "#4a3521", "#74583d", "#9c7f61", "#c4a98c", "#ddc8ae", "#f5e6d3", "#fff8ef"]
+      },
+      "frost-white": {
+        "role": "neutral",
+        "displayName": "Frost White",
+        "canonical": "#e8f0e8",
+        "tonalRamp": ["#101710", "#253025", "#4f5f4f", "#7f927f", "#adbfad", "#d2dfd2", "#e8f0e8", "#fbfdfb"]
+      },
+      "cosmic-purple-deep": {
+        "role": "secondary",
+        "displayName": "Cosmic Purple Deep",
+        "canonical": "#3d2066",
+        "tonalRamp": ["#0d0716", "#1f1033", "#3d2066", "#5a3293", "#7849bd", "#9d78d1", "#c7b0e7", "#efe8fa"]
+      },
+      "cosmic-purple-vivid": {
+        "role": "secondary",
+        "displayName": "Cosmic Purple Vivid",
+        "canonical": "#8347d7",
+        "tonalRamp": ["#140924", "#2b1251", "#4c208a", "#6f35bd", "#8347d7", "#a77ae6", "#cbb2f1", "#f0e8fc"]
+      },
+      "destructive-red": {
+        "role": "tertiary",
+        "displayName": "Destructive Red",
+        "canonical": "#f97373",
+        "tonalRamp": ["#2b0505", "#5a1111", "#8b2525", "#c24141", "#f97373", "#fca5a5", "#fecaca", "#fff1f1"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero headlines and the strongest page statement only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Major documentation sections and page-level section breaks."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Cards, examples, troubleshooting entries, and smaller content groups."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Long prose, descriptions, notes, and docs explanation."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Command flags, nav labels, terminal captions, metadata, and compact controls."
+      }
+    },
+    "shadows": [
+      {
+        "name": "command-glow",
+        "value": "0 0 18px rgba(212,168,83,0.20)",
+        "purpose": "Soft atmospheric halo around command blocks and signature terminal surfaces."
+      },
+      {
+        "name": "feature-hover-glow",
+        "value": "0 0 18px rgba(131,71,215,0.20)",
+        "purpose": "Hover-only glow for feature cards and signature public-site moments."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "ease-out",
+        "purpose": "Default state transitions for color, border, opacity, and transform."
+      },
+      {
+        "name": "entrance-rise",
+        "value": "opacity 0 to 1, translateY 20px to 0, 500ms to 800ms",
+        "purpose": "Section and hero entrance motion, always with content present by default."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary CTA Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Use for the main public-site action when the reader should move forward.",
+      "html": "<button class=\"ds-btn-primary\">Read the docs</button>",
+      "css": ".ds-btn-primary { background: #d4a853; color: #0b1d0b; border: 2px solid #d4a853; border-radius: 8px; padding: 16px 32px; font-family: Source Serif 4, Georgia, serif; font-size: 1rem; font-weight: 600; transition: background-color 200ms ease-out, color 200ms ease-out, transform 200ms ease-out; } .ds-btn-primary:hover { transform: translateY(-1px); } .ds-btn-primary:focus-visible { outline: 3px solid rgba(212,168,83,0.55); outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline CTA Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Use for secondary public-site actions and docs links that need presence without stealing focus.",
+      "html": "<a class=\"ds-btn-outline\" href=\"#\">Read the docs</a>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: #d4a853; border: 2px solid #d4a853; border-radius: 8px; padding: 16px 32px; font-family: Source Serif 4, Georgia, serif; font-size: 1rem; font-weight: 600; text-decoration: none; transition: background-color 200ms ease-out, color 200ms ease-out, transform 200ms ease-out; } .ds-btn-outline:hover { background: #d4a853; color: #0b1d0b; transform: translateY(-1px); } .ds-btn-outline:focus-visible { outline: 3px solid rgba(212,168,83,0.55); outline-offset: 2px; }"
+    },
+    {
+      "name": "Copy Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Compact mono control used inside command blocks.",
+      "html": "<button class=\"ds-copy-button\">Copy</button>",
+      "css": ".ds-copy-button { min-height: 44px; background: #1a3a1a; color: #f5e6d3; border: 1px solid rgba(212,168,83,0.30); border-radius: 4px; padding: 8px 12px; font-family: JetBrains Mono, ui-monospace, monospace; font-size: 0.875rem; transition: background-color 200ms ease-out, color 200ms ease-out; } .ds-copy-button:hover { background: #1a3a1a; color: #d4a853; } .ds-copy-button:focus-visible { outline: 3px solid rgba(212,168,83,0.55); outline-offset: 2px; }"
+    },
+    {
+      "name": "Command Block",
+      "kind": "custom",
+      "refersTo": "command-block",
+      "description": "Signature terminal-style component for runnable commands.",
+      "html": "<div class=\"ds-command\"><div class=\"ds-command-bar\"><span>Terminal</span><button class=\"ds-command-copy\">Copy</button></div><div class=\"ds-command-body\"><span class=\"ds-command-prompt\">$</span><code>yggtree create feat/docs-pass</code></div></div>",
+      "css": ".ds-command { position: relative; overflow: hidden; background: rgba(26,58,26,0.90); color: #e8f0e8; border: 1px solid rgba(212,168,83,0.20); border-radius: 8px; box-shadow: 0 0 18px rgba(212,168,83,0.20); font-family: JetBrains Mono, ui-monospace, monospace; } .ds-command-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; border-bottom: 1px solid rgba(212,168,83,0.20); background: rgba(11,29,11,0.50); color: rgba(245,230,211,0.60); font-size: 0.75rem; } .ds-command-copy { background: #1a3a1a; color: #f5e6d3; border: 1px solid rgba(212,168,83,0.30); border-radius: 4px; padding: 4px 12px; font: inherit; } .ds-command-body { display: flex; gap: 8px; padding: 16px; font-size: 0.875rem; } .ds-command-prompt { color: #d4a853; } .ds-command code { color: #e8f0e8; white-space: pre-wrap; overflow-wrap: anywhere; }"
+    },
+    {
+      "name": "Docs Card",
+      "kind": "card",
+      "refersTo": "docs-card",
+      "description": "Readable documentation grouping for examples, workflows, safety notes, and troubleshooting.",
+      "html": "<article class=\"ds-docs-card\"><h3>Create a task worktree</h3><p>Use this when the work deserves a branch, review, and normal Git history.</p></article>",
+      "css": ".ds-docs-card { background: rgba(26,58,26,0.25); color: #e8f0e8; border: 1px solid rgba(212,168,83,0.20); border-radius: 8px; padding: 24px; } .ds-docs-card h3 { margin: 0 0 8px; font-family: Cinzel, Georgia, serif; font-size: 1.35rem; line-height: 1.18; font-weight: 600; letter-spacing: -0.005em; } .ds-docs-card p { margin: 0; max-width: 62ch; color: rgba(245,230,211,0.70); font-family: Source Serif 4, Georgia, serif; font-size: 1rem; line-height: 1.65; }"
+    },
+    {
+      "name": "Docs Nav Link",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Quiet left-rail navigation link for long documentation pages.",
+      "html": "<a class=\"ds-docs-nav\" href=\"#commands\">Commands</a>",
+      "css": ".ds-docs-nav { display: block; padding: 4px 0; color: rgba(245,230,211,0.70); font-family: Source Serif 4, Georgia, serif; font-size: 0.875rem; line-height: 1.5; text-decoration: none; transition: color 160ms ease-out; } .ds-docs-nav:hover, .ds-docs-nav:focus-visible { color: #d4a853; outline: none; }"
+    },
+    {
+      "name": "Mobile Docs Trigger",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Compact mobile entrypoint into the docs table of contents.",
+      "html": "<button class=\"ds-mobile-docs\">Docs</button>",
+      "css": ".ds-mobile-docs { min-height: 44px; display: inline-flex; align-items: center; gap: 4px; background: transparent; color: #f5e6d3; border: 1px solid rgba(212,168,83,0.20); border-radius: 8px; padding: 6px 12px; font-family: JetBrains Mono, ui-monospace, monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; transition: background-color 160ms ease-out, color 160ms ease-out; } .ds-mobile-docs:hover { background: rgba(26,58,26,0.60); color: #d4a853; } .ds-mobile-docs:focus-visible { outline: 3px solid rgba(212,168,83,0.55); outline-offset: 2px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Living Terminal Grove",
+    "overview": "The Yggdrasil Worktree system feels like a command manual found in a mythic forest workshop: dark, quiet, tactile, and built for repeated use. It gives the public site a distinct identity without making command examples feel theatrical. The tree metaphor is present in color, naming, and atmosphere, while the layout stays practical enough for developers who came to solve a workflow problem.\n\nThis system rejects generic SaaS polish, terminal costume, and decorative mythology. Surfaces should feel grown from the same root: deep forest backgrounds, mist-green panels, rare gold emphasis, serif-led voice, and mono command details. Documentation pages can be expressive, but dense references must behave like tools.",
+    "keyCharacteristics": [
+      "Dark forest surfaces with gold used as a scarce signal.",
+      "Serif display and body type, with mono reserved for commands, labels, and control text.",
+      "Tonal layering, borders, and soft glows instead of heavy app shadows.",
+      "Practical command examples placed before exhaustive reference detail.",
+      "Motion that reveals structure without delaying access to content."
+    ],
+    "rules": [
+      {
+        "name": "The Scarce Rune Rule",
+        "body": "Gold is the reader's signal color. If every border, heading, and icon is gold, the system loses hierarchy.",
+        "section": "colors"
+      },
+      {
+        "name": "The Forest Before Purple Rule",
+        "body": "Purple supports atmosphere through glows and gradients. It is never the dominant surface, text, or navigation color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono Means Work Rule",
+        "body": "Mono is reserved for command text, flags, labels, and controls. Do not use it as a lazy shorthand for developer personality.",
+        "section": "typography"
+      },
+      {
+        "name": "The Serif Carries Trust Rule",
+        "body": "Long-form docs use Source Serif 4 with generous line-height. Do not collapse docs prose into cramped UI sans patterns.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tonal Layer Rule",
+        "body": "A panel should become visible through green surface shifts and gold borders before it uses shadow.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Glow Must Earn It Rule",
+        "body": "Glow belongs to terminal, hero, and signature feature moments. It is prohibited as generic card decoration.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do teach the workflow before the flag list.",
+      "Do make safety visible whenever a command can move, copy, apply, or delete work.",
+      "Do use Deep Forest, Mist Green, and Parchment as the reading base, with Gold Rune as the scarce signal.",
+      "Do keep command examples concrete and runnable.",
+      "Do use the Yggdrasil metaphor to add identity, not ambiguity."
+    ],
+    "donts": [
+      "Don't create generic SaaS docs pages with interchangeable cards, soft gradients, and vague productivity promises.",
+      "Don't use terminal-only hacker aesthetics that make the product feel narrower than the workflow it supports.",
+      "Don't add decorative mythology that obscures the actual Git and worktree behavior.",
+      "Don't write dense command references that present completeness before the reader has a working mental model.",
+      "Don't use border-left or border-right greater than 1px as a colored accent on cards, list items, callouts, or alerts.",
+      "Don't pair a 1px border with a soft wide drop shadow on the same card. Use a defined border or a restrained glow, not both as decoration."
+    ]
+  }
+}

@@ -29,6 +29,12 @@ All notable changes to this project will be documented in this file.
 - Worktree creation flows now offer to copy local `.env` files into the new worktree before bootstrap runs. The copy is opt-in, skips example/template env files, and covers `create`, `worktree-checkout`, `create-multi`, and `create-sandbox`.
 - README and website docs now lead with global installation, keep `npx yggtree` as a secondary option, and align examples with the current `wc` and `open` flows.
 - Expanded the website docs page with scenario-based workflows, current command flags, sandbox guidance, configuration notes, and troubleshooting.
+- Added Impeccable project context and live-mode configuration for the public website and docs.
+- Refined the website docs typography with stronger heading hierarchy, controlled prose measure, and a more scannable command flag reference.
+- Tightened the docs page type system with clearer text roles, improved command-reference rhythm, and site-wide font rendering refinements.
+- Reduced the docs hero headline scale so the page opens with a calmer documentation rhythm.
+- Documented the website design system in `DESIGN.md` and `.impeccable/design.json` so future Impeccable work can preserve the existing visual identity.
+- Polished the website docs touch targets for mobile navigation and command-copy controls.
 
 ### Removed
 - Removed the public `enter` and `close` commands from the CLI, menus, and current docs. The shell-entry primitive remains internal for checkout and open flows.

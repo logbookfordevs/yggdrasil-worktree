@@ -26,7 +26,7 @@ export function DocsMobileMenu({ items }: DocsMobileMenuProps) {
         <Button
           variant="ghost"
           size="sm"
-          className="border border-gold-rune/20 px-2.5 font-mono text-xs uppercase tracking-wide text-parchment hover:bg-mist-green/60 hover:text-gold-rune md:hidden"
+          className="min-h-11 border border-gold-rune/20 px-3 font-mono text-xs uppercase tracking-wide text-parchment hover:bg-mist-green/60 hover:text-gold-rune md:hidden"
         >
           <MenuIcon data-icon="inline-start" />
           Docs
@@ -47,7 +47,7 @@ export function DocsMobileMenu({ items }: DocsMobileMenuProps) {
             <SheetClose key={item.href} asChild>
               <a
                 href={item.href}
-                className="rounded-md px-3 py-2 text-sm text-parchment/75 transition-colors hover:bg-gold-rune/15 hover:text-frost-white"
+                className="flex min-h-11 items-center rounded-md px-3 py-2 text-sm text-parchment/75 transition-colors hover:bg-gold-rune/15 hover:text-frost-white"
               >
                 {item.label}
               </a>

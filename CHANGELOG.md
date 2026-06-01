@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - **GitHub Actions validation**: Added CI coverage for TypeScript checks and publish workflow support so release readiness is easier to verify from GitHub.
 - **Vitest test runner**: Migrated CLI helper coverage from ad hoc `.mjs` scripts to named Vitest suites for env-file handling and worktree checkout behavior.
 - **PR validation workflow**: GitHub Actions now runs the full `pnpm test` pipeline on pull requests and pushes to `main`.
+- **Tag-based npm releases**: Hardened the publish workflow so `v*` tags only publish when they match `package.json`, point at the current `main` tip, pass validation, and produce the expected npm package contents.
 - `yggtree wc` and `yggtree wt wc` now provide short aliases for the checkout-style `worktree-checkout` flow.
 - `open` now detects Codex App on macOS and supports `--tool codex-app` / `--tool codex` to launch the selected worktree with the desktop app.
 

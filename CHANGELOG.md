@@ -2,7 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Next Release] - Unreleased
+## Next Release - TBD
+
+## [v1.4.3] - 2026-06-01
 
 ### Added
 - **Yggtree agent skill**: Added a consolidated `yggtree` skill with focused references for creating task worktrees, checking out existing branches without stashing, managing realm lifecycle commands, and running sandbox experiments.

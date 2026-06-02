@@ -3,7 +3,8 @@
 Choose sandbox when the user is already in the middle of a task and wants to
 try alternate approaches locally. Sandbox creates a local-only branch, writes
 `.yggtree/sandbox-meta.json`, and can later apply or unapply file changes back
-to the origin realm.
+to the origin realm. Interactive sandbox creation can also offer opt-in copying
+of local `.env` files before bootstrap.
 
 ```bash
 yggtree create-sandbox
@@ -19,6 +20,9 @@ yggtree create-sandbox
 
 When prompted, keep `Carry uncommitted changes to sandbox?` enabled if the
 experiment should begin from the current working state.
+
+When prompted about local env files, copy them only if the experiment needs the
+same machine-local secrets/configuration as the origin realm.
 
 Apply the winner back to the origin realm:
 

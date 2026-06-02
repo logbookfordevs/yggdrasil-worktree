@@ -6,7 +6,8 @@ live in an isolated, branch-backed worktree.
 ## Setup
 
 `create` makes a new branch, creates a worktree under
-`~/.yggtree/<repo>/<slug>`, and tries to publish that branch to `origin`.
+`~/.yggtree/<repo>/<slug>`, tries to publish that branch to `origin`, and can
+offer to copy local `.env` files into the new worktree before bootstrap.
 
 ```bash
 yggtree create feat/new-checkout-flow --base main --source remote --no-open
@@ -31,6 +32,10 @@ Create the worktree without opening a tool:
 ```bash
 yggtree create feat/background-task --base main --source remote --no-open
 ```
+
+In interactive creation, copy local `.env` files only when the user wants that
+local machine state in the new realm. Example/template env files are skipped.
+Non-interactive creation should avoid env-file prompts.
 
 Prefer single-worktree creation unless the user explicitly asks for multiple
 parallel task worktrees.

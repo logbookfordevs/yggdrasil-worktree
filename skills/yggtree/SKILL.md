@@ -20,8 +20,8 @@ only the reference file for that path.
   branch-backed worktree and a remote-tracked branch. Read
   `references/create-task-worktree.md`.
 - **Existing branch or clean interruption:** use `yggtree worktree-checkout`
-  when current work must stay untouched and the user needs another existing ref.
-  Read `references/branch-off-without-stashing.md`.
+  or `yggtree wc` when current work must stay untouched and the user needs
+  another existing ref. Read `references/branch-off-without-stashing.md`.
 - **Local experiment:** use `yggtree create-sandbox` when the user wants to
   try alternative approaches locally, then maybe apply the winner back. Read
   `references/sandbox-experiments.md`.
@@ -35,9 +35,12 @@ only the reference file for that path.
   remote tracking.
 - Prefer `worktree-checkout` over stash or temporary commits when the user is
   interrupted by work on another branch.
-- Prefer `worktree-checkout` when the user wants shell entry for a branch,
+- Prefer `wc` / `worktree-checkout` when the user wants shell entry for a branch,
   `open` for IDE-style opening, and `exec` for simple non-interactive process
   launch inside a chosen realm.
+- Expect interactive creation flows to offer opt-in local `.env` file copying
+  before bootstrap; skip or disable it for scripted/non-interactive runs unless
+  the user explicitly asks to carry local environment files.
 - Keep `create-multi` out of the default path unless the user explicitly asks
   for multiple official worktrees.
 
@@ -45,11 +48,14 @@ only the reference file for that path.
 
 ```bash
 yggtree create feat/new-checkout-flow --base main --source remote --no-open
-yggtree worktree-checkout --ref hotfix/payment-timeout
+yggtree wc --ref hotfix/payment-timeout
+yggtree wc --ref hotfix/payment-timeout --tool codex-app --no-enter
 yggtree create-sandbox
 yggtree bootstrap
 yggtree open my-feature --tool cursor
+yggtree open my-feature --tool codex
 yggtree open my-feature --tool codex-app
+yggtree list --open
 yggtree exec my-feature codex --approval-mode auto
 ```
 

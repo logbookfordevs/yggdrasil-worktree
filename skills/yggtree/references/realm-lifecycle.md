@@ -36,6 +36,13 @@ Use `worktree-checkout` when you want to land in a branch worktree shell:
 yggtree wc --ref my-feature
 ```
 
+Add `--no-enter` when the checkout flow should prepare or open the worktree and
+then return:
+
+```bash
+yggtree wc --ref my-feature --tool codex-app --no-enter
+```
+
 Use `open --enter` when the worktree is already known and editor launch should
 continue into a shell:
 
@@ -49,10 +56,18 @@ Use `open` for IDE-style opening:
 yggtree open my-feature --tool cursor
 ```
 
-Use `codex-app` to open the Codex desktop app on macOS:
+Use `codex` or `codex-app` to open the Codex desktop app on macOS:
 
 ```bash
+yggtree open my-feature --tool codex
 yggtree open my-feature --tool codex-app
+```
+
+Use `list --open` when the user wants to choose from the worktree list before
+launching tools:
+
+```bash
+yggtree list --open
 ```
 
 Use `exec` for simple non-interactive commands inside a chosen worktree:
@@ -123,9 +138,9 @@ Correct:
 yggtree exec orchestrator-branch codex --approval-mode auto
 ```
 
-Treat `open` as editor/app-oriented. `codex-app` opens the desktop app with the
-worktree folder; use `exec` or the separate orchestration skill when a main
-agent needs to coordinate non-interactive agents across worktrees.
+Treat `open` as editor/app-oriented. `codex` and `codex-app` open the desktop
+app with the worktree folder; use `exec` or the separate orchestration skill when
+a main agent needs to coordinate non-interactive agents across worktrees.
 
 Source: `src/commands/wt/open.ts`
 

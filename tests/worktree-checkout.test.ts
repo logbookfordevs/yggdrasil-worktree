@@ -4,7 +4,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
-import { findExistingBranchWorktree, listBranchCandidates } from '../src/commands/wt/create.js';
+import {
+    findExistingBranchWorktree,
+    getWorktreePathCollisionMessage,
+    listBranchCandidates,
+} from '../src/commands/wt/create.js';
 import { parseWorktreeList } from '../src/lib/git.js';
 
 const exec = promisify(execFile);
@@ -155,6 +159,31 @@ describe('worktree checkout reuse', () => {
             await rm(tmp, { recursive: true, force: true });
         }
     });
+
+    it('reports when the default slug path is occupied by another branch', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-path-collision-'));
+
+        try {
+            const developmentPath = path.join(tmp, 'development');
+            await mkdir(developmentPath);
+
+            const collisionMessage = getWorktreePathCollisionMessage(
+                'development',
+                developmentPath,
+                [
+                    {
+                        path: developmentPath,
+                        HEAD: 'feature-head',
+                        branch: 'feat/other-work',
+                    },
+                ],
+            );
+
+            expect(collisionMessage).toBe('Worktree name "development" is already used by branch "feat/other-work".');
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    });
 });
 
 describe('worktree checkout CLI', () => {
@@ -197,6 +226,47 @@ describe('worktree checkout CLI', () => {
             await rm(tmp, { recursive: true, force: true });
         }
     });
+
+    it('reports occupied worktree slug paths before git worktree add runs', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-path-collision-cli-'));
+
+        try {
+            const repo = await createBranchCandidateRepo(tmp);
+            const home = path.join(tmp, 'home');
+            const occupiedPath = path.join(home, '.yggtree', 'repo', 'development');
+            await mkdir(path.dirname(occupiedPath), { recursive: true });
+            await git(repo, ['worktree', 'add', occupiedPath, 'local-only']);
+
+            const { stdout } = await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'wc',
+                    '--ref',
+                    'development',
+                    '--name',
+                    'development',
+                    '--no-open',
+                    '--no-enter',
+                    '--no-bootstrap',
+                ],
+                {
+                    cwd: repo,
+                    env: {
+                        ...process.env,
+                        CI: 'true',
+                        HOME: home,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            expect(stdout).toContain('Worktree name "development" is already used by branch "local-only".');
+            expect(stdout).not.toContain('fatal:');
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    }, 15_000);
 
     it('can checkout from outside a repo by using the registered repo reference', async () => {
         const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-registered-repo-'));

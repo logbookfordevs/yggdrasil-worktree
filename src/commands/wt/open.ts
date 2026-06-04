@@ -96,10 +96,6 @@ function openRail(): string {
     return yggtreeAccent('│');
 }
 
-function openSectionLabel(label: string): string {
-    return `${yggtreeAccent('┌')} ${chalk.bold(label)}`;
-}
-
 function formatOpenColumns(name: string, command: string, detail: string): string {
     const paddedName = name.padEnd(16);
     const paddedCommand = command.padEnd(13);
@@ -218,29 +214,11 @@ export async function promptOpenToolSelection(
     installedTools: OpenToolOption[],
     message = 'Select tool to open:'
 ): Promise<OpenToolOption> {
-    const ideChoices = installedTools
-        .filter(tool => tool.kind === 'editor')
+    const choices = installedTools
         .map(tool => ({
             name: formatOpenToolChoice(tool),
             value: tool,
         }));
-
-    const appChoices = installedTools
-        .filter(tool => tool.kind === 'app')
-        .map(tool => ({
-            name: formatOpenToolChoice(tool),
-            value: tool,
-        }));
-
-    const choices: any[] = [];
-    if (ideChoices.length > 0) {
-        choices.push(new inquirer.Separator(openSectionLabel('Editors & IDEs')));
-        choices.push(...ideChoices);
-    }
-    if (appChoices.length > 0) {
-        choices.push(new inquirer.Separator(openSectionLabel('Apps')));
-        choices.push(...appChoices);
-    }
 
     const { selectedTool } = await inquirer.prompt<{ selectedTool: OpenToolOption }>([
         {
@@ -257,30 +235,22 @@ export async function promptOpenToolSelection(
 }
 
 export function buildOpenActionsFromSelection(
-    selectedValues: string[],
+    selectedValue: string,
     installedTools: OpenToolOption[],
     otherCommand?: string,
 ): OpenAction[] {
-    if (selectedValues.includes(NO_OPEN_ACTION)) return [];
+    if (selectedValue === NO_OPEN_ACTION) return [];
 
-    const actions: OpenAction[] = selectedValues
-        .filter(value => value.startsWith('tool:'))
-        .map(value => installedTools.find(tool => `tool:${tool.id}` === value))
-        .filter((tool): tool is OpenToolOption => Boolean(tool))
-        .map(tool => ({ type: 'tool', tool }));
-
-    if (selectedValues.includes(OTHER_COMMAND_ACTION) && otherCommand?.trim()) {
-        actions.push({ type: 'other-command', command: otherCommand.trim() });
+    if (selectedValue.startsWith('tool:')) {
+        const tool = installedTools.find(candidate => `tool:${candidate.id}` === selectedValue);
+        return tool ? [{ type: 'tool', tool }] : [];
     }
 
-    return actions;
-}
-
-export function validateOpenActionSelection(selectedValues: string[]): true | string {
-    if (selectedValues.includes(NO_OPEN_ACTION) && selectedValues.length > 1) {
-        return 'Choose either "Nothing" or one or more actions, not both.';
+    if (selectedValue === OTHER_COMMAND_ACTION && otherCommand?.trim()) {
+        return [{ type: 'other-command', command: otherCommand.trim() }];
     }
-    return true;
+
+    return [];
 }
 
 export async function promptOpenActions(
@@ -291,55 +261,39 @@ export async function promptOpenActions(
     const choices: any[] = [];
 
     if (installedTools.length > 0) {
-        const editorTools = installedTools.filter(tool => tool.kind === 'editor');
-        const appTools = installedTools.filter(tool => tool.kind === 'app');
-
-        if (editorTools.length > 0) {
-            choices.push(new inquirer.Separator(openSectionLabel('Editors & IDEs')));
-            choices.push(...editorTools.map(tool => ({
+        choices.push(
+            ...installedTools.map(tool => ({
                 name: formatOpenToolChoice(tool),
                 value: `tool:${tool.id}`,
-            })));
-        }
-
-        if (appTools.length > 0) {
-            choices.push(new inquirer.Separator(openSectionLabel('Apps')));
-            choices.push(...appTools.map(tool => ({
-                name: formatOpenToolChoice(tool),
-                value: `tool:${tool.id}`,
-            })));
-        }
+            }))
+        );
     }
 
     if (allowShellAction) {
-        if (choices.length > 0) choices.push(new inquirer.Separator(' '));
-        choices.push(new inquirer.Separator(openSectionLabel('Shell')));
         choices.push({
             name: formatOpenSpecialChoice(OTHER_COMMAND_ACTION, allowShellAction),
             value: OTHER_COMMAND_ACTION,
         });
     }
 
-    if (choices.length > 0) choices.push(new inquirer.Separator(' '));
     choices.push({
         name: formatOpenSpecialChoice(NO_OPEN_ACTION, allowShellAction),
         value: NO_OPEN_ACTION,
     });
 
-    const { selectedValues } = await inquirer.prompt<{ selectedValues: string[] }>([
+    const { selectedValue } = await inquirer.prompt<{ selectedValue: string }>([
         {
-            type: 'checkbox',
-            name: 'selectedValues',
+            type: 'list',
+            name: 'selectedValue',
             message: options.message || 'Open anything before entering the shell?',
             choices,
             loop: false,
             pageSize: 10,
-            validate: validateOpenActionSelection,
         },
     ]);
 
     let otherCommand: string | undefined;
-    if (selectedValues.includes(OTHER_COMMAND_ACTION)) {
+    if (selectedValue === OTHER_COMMAND_ACTION) {
         const answer = await inquirer.prompt<{ otherCommand: string }>([
             {
                 type: 'input',
@@ -351,7 +305,7 @@ export async function promptOpenActions(
         otherCommand = answer.otherCommand;
     }
 
-    return buildOpenActionsFromSelection(selectedValues, installedTools, otherCommand);
+    return buildOpenActionsFromSelection(selectedValue, installedTools, otherCommand);
 }
 
 export async function launchOpenTool(tool: OpenToolOption, wtPath: string): Promise<void> {

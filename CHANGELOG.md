@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release - TBD
 
+### Changed
+- Open-tool prompts now use a single-selection list without checkbox multi-select behavior or section separators, making Enter choose the highlighted action directly.
+
 ## [v1.4.3] - 2026-06-01
 
 ### Added

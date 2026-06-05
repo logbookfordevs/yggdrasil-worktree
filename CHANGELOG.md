@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release - TBD
 
+### Changed
+- Redesigned and polished the website docs page around a calmer Refined Grove direction, with a compact workflow chooser, quieter command blocks, clearer keyboard focus states, a more restrained desktop title scale, and less repetitive panel styling.
+
 ## [v1.4.3] - 2026-06-01
 
 ### Added

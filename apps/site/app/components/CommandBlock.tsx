@@ -11,12 +11,9 @@ interface CommandBlockProps {
 export function CommandBlock({ command, output, className = '' }: CommandBlockProps) {
   return (
     <div className={`relative group ${className}`}>
-      <div className="absolute -inset-0.5 bg-gradient-to-r from-gold-rune to-cosmic-purple rounded-lg opacity-20 group-hover:opacity-40 transition-opacity blur"></div>
-      <div className="relative bg-mist-green/90 backdrop-blur-sm rounded-lg border border-gold-rune/20 overflow-hidden">
-        <div className="flex items-center justify-between gap-3 border-b border-gold-rune/20 bg-deep-forest/50 px-3 py-2 sm:px-4">
-          <span className="ygg-mono text-[0.75rem] font-medium leading-5 text-parchment/60">
-            Terminal
-          </span>
+      <div className="relative overflow-hidden rounded-lg border border-gold-rune/18 bg-mist-green/78 transition-colors group-hover:border-gold-rune/30">
+        <div className="flex items-center justify-between gap-3 border-b border-gold-rune/14 bg-deep-forest/46 px-3 py-2 sm:px-4">
+          <span className="ygg-mono text-[0.75rem] font-medium leading-5 text-parchment/64">Terminal</span>
           <CopyButton text={command} />
         </div>
         <div className="ygg-mono p-3 text-[0.875rem] leading-6 sm:p-4">
@@ -27,7 +24,7 @@ export function CommandBlock({ command, output, className = '' }: CommandBlockPr
             </code>
           </div>
           {output && (
-            <div className="ygg-mono mt-3 rounded-md bg-deep-forest/45 px-3 py-2 text-[0.8125rem] leading-6 text-parchment/70">
+            <div className="ygg-mono mt-3 rounded-md border border-gold-rune/10 bg-deep-forest/46 px-3 py-2 text-[0.8125rem] leading-6 text-parchment/74">
               {output}
             </div>
           )}

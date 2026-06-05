@@ -15,7 +15,7 @@ import {
 
 const navItems = [
   { href: '#start', label: 'Start' },
-  { href: '#workflows', label: 'Workflows' },
+  { href: '#workflows', label: 'Choose Workflow' },
   { href: '#agents', label: 'Agents' },
   { href: '#creation', label: 'Create Worktrees' },
   { href: '#navigation', label: 'Navigate' },
@@ -32,44 +32,56 @@ type CommandFlag = {
   description: string;
 };
 
+type WorkflowChoice = {
+  href: string;
+  title: string;
+  when: string;
+  command: string;
+  result: string;
+};
+
 const flag = (term: string, description: string): CommandFlag => ({ term, description });
 
 const monoFaceClass = 'ygg-mono';
 const kickerClass = `${monoFaceClass} text-[0.8125rem] font-medium leading-5 text-gold-rune`;
 const sectionTitleClass =
-  'font-display text-[clamp(2rem,1.45vw+1.5rem,2.85rem)] font-semibold leading-[1.08] tracking-[-0.008em] [text-wrap:balance]';
-const sectionIntroClass =
-  'mt-3 max-w-[75ch] text-[1.0625rem] leading-8 text-parchment/75 [text-wrap:pretty]';
+  'font-display text-[clamp(1.75rem,1vw+1.35rem,2.35rem)] font-semibold leading-[1.1] tracking-[-0.006em] [text-wrap:balance]';
+const sectionIntroClass = 'mt-3 max-w-[72ch] text-[1.0625rem] leading-8 text-parchment/78 [text-wrap:pretty]';
 const exampleTitleClass =
   'font-display text-[clamp(1.25rem,0.35vw+1.12rem,1.45rem)] font-semibold leading-[1.16] text-frost-white [text-wrap:balance]';
-const bodyCopyClass = 'max-w-[72ch] text-base leading-7 text-parchment/72 [text-wrap:pretty]';
-const bodyPanelClass = 'text-base leading-7 text-parchment/75 [text-wrap:pretty]';
-const noteClass = 'max-w-[74ch] text-[0.9375rem] leading-6 text-parchment/62 [text-wrap:pretty]';
+const bodyPanelClass = 'text-base leading-7 text-parchment/78 [text-wrap:pretty]';
+const noteClass = 'max-w-[74ch] text-[0.9375rem] leading-6 text-parchment/68 [text-wrap:pretty]';
 const referenceHeadingClass =
-  'mb-4 font-display text-[clamp(1.35rem,0.6vw+1.12rem,1.65rem)] font-semibold leading-[1.12] text-gold-rune [text-wrap:balance]';
-const commandCodeClass =
-  `block max-w-full whitespace-normal break-words ${monoFaceClass} text-[0.875rem] leading-6 text-frost-white sm:scrollbar-none sm:overflow-x-auto sm:whitespace-nowrap sm:pb-1`;
+  'mb-4 font-display text-[clamp(1.25rem,0.45vw+1.08rem,1.5rem)] font-semibold leading-[1.14] text-frost-white [text-wrap:balance]';
+const commandCodeClass = `block max-w-full whitespace-normal break-words ${monoFaceClass} text-[0.875rem] leading-6 text-frost-white sm:scrollbar-none sm:overflow-x-auto sm:whitespace-nowrap sm:pb-1`;
 const flagTermClass = `${monoFaceClass} text-[0.8125rem] font-medium leading-6 text-gold-rune/95`;
-const flagDescriptionClass = 'text-[0.9375rem] leading-6 text-parchment/65 [text-wrap:pretty]';
+const flagDescriptionClass = 'text-[0.9375rem] leading-6 text-parchment/70 [text-wrap:pretty]';
+const sectionClass = 'border-t border-gold-rune/12 py-14';
+const exampleShellClass =
+  'min-w-0 rounded-lg border border-gold-rune/16 bg-mist-green/16 p-4 transition-colors hover:border-gold-rune/28 hover:bg-mist-green/22 sm:p-5';
+const referenceShellClass = 'min-w-0 rounded-lg border border-gold-rune/14 bg-deep-forest/45 p-4 sm:p-5';
 
-const workflows = [
+const workflowChoices: WorkflowChoice[] = [
   {
-    title: 'Start a real task',
-    description: 'Use this when the work deserves a branch, review, and normal Git history.',
-    command: 'yggtree create feat/billing-export --base main --source remote',
-    note: 'Creates a branch-backed managed worktree, copies opted-in local env files, and bootstraps the environment.',
+    href: '#creation',
+    title: 'Start planned work',
+    when: 'You need a named branch, reviewable history, and normal setup.',
+    command: 'yggtree create',
+    result: 'Creates a managed task worktree.',
   },
   {
-    title: 'Jump to an existing branch',
-    description: 'Use this when you are interrupted and do not want to stash current work.',
-    command: 'yggtree wc --ref hotfix/payment-timeout',
-    note: 'Leaves your current checkout alone, reuses an existing branch worktree when one exists, then enters the shell.',
+    href: '#navigation',
+    title: 'Jump to a branch',
+    when: 'You were interrupted and do not want to stash current edits.',
+    command: 'yggtree wc',
+    result: 'Reuses or creates the checkout, then enters the shell.',
   },
   {
-    title: 'Try a disposable idea',
-    description: 'Use this when you want a local experiment that may never become a branch.',
-    command: 'yggtree create-sandbox --carry',
-    note: 'Carries changed files into a sandbox, then lets you apply or discard the result.',
+    href: '#sandbox',
+    title: 'Try risky edits',
+    when: 'You want an experiment that may be discarded.',
+    command: 'yggtree create-sandbox',
+    result: 'Keeps the idea local until you apply it back.',
   },
 ];
 
@@ -77,12 +89,14 @@ const agentExamples = [
   {
     title: 'Install the full skill pack',
     command: 'npx skills add logbookfordevs/yggdrasil-worktree',
-    detail: 'Adds the consolidated Yggtree skill plus its focused references for worktree creation, checkout, lifecycle, and sandbox workflows.',
+    detail:
+      'Adds the consolidated Yggtree skill plus its focused references for worktree creation, checkout, lifecycle, and sandbox workflows.',
   },
   {
     title: 'Install the Yggtree skill only',
     command: 'npx skills add logbookfordevs/yggdrasil-worktree --skill yggtree',
-    detail: 'Use this when your agent runtime supports targeted skill installs and you want the compact Yggtree workflow guide.',
+    detail:
+      'Use this when your agent runtime supports targeted skill installs and you want the compact Yggtree workflow guide.',
   },
   {
     title: 'Target Codex directly',
@@ -150,14 +164,12 @@ const openExamples = [
   {
     title: 'Open Codex App directly',
     command: 'yggtree open feat/new-ui --tool codex-app',
-    detail:
-      '`--tool` skips the picker. Codex App can be addressed as `codex` or `codex-app` when it is detected.',
+    detail: '`--tool` skips the picker. Codex App can be addressed as `codex` or `codex-app` when it is detected.',
   },
   {
     title: 'Open tools and continue in the shell',
     command: 'yggtree open feat/new-ui --tool code --enter',
-    detail:
-      '`open` returns by default. Add `--enter` when opening should continue into the worktree shell.',
+    detail: '`open` returns by default. Add `--enter` when opening should continue into the worktree shell.',
   },
   {
     title: 'Open from the worktree list',
@@ -250,7 +262,10 @@ const commandGroups = [
         description:
           'Open a worktree in an editor or supported desktop app. Without a worktree argument, pick from a type-to-filter list. The interactive picker supports multiple tools; the command returns by default.',
         flags: [
-          flag('--tool <command>', 'Use a specific editor or app such as cursor, code, zed, webstorm, codex, or codex-app.'),
+          flag(
+            '--tool <command>',
+            'Use a specific editor or app such as cursor, code, zed, webstorm, codex, or codex-app.'
+          ),
           flag('--enter', 'Enter the worktree shell after opening.'),
         ],
       },
@@ -360,7 +375,7 @@ export default function DocsPage() {
       }
     >
       <main className="ygg-body min-h-screen w-full bg-deep-forest text-frost-white">
-        <div className="border-b border-gold-rune/20 bg-deep-forest/95 backdrop-blur-sm">
+        <div className="border-b border-gold-rune/16 bg-deep-forest/96">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 md:px-12">
             <div className="flex min-w-0 items-center gap-3">
               <DocsMobileMenu items={navItems} />
@@ -372,14 +387,17 @@ export default function DocsPage() {
               </Link>
             </div>
             <nav className="flex shrink-0 items-center gap-3 text-sm text-parchment/70 sm:gap-5">
-              <Link href="/" className="flex min-h-11 min-w-11 items-center justify-center hover:text-gold-rune">
+              <Link
+                href="/"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-sm px-1 hover:text-gold-rune focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-rune/55"
+              >
                 Home
               </Link>
               <a
                 href="https://github.com/logbookfordevs/yggdrasil-worktree"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex min-h-11 min-w-11 items-center justify-center hover:text-gold-rune"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-sm px-1 hover:text-gold-rune focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-rune/55"
               >
                 GitHub
               </a>
@@ -387,12 +405,12 @@ export default function DocsPage() {
           </div>
         </div>
 
-        <div className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 md:px-12 md:py-12 lg:grid-cols-[220px_1fr]">
+        <div className="mx-auto grid w-full max-w-[96rem] gap-7 px-4 py-10 sm:px-6 md:px-10 md:py-10 lg:grid-cols-[220px_minmax(0,1fr)] xl:px-12 xl:pb-12">
           <aside className="hidden lg:block">
             <Sidebar collapsible="none" className="sticky top-8 h-auto w-auto bg-transparent text-parchment">
-              <SidebarContent className="overflow-visible border-l border-gold-rune/20 bg-transparent pl-5">
+              <SidebarContent className="overflow-visible border-l border-gold-rune/16 bg-transparent pl-5">
                 <SidebarGroup className="p-0">
-                  <SidebarGroupLabel className="mb-4 h-auto px-0 font-mono text-xs uppercase tracking-normal text-parchment/40">
+                  <SidebarGroupLabel className="mb-4 h-auto px-0 font-mono text-xs tracking-normal text-parchment/42">
                     Docs
                   </SidebarGroupLabel>
                   <SidebarGroupContent>
@@ -401,7 +419,7 @@ export default function DocsPage() {
                         <SidebarMenuItem key={item.href}>
                           <a
                             href={item.href}
-                            className="flex min-h-11 items-center font-body text-sm font-normal leading-6 text-parchment/70 transition-colors hover:text-gold-rune focus-visible:text-gold-rune focus-visible:outline-none"
+                            className="-mx-1 flex min-h-11 items-center rounded-sm px-1 font-body text-sm font-normal leading-6 text-parchment/70 transition-colors hover:text-gold-rune focus-visible:text-gold-rune focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-rune/55"
                           >
                             {item.label}
                           </a>
@@ -414,56 +432,70 @@ export default function DocsPage() {
             </Sidebar>
           </aside>
 
-          <article className="min-w-0 max-w-4xl">
-            <section id="start" className="pb-12 sm:pb-16">
-              <p className={`mb-4 ${kickerClass}`}>Documentation</p>
-              <h1 className="mb-6 max-w-[15ch] font-display text-[clamp(2.5rem,3.2vw+1.15rem,4.75rem)] font-bold leading-[1.02] tracking-[-0.018em] [text-wrap:balance]">
-                Use worktrees without losing the plot.
-              </h1>
-              <p className="max-w-[64ch] text-[1.125rem] leading-8 text-parchment/82 sm:text-[1.25rem] sm:leading-9 [text-wrap:pretty]">
-                Yggtree is small enough to learn quickly, but it changes a habit that is easy to get wrong: switching
-                contexts while work is already in motion. Install the CLI first, then pick the workflow that matches
-                what you are trying to protect.
-              </p>
-              <div className="mt-8 grid max-w-2xl gap-4">
-                <CommandBlock command="npm install -g yggtree" output="Install the CLI globally once." />
-                <CommandBlock
-                  command="yggtree"
-                  output="Open the guided menu from any Git repository. If your global install is behind npm, the menu points you to the update command."
-                />
-                <p className={noteClass}>
-                  Prefer a one-off run? Use{' '}
-                  <code className={`${monoFaceClass} text-[0.875rem] text-gold-rune`}>npx yggtree</code> without
-                  installing.
-                </p>
-              </div>
-            </section>
-
-            <section id="workflows" className="border-t border-gold-rune/15 py-10 sm:py-14">
-              <div className="mb-8">
-                <h2 className={sectionTitleClass}>Common workflows</h2>
-                <p className={sectionIntroClass}>
-                  Choose by intent first. The command is the easy part once the workflow is clear.
-                </p>
-              </div>
-              <div className="grid gap-6">
-                {workflows.map((workflow) => (
-                  <div
-                    key={workflow.title}
-                    className="min-w-0 rounded-lg border border-gold-rune/20 bg-mist-green/25 p-4 sm:p-6"
-                  >
-                    <h3 className={exampleTitleClass}>{workflow.title}</h3>
-                    <p className={`mt-2 ${bodyCopyClass}`}>{workflow.description}</p>
-                    <div className="mt-5">
-                      <CommandBlock command={workflow.command} />
-                    </div>
-                    <p className={`mt-4 ${noteClass}`}>{workflow.note}</p>
+          <article className="min-w-0 max-w-none">
+            <section id="start" className="pb-14">
+              <div className="grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_minmax(22rem,30rem)] xl:items-start">
+                <div className="min-w-0">
+                  <p className={`mb-4 ${kickerClass}`}>Documentation</p>
+                  <h1 className="mb-6 max-w-[14ch] font-display text-[clamp(2.35rem,2.35vw+1.28rem,4.05rem)] font-bold leading-[1.04] tracking-[-0.014em] [text-wrap:balance]">
+                    Use worktrees without losing the plot.
+                  </h1>
+                  <p className="max-w-[62ch] text-[1.125rem] leading-8 text-parchment/84 sm:text-[1.22rem] sm:leading-9 [text-wrap:pretty]">
+                    Yggtree helps you move to the right Git checkout without disturbing the work already in motion.
+                    Install the CLI, then choose the workflow that matches what you need to protect.
+                  </p>
+                  <div className="mt-8 grid max-w-3xl gap-4">
+                    <CommandBlock command="npm install -g yggtree" output="Install the CLI globally once." />
+                    <CommandBlock
+                      command="yggtree"
+                      output="Open the guided menu from any Git repository. If your global install is behind npm, the menu points you to the update command."
+                    />
+                    <p className={noteClass}>
+                      Prefer a one-off run? Use{' '}
+                      <code className={`${monoFaceClass} text-[0.875rem] text-gold-rune`}>npx yggtree</code> without
+                      installing.
+                    </p>
                   </div>
-                ))}
+                </div>
+
+                <section
+                  id="workflows"
+                  aria-labelledby="workflows-heading"
+                  className="min-w-0 scroll-mt-8 rounded-lg border border-gold-rune/18 bg-mist-green/14 p-4 sm:p-5"
+                >
+                  <h2
+                    id="workflows-heading"
+                    className="font-display text-[clamp(1.25rem,0.45vw+1.08rem,1.6rem)] font-semibold leading-[1.14] tracking-[-0.004em] text-frost-white [text-wrap:balance]"
+                  >
+                    Choose what to protect.
+                  </h2>
+                  <p className={`mt-2 ${noteClass}`}>
+                    Start with the state you need to keep safe, then jump to the deeper command section when you need
+                    flags.
+                  </p>
+                  <div className="mt-5 grid gap-3">
+                    {workflowChoices.map((choice) => (
+                      <a
+                        key={choice.href}
+                        href={choice.href}
+                        className="group block rounded-md border border-gold-rune/12 bg-deep-forest/42 p-4 transition-colors hover:border-gold-rune/34 hover:bg-deep-forest/62 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-rune/55"
+                      >
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                          <h3 className={exampleTitleClass}>{choice.title}</h3>
+                          <code className={`${monoFaceClass} text-[0.8125rem] leading-6 text-gold-rune`}>
+                            {choice.command}
+                          </code>
+                        </div>
+                        <p className={`mt-2 ${noteClass}`}>{choice.when}</p>
+                        <p className="mt-3 text-[0.875rem] leading-6 text-parchment/74">{choice.result}</p>
+                      </a>
+                    ))}
+                  </div>
+                </section>
               </div>
             </section>
 
-            <section id="agents" className="border-t border-gold-rune/15 py-10 sm:py-14">
+            <section id="agents" className={sectionClass}>
               <div className="mb-8">
                 <h2 className={sectionTitleClass}>Use Yggtree from agent workflows</h2>
                 <p className={sectionIntroClass}>
@@ -474,10 +506,7 @@ export default function DocsPage() {
               </div>
               <div className="grid gap-5">
                 {agentExamples.map((example) => (
-                  <div
-                    key={example.command}
-                    className="min-w-0 border-l border-gold-rune/30 bg-mist-green/15 p-4 sm:p-5"
-                  >
+                  <div key={example.command} className={exampleShellClass}>
                     <h3 className={exampleTitleClass}>{example.title}</h3>
                     <div className="mt-4">
                       <CommandBlock command={example.command} />
@@ -488,7 +517,7 @@ export default function DocsPage() {
               </div>
             </section>
 
-            <section id="creation" className="border-t border-gold-rune/15 py-10 sm:py-14">
+            <section id="creation" className={sectionClass}>
               <div className="mb-8">
                 <h2 className={sectionTitleClass}>Create a task worktree</h2>
                 <p className={sectionIntroClass}>
@@ -499,10 +528,7 @@ export default function DocsPage() {
               </div>
               <div className="grid gap-5">
                 {creationExamples.map((example) => (
-                  <div
-                    key={example.command}
-                    className="min-w-0 border-l border-gold-rune/30 bg-mist-green/15 p-4 sm:p-5"
-                  >
+                  <div key={example.command} className={exampleShellClass}>
                     <h3 className={exampleTitleClass}>{example.title}</h3>
                     <div className="mt-4">
                       <CommandBlock command={example.command} />
@@ -513,21 +539,18 @@ export default function DocsPage() {
               </div>
             </section>
 
-            <section id="navigation" className="border-t border-gold-rune/15 py-10 sm:py-14">
+            <section id="navigation" className={sectionClass}>
               <div className="mb-8">
                 <h2 className={sectionTitleClass}>Checkout and move between worktrees</h2>
                 <p className={sectionIntroClass}>
-                  <code className={`${monoFaceClass} text-sm text-gold-rune`}>wc</code> is the fastest path from
-                  &quot;I need that branch&quot; to &quot;I am in the right shell.&quot; It is designed to avoid stashing,
+                  <code className={`${monoFaceClass} text-sm text-gold-rune`}>wc</code> is the fastest path from &quot;I
+                  need that branch&quot; to &quot;I am in the right shell.&quot; It is designed to avoid stashing,
                   preserve the current checkout, and reuse existing branch worktrees when possible.
                 </p>
               </div>
               <div className="grid gap-5">
                 {checkoutExamples.map((example) => (
-                  <div
-                    key={example.command}
-                    className="min-w-0 border-l border-gold-rune/30 bg-mist-green/15 p-4 sm:p-5"
-                  >
+                  <div key={example.command} className={exampleShellClass}>
                     <h3 className={exampleTitleClass}>{example.title}</h3>
                     <div className="mt-4">
                       <CommandBlock command={example.command} />
@@ -538,22 +561,20 @@ export default function DocsPage() {
               </div>
             </section>
 
-            <section id="tools" className="border-t border-gold-rune/15 py-10 sm:py-14">
+            <section id="tools" className={sectionClass}>
               <div className="mb-8">
                 <h2 className={sectionTitleClass}>Open worktrees in editors and apps</h2>
                 <p className={sectionIntroClass}>
                   Opening tools is separate from creating or checking out a worktree. Use{' '}
                   <code className={`${monoFaceClass} text-sm text-gold-rune`}>open</code> when you want to launch
-                  editors and return, and use <code className={`${monoFaceClass} text-sm text-gold-rune`}>wc --open</code>{' '}
-                  when you want the checkout flow to open tools before entering the worktree shell.
+                  editors and return, and use{' '}
+                  <code className={`${monoFaceClass} text-sm text-gold-rune`}>wc --open</code> when you want the
+                  checkout flow to open tools before entering the worktree shell.
                 </p>
               </div>
               <div className="grid gap-5">
                 {openExamples.map((example) => (
-                  <div
-                    key={example.command}
-                    className="min-w-0 border-l border-gold-rune/30 bg-mist-green/15 p-4 sm:p-5"
-                  >
+                  <div key={example.command} className={exampleShellClass}>
                     <h3 className={exampleTitleClass}>{example.title}</h3>
                     <div className="mt-4">
                       <CommandBlock command={example.command} />
@@ -564,7 +585,7 @@ export default function DocsPage() {
               </div>
             </section>
 
-            <section id="sandbox" className="border-t border-gold-rune/15 py-10 sm:py-14">
+            <section id="sandbox" className={sectionClass}>
               <div className="mb-8">
                 <h2 className={sectionTitleClass}>Use sandboxes for risky edits</h2>
                 <p className={sectionIntroClass}>
@@ -574,10 +595,7 @@ export default function DocsPage() {
               </div>
               <div className="grid gap-5">
                 {sandboxExamples.map((example) => (
-                  <div
-                    key={example.command}
-                    className="min-w-0 border-l border-gold-rune/30 bg-mist-green/15 p-4 sm:p-5"
-                  >
+                  <div key={example.command} className={exampleShellClass}>
                     <h3 className={exampleTitleClass}>{example.title}</h3>
                     <div className="mt-4">
                       <CommandBlock command={example.command} />
@@ -588,20 +606,18 @@ export default function DocsPage() {
               </div>
             </section>
 
-            <section id="commands" className="border-t border-gold-rune/15 py-10 sm:py-14">
+            <section id="commands" className={sectionClass}>
               <div className="mb-8">
                 <h2 className={sectionTitleClass}>Command reference</h2>
                 <p className={sectionIntroClass}>
-                  Every worktree command is available directly at the top level. `yggtree wt ...` remains as a
-                  compatibility alias for older scripts.
+                  Every worktree command is available directly at the top level.{' '}
+                  <code className={`${monoFaceClass} text-sm text-gold-rune`}>yggtree wt ...</code> remains as a
+                  compatibility alias.
                 </p>
               </div>
               <div className="grid gap-5">
                 {commandGroups.map((group) => (
-                  <div
-                    key={group.title}
-                    className="min-w-0 rounded-lg border border-gold-rune/15 bg-deep-forest/50 p-4 sm:p-5"
-                  >
+                  <div key={group.title} className={referenceShellClass}>
                     <h3 className={referenceHeadingClass}>{group.title}</h3>
                     <div className="space-y-4">
                       {group.commands.map((item) => (
@@ -630,26 +646,29 @@ export default function DocsPage() {
               </div>
             </section>
 
-            <section id="configuration" className="border-t border-gold-rune/15 py-10 sm:py-14">
+            <section id="configuration" className={sectionClass}>
               <h2 className={sectionTitleClass}>Configuration</h2>
               <p className={sectionIntroClass}>
-                If a repository needs something other than the fallback `npm install`, define setup commands once and
-                let every new realm inherit the same ritual. When local env files such as `.env` or `.env.local` exist,
-                interactive creation flows offer to copy them into the new worktree. Example and template env files are
-                skipped, and CI or other non-interactive runs skip the prompt entirely.
+                If a repository needs something other than the fallback{' '}
+                <code className={`${monoFaceClass} text-sm text-gold-rune`}>npm install</code>, define setup commands
+                once and let every new worktree inherit them. When local env files such as{' '}
+                <code className={`${monoFaceClass} text-sm text-gold-rune`}>.env</code> or{' '}
+                <code className={`${monoFaceClass} text-sm text-gold-rune`}>.env.local</code> exist, interactive
+                creation flows offer to copy them into the new worktree. Example and template env files are skipped, and
+                CI or other non-interactive runs skip the prompt entirely.
               </p>
-              <div className="mt-6 min-w-0 rounded-lg border border-gold-rune/20 bg-mist-green/25 p-4 sm:p-6">
+              <div className={`mt-6 ${referenceShellClass}`}>
                 <p className={`scrollbar-none mb-4 overflow-x-auto whitespace-nowrap ${kickerClass}`}>
                   .yggtree/worktree-setup.json
                 </p>
-                <pre className="scrollbar-none overflow-x-auto rounded-md bg-deep-forest/90 p-4 font-mono text-[0.8125rem] leading-6 text-frost-white sm:p-5 sm:text-[0.875rem]">
+                <pre className="scrollbar-none overflow-x-auto rounded-md border border-gold-rune/10 bg-deep-forest/82 p-4 font-mono text-[0.8125rem] leading-6 text-frost-white sm:p-5 sm:text-[0.875rem]">
                   <code>{`{
-  "setup-worktree": [
-    "pnpm install",
-    "git submodule sync --recursive",
-    "git submodule update --init --recursive"
-  ]
-}`}</code>
+          "setup-worktree": [
+            "pnpm install",
+            "git submodule sync --recursive",
+            "git submodule update --init --recursive"
+          ]
+        }`}</code>
                 </pre>
                 <p className={`mt-4 ${noteClass}`}>
                   Bootstrap runs after worktree creation unless you pass `--no-bootstrap`. The same config is used by
@@ -658,31 +677,36 @@ export default function DocsPage() {
               </div>
             </section>
 
-            <section id="safety" className="border-t border-gold-rune/15 py-10 sm:py-14">
+            <section id="safety" className={sectionClass}>
               <h2 className={sectionTitleClass}>Safety notes</h2>
-              <div className="mt-6 grid gap-4">
-                <p className={`rounded-lg border border-gold-rune/15 bg-mist-green/20 p-5 ${bodyPanelClass}`}>
-                  Use `create` for official task branches. Use `create-sandbox` for disposable alternatives.
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+                  Use <code className={`${monoFaceClass} text-sm text-gold-rune`}>create</code> for task branches. Use{' '}
+                  <code className={`${monoFaceClass} text-sm text-gold-rune`}>create-sandbox</code> for disposable
+                  alternatives.
                 </p>
-                <p className={`rounded-lg border border-gold-rune/15 bg-mist-green/20 p-5 ${bodyPanelClass}`}>
-                  Run `unapply` before deleting a sandbox if you may need to undo changes applied back to the origin.
+                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+                  Run <code className={`${monoFaceClass} text-sm text-gold-rune`}>unapply</code> before deleting a
+                  sandbox if you may need to undo changes applied back to the origin.
                 </p>
-                <p className={`rounded-lg border border-gold-rune/15 bg-mist-green/20 p-5 ${bodyPanelClass}`}>
-                  Prefer `worktree-checkout` over stash when the current checkout contains work you do not want to
-                  disturb.
+                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+                  Prefer <code className={`${monoFaceClass} text-sm text-gold-rune`}>worktree-checkout</code> over stash
+                  when the current checkout contains work you do not want to disturb.
                 </p>
-                <p className={`rounded-lg border border-gold-rune/15 bg-mist-green/20 p-5 ${bodyPanelClass}`}>
-                  Use `delete --all` carefully. It can include linked worktrees outside `~/.yggtree`, while still
-                  protecting the main and current worktree.
+                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+                  Use <code className={`${monoFaceClass} text-sm text-gold-rune`}>delete --all</code> carefully. It can
+                  include linked worktrees outside{' '}
+                  <code className={`${monoFaceClass} text-sm text-gold-rune`}>~/.yggtree</code>, while still protecting
+                  the main and current worktree.
                 </p>
               </div>
             </section>
 
-            <section id="troubleshooting" className="border-t border-gold-rune/15 py-10 sm:py-14">
+            <section id="troubleshooting" className={sectionClass}>
               <h2 className={sectionTitleClass}>Troubleshooting</h2>
               <div className="mt-6 grid gap-4">
                 {troubleshooting.map((item) => (
-                  <div key={item.problem} className="rounded-lg border border-gold-rune/15 bg-mist-green/20 p-5">
+                  <div key={item.problem} className={exampleShellClass}>
                     <h3 className={exampleTitleClass}>{item.problem}</h3>
                     <p className={`mt-2 ${noteClass}`}>{item.answer}</p>
                   </div>

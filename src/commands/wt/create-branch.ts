@@ -11,6 +11,7 @@ import {
     launchOpenTool,
     promptOpenToolSelection,
 } from './open.js';
+import { enterCommand } from './enter.js';
 import { execa } from 'execa';
 import fs from 'fs-extra';
 
@@ -24,14 +25,15 @@ interface NewCreateOptions {
     exec?: string;
 }
 
+export function shouldEnterCreatedWorktree(options: Pick<NewCreateOptions, 'enter'>): boolean {
+    return options.enter !== false;
+}
+
 export async function createCommandNew(options: NewCreateOptions) {
     try {
         const repoRoot = await getRepoRoot();
         log.info(`Repo: ${chalk.dim(repoRoot)}`);
-
-        if (options.enter !== undefined) {
-            log.warning('`--enter` / `--no-enter` is deprecated. Use `--open` / `--no-open` instead.');
-        }
+        const shouldEnterShell = shouldEnterCreatedWorktree(options);
 
         // 1. Gather inputs
         const currentBranch = await getCurrentBranch();
@@ -87,9 +89,7 @@ export async function createCommandNew(options: NewCreateOptions) {
         const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
         const shouldOpenTool = options.open !== undefined
             ? options.open
-            : options.enter !== undefined
-                ? options.enter
-                : Boolean(answers.shouldOpenTool);
+            : Boolean(answers.shouldOpenTool);
         let selectedTool: Awaited<ReturnType<typeof promptOpenToolSelection>> | undefined;
         if (options.exec === undefined && shouldOpenTool) {
             const installedTools = await detectInstalledOpenTools();
@@ -179,33 +179,45 @@ export async function createCommandNew(options: NewCreateOptions) {
             await runBootstrap(wtPath, repoRoot);
         }
 
-        // 5. Exec Command
+        // 5. Post-create actions
         if (options.exec && options.exec.trim()) {
-            log.info(`Executing: ${options.exec} in ${ui.path(wtPath)}`);
-            try {
-                await execa(options.exec, {
-                    cwd: wtPath,
-                    stdio: 'inherit',
-                    shell: true
-                });
-            } catch (error: any) {
-                log.actionableError(error.message, options.exec, wtPath, [
-                    `cd ${wtPath} && ${options.exec}`,
-                    'Check your command syntax and environment variables'
-                ]);
+            if (shouldEnterShell) {
+                await enterCommand(wtPath, { exec: options.exec });
+            } else {
+                log.info(`Executing: ${options.exec} in ${ui.path(wtPath)}`);
+                try {
+                    await execa(options.exec, {
+                        cwd: wtPath,
+                        stdio: 'inherit',
+                        shell: true
+                    });
+                } catch (error: any) {
+                    log.actionableError(error.message, options.exec, wtPath, [
+                        `cd ${wtPath} && ${options.exec}`,
+                        'Check your command syntax and environment variables'
+                    ]);
+                }
             }
-        } else if (selectedTool) {
-            try {
-                log.info(`Opening ${ui.path(wtPath)} in ${chalk.cyan(selectedTool.name)}...`);
-                await launchOpenTool(selectedTool, wtPath);
-            } catch (error: any) {
-                log.warning(`Could not open ${selectedTool.name}: ${error.message}`);
+        } else {
+            if (selectedTool) {
+                try {
+                    log.info(`Opening ${ui.path(wtPath)} in ${chalk.cyan(selectedTool.name)}...`);
+                    await launchOpenTool(selectedTool, wtPath);
+                } catch (error: any) {
+                    log.warning(`Could not open ${selectedTool.name}: ${error.message}`);
+                }
+            }
+
+            if (shouldEnterShell) {
+                await enterCommand(wtPath);
             }
         }
 
         // 6. Final Output
         log.success('Worktree ready!');
-        log.header(`cd "${wtPath}"`);
+        if (!shouldEnterShell) {
+            log.header(`cd "${wtPath}"`);
+        }
 
     } catch (error: any) {
         log.actionableError(error.message, 'yggtree wt create');

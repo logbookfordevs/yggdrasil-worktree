@@ -269,11 +269,13 @@ Options:
 * `--source local|remote`
 * `--no-bootstrap`
 * `--open / --no-open`
+* `--enter / --no-enter`
 * `--exec "<command>"`
 
 Interactive flow:
 
 * Instead of asking for a free-form `exec` command, yggtree now asks if you want to open an editor after creation.
+* After creation, yggtree enters the new worktree shell unless you pass `--no-enter`.
 * `--exec` remains available as an advanced explicit override.
 
 <details>
@@ -531,12 +533,12 @@ yggtree create feat/login-flow
 ---
 
 <details>
-<summary>Create a worktree without bootstrap and without opening a tool</summary>
+<summary>Create a worktree without bootstrap, opening a tool, or entering</summary>
 
 **Command:**
 
 ```
-yggtree create feat/cleanup-api --no-bootstrap --no-open
+yggtree create feat/cleanup-api --no-bootstrap --no-open --no-enter
 ```
 
 **When to use:**

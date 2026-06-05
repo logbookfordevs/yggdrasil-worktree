@@ -45,8 +45,8 @@ function registerWorktreeCommands(parent: Command) {
         .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
         .option('--open', 'Open an editor after creation')
         .option('--no-open', 'Skip opening an editor after creation')
-        .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
-        .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
+        .option('--enter', 'Enter the worktree sub-shell after creation')
+        .option('--no-enter', 'Do not enter the worktree sub-shell after creation')
         .option('--exec <command>', 'Command to execute after creation')
         .action(async (branch, options) => {
             await createCommandNew({

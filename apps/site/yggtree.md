@@ -200,6 +200,7 @@ Options:
 * `--source local|remote`
 * `--no-bootstrap`
 * `--open / --no-open`
+* `--enter / --no-enter`
 * `--exec "<command>"`
 
 <details>
@@ -317,12 +318,12 @@ yggtree create feat/login-flow
 ---
 
 <details>
-<summary>Create a worktree without bootstrap and without opening a tool</summary>
+<summary>Create a worktree without bootstrap, opening a tool, or entering</summary>
 
 **Command:**
 
 ```
-yggtree create feat/cleanup-api --no-bootstrap --no-open
+yggtree create feat/cleanup-api --no-bootstrap --no-open --no-enter
 ```
 
 **When to use:**

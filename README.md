@@ -146,7 +146,10 @@ Create, manage, and navigate Git worktrees as a primary workflow, not an afterth
 Work on multiple branches at the same time, each in its own isolated environment.
 
 🧪 **Sandbox worktrees for experimentation**
-Prototyping something risky? Create a sandbox with a random name, try different strategies, and apply the winner back to your origin branch.
+Prototyping something risky? Create a sandbox, try different strategies, and apply the winner back to your origin branch.
+
+🤝 **Handoff current work**
+Started in your main checkout? Carry staged, unstaged, and untracked work into a named sandbox worktree and continue there.
 
 🤖 **AI-friendly isolation**
 One worktree per agent, per experiment, per idea. No shared state, no collisions.
@@ -217,7 +220,13 @@ Sometimes you don't want to "commit to a branch" yet. You just want to try somet
 3.  **Apply**: `yggtree apply` to "push" those file changes back to your origin directory.
 4.  **Unapply**: Don't like it? `yggtree unapply` restores your origin to exactly how it was before.
 
-Sandboxes are **not pushed to remote** and their names are randomly generated because they are meant to be temporary playgrounds.
+Sandboxes are **not pushed to remote**. Omit the name for a generated temporary sandbox, or provide one when the work needs to be easy to find later.
+
+Use `handoff` when you started in the origin checkout and want to continue that dirty work in a sandbox:
+
+```bash
+yggtree handoff --name auth-refactor
+```
 
 ---
 
@@ -269,11 +278,13 @@ Options:
 * `--source local|remote`
 * `--no-bootstrap`
 * `--open / --no-open`
+* `--enter / --no-enter`
 * `--exec "<command>"`
 
 Interactive flow:
 
 * Instead of asking for a free-form `exec` command, yggtree now asks if you want to open an editor after creation.
+* After creation, yggtree enters the new worktree shell unless you pass `--no-enter`.
 * `--exec` remains available as an advanced explicit override.
 
 <details>
@@ -307,15 +318,17 @@ Options:
 * `-r, --ref <ref>`: skip picker and use a specific branch (`feature/x` or `origin/feature/x`)
 * `--no-bootstrap`
 * `--open / --no-open`: choose whether to open editors or run a startup command before the worktree shell starts
-* `--tool <command>`: open a specific editor/app and skip the open prompt (`cursor`, `code`, `codex-app`)
+* `--tool <command>`: open a specific editor, app, or terminal target and skip the open prompt (`cursor`, `code`, `codex-app`, `cmux`, `tmux`)
 * `--no-enter`: finish after create/open and return to the caller
 * `--exec "<command>"`
 
 Interactive flow:
 
 * Yggtree asks what to open before starting the worktree shell.
-* Editor choices can be selected together.
-* Use `--tool` to skip the open prompt and launch one editor/app directly.
+* Shell-entry flows use a single action picker, so pressing Enter on Cmux or Tmux chooses that terminal target directly.
+* Plain `yggtree open` flows use the same single action picker and return after opening the selected target.
+* Use `--tool` to skip the open prompt and launch one editor/app or terminal target directly.
+* Cmux, Tmux, and `Other command...` are mutually exclusive because the open picker accepts one action.
 * `Other command...` runs a command in the Yggtree shell first, then leaves you there.
 * Use `--no-enter` when you only want the worktree created/opened and the command to return.
 * `--exec` remains available as an advanced explicit override.
@@ -351,6 +364,21 @@ Interactive flow:
 * Prompts for an optional sandbox name (leave empty to auto-generate one from current branch).
 * Instead of asking for a free-form `exec` command, yggtree now asks if you want to open an editor after creation.
 * `--exec` remains available as an advanced explicit override.
+
+---
+
+### `yggtree handoff`
+
+Carry uncommitted work from the current checkout into a sandbox worktree.
+
+Options:
+
+*   `-n, --name <name>`: Optional handoff name (prompted when omitted).
+*   `--no-bootstrap`
+*   `--open / --no-open`
+*   `--exec "<command>"`
+
+This is the continuation-focused version of `create-sandbox --carry`: it keeps sandbox metadata and apply/unapply behavior, but defaults to carrying staged, unstaged, and untracked files.
 
 ---
 
@@ -415,20 +443,22 @@ Notes:
 
 ### `yggtree open [worktree]`
 
-Open a worktree in an editor or supported desktop app.
+Open a worktree in an editor, supported desktop app, or terminal target.
 
 Behavior:
 
 * If `[worktree]` is omitted, you can pick from the worktree list with type-to-filter search.
 * Detects available editor commands in your `PATH` (for example: `cursor`, `code`, `zed`, `webstorm`).
 * Detects Codex App on macOS and launches it with `open -b com.openai.codex`.
-* Lets you choose one or more editors/apps interactively, or pass `--tool`.
-* By default, `open` launches editors/apps and returns.
+* Detects Cmux and Tmux when their CLI commands are available.
+* Lets you choose one editor, app, or terminal target interactively, or pass `--tool`.
+* Keeps Cmux, Tmux, and `Other command...` mutually exclusive by using a single action picker.
+* By default, `open` launches the selected target and returns, except foreground terminal targets such as Tmux.
 * Use `wc --open` when you want to open a worktree and continue in its shell.
 
 Options:
 
-* `--tool <command>` (for example: `cursor`, `code`, `codex`, or `codex-app`)
+* `--tool <command>` (for example: `cursor`, `code`, `codex`, `codex-app`, `cmux`, or `tmux`)
 
 <details>
 <summary>Examples</summary>
@@ -437,6 +467,7 @@ Options:
 yggtree open
 yggtree open feat/new-ui --tool cursor
 yggtree open feat/new-ui --tool codex-app
+yggtree open feat/new-ui --tool tmux
 yggtree list --open
 ```
 
@@ -531,12 +562,12 @@ yggtree create feat/login-flow
 ---
 
 <details>
-<summary>Create a worktree without bootstrap and without opening a tool</summary>
+<summary>Create a worktree without bootstrap, opening a tool, or entering</summary>
 
 **Command:**
 
 ```
-yggtree create feat/cleanup-api --no-bootstrap --no-open
+yggtree create feat/cleanup-api --no-bootstrap --no-open --no-enter
 ```
 
 **When to use:**
@@ -636,7 +667,7 @@ yggtree create-sandbox --carry
 **Scenario:**
 
 1.  You have 5 files changed in your main repo but aren't sure about the direction.
-2.  Run `create-sandbox --carry` to move those changes into an isolated `sandbox-a3f2_feature-branch` folder.
+2.  Run `handoff --name risky-refactor` to carry those changes into an isolated `sandbox-risky-refactor` folder.
 3.  Experiment freely.
 4.  If it works: `yggtree apply`.
 5.  If it fails: Just delete the sandbox or `unapply`.

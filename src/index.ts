@@ -16,6 +16,7 @@ import { pathCommand } from './commands/wt/path.js';
 import { openCommand } from './commands/wt/open.js';
 import { applyCommand } from './commands/wt/apply.js';
 import { unapplyCommand } from './commands/wt/unapply.js';
+import { handoffCommand } from './commands/wt/handoff.js';
 import { getVersion } from './lib/version.js';
 import { notifyIfUpdateAvailable } from './lib/update-check.js';
 import { findSandboxRoot } from './lib/sandbox.js';
@@ -45,8 +46,8 @@ function registerWorktreeCommands(parent: Command) {
         .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
         .option('--open', 'Open an editor after creation')
         .option('--no-open', 'Skip opening an editor after creation')
-        .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
-        .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
+        .option('--enter', 'Enter the worktree sub-shell after creation')
+        .option('--no-enter', 'Do not enter the worktree sub-shell after creation')
         .option('--exec <command>', 'Command to execute after creation')
         .action(async (branch, options) => {
             await createCommandNew({
@@ -72,7 +73,7 @@ function registerWorktreeCommands(parent: Command) {
             .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
             .option('--open', 'Open editors or run a startup command before entering')
             .option('--no-open', 'Skip opening editors or startup commands before entering')
-            .option('--tool <command>', 'Editor or app command to open after checkout (skips open prompt)')
+            .option('--tool <command>', 'Editor, app, or terminal command to open after checkout (skips open prompt)')
             .addOption(new Option('--enter', 'Enter the worktree sub-shell after checkout/opening').hideHelp())
             .option('--no-enter', 'Do not enter the worktree sub-shell after checkout/opening')
             .option('--exec <command>', 'Command to execute after creation')
@@ -96,8 +97,8 @@ function registerWorktreeCommands(parent: Command) {
         });
 
     parent.command('open [worktree]')
-        .description('Open a worktree in an editor or supported app')
-        .option('--tool <command>', 'Editor or app command to use (e.g. cursor, code, codex-app)')
+        .description('Open a worktree in an editor, supported app, or terminal target')
+        .option('--tool <command>', 'Editor, app, or terminal command to use (e.g. cursor, code, codex-app, tmux)')
         .option('--enter', 'Enter the worktree sub-shell after opening')
         .addOption(new Option('--no-enter', 'Do not enter the worktree sub-shell after opening').hideHelp())
         .action(async (worktree, options) => {
@@ -141,6 +142,19 @@ function registerWorktreeCommands(parent: Command) {
             await createSandboxCommand(options);
         });
 
+    parent.command('handoff')
+        .description('Carry uncommitted work into a sandbox worktree')
+        .option('-n, --name <name>', 'Optional handoff name (prompted when omitted)')
+        .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .option('--open', 'Open an editor after creation')
+        .option('--no-open', 'Skip opening an editor after creation')
+        .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
+        .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
+        .option('--exec <command>', 'Command to execute after creation')
+        .action(async (options) => {
+            await handoffCommand(options);
+        });
+
     parent.command('apply')
         .description('Apply sandbox changes to origin directory')
         .action(applyCommand);
@@ -178,6 +192,7 @@ program
             { name: `🌿 Grow New Realm ${chalk.dim('(create worktree)')}`, value: 'create-smart' },
             { name: `🔀 Traverse to Another Realm ${chalk.dim('(checkout existing branch in new worktree)')}`, value: 'worktree-checkout' },
             { name: `🌳 Grow Many Realms ${chalk.dim('(create multiple worktrees)')}`, value: 'create-multi' },
+            { name: `🤝 Hand Off Current Work ${chalk.dim('(carry dirty work into a sandbox)')}`, value: 'handoff' },
             { name: `🧪 Forge Sandbox Realm ${chalk.dim('(create sandbox worktree)')}`, value: 'create-sandbox' },
             { name: `🗺️  Survey Realms ${chalk.dim('(list worktrees)')}`, value: 'list' },
             { name: `🧭 Open Realm in Editor ${chalk.dim('(open worktree in editor)')}`, value: 'open' },
@@ -263,6 +278,9 @@ program
                 break;
             case 'create-sandbox':
                 await createSandboxCommand({ bootstrap: true });
+                break;
+            case 'handoff':
+                await handoffCommand({ bootstrap: true });
                 break;
             case 'bifrost':
                 await bifrostCommand();

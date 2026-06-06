@@ -4,8 +4,9 @@ description: >
   Use this skill when the user wants help with yggtree worktree workflows:
   creating branch-backed task worktrees, checking out existing branches without
   stashing, bootstrapping a realm, opening a realm in an IDE,
-  running commands inside a worktree, creating sandbox experiments, or applying
-  sandbox results back to the origin checkout.
+  running commands inside a worktree, handing off dirty work into a sandbox,
+  creating sandbox experiments, or applying sandbox results back to the origin
+  checkout.
 ---
 
 # Yggtree
@@ -22,6 +23,10 @@ only the reference file for that path.
 - **Existing branch or clean interruption:** use `yggtree worktree-checkout`
   or `yggtree wc` when current work must stay untouched and the user needs
   another existing ref. Read `references/branch-off-without-stashing.md`.
+- **Dirty-work handoff:** use `yggtree handoff` when the user started in an
+  origin checkout and wants to carry staged, unstaged, or untracked work into a
+  named sandbox worktree to continue there. Read
+  `references/sandbox-experiments.md`.
 - **Local experiment:** use `yggtree create-sandbox` when the user wants to
   try alternative approaches locally, then maybe apply the winner back. Read
   `references/sandbox-experiments.md`.
@@ -31,25 +36,34 @@ only the reference file for that path.
 ## Default Decision Rules
 
 - Prefer a sandbox for disposable alternatives inside an active task.
+- Prefer `handoff --name <task>` over `create-sandbox --carry` when the user
+  describes moving current dirty work into a worktree to continue.
 - Prefer `create` for real new scopes that deserve their own branch and
   remote tracking.
 - Prefer `worktree-checkout` over stash or temporary commits when the user is
   interrupted by work on another branch.
-- Prefer `wc` / `worktree-checkout` when the user wants shell entry for a branch,
-  `open` for IDE-style opening, and `exec` for simple non-interactive process
-  launch inside a chosen realm.
+- Prefer `create` and `wc` / `worktree-checkout` when the user wants to land in
+  a worktree shell; both enter by default unless `--no-enter` is set.
+- Prefer `open` for IDE-style opening that returns by default; add `--enter`
+  only when editor/app launch should continue into a worktree shell.
+- Prefer `exec` for simple non-interactive process launch inside a chosen realm.
 - Expect interactive creation flows to offer opt-in local `.env` file copying
   before bootstrap; skip or disable it for scripted/non-interactive runs unless
   the user explicitly asks to carry local environment files.
+- For automation or fire-and-forget setup, pass both `--no-open` and
+  `--no-enter` when a create/checkout command should prepare the worktree and
+  return to the caller.
 - Keep `create-multi` out of the default path unless the user explicitly asks
   for multiple official worktrees.
 
 ## Quick Commands
 
 ```bash
-yggtree create feat/new-checkout-flow --base main --source remote --no-open
+yggtree create feat/new-checkout-flow --base main --source remote
+yggtree create feat/background-task --base main --source remote --no-open --no-enter
 yggtree wc --ref hotfix/payment-timeout
 yggtree wc --ref hotfix/payment-timeout --tool codex-app --no-enter
+yggtree handoff --name continue-auth-refactor
 yggtree create-sandbox
 yggtree bootstrap
 yggtree open my-feature --tool cursor

@@ -110,7 +110,7 @@ const creationExamples = [
     title: 'Create from the default interactive flow',
     command: 'yggtree create',
     detail:
-      'Yggtree asks for the branch, base ref, optional local env-file copy, bootstrap preference, and whether to open an editor.',
+      'Yggtree asks for the branch, base ref, optional local env-file copy, bootstrap preference, and whether to open an editor before entering the new worktree shell.',
   },
   {
     title: 'Create a named branch from a known base',
@@ -118,9 +118,9 @@ const creationExamples = [
     detail: 'Use this for reviewable task work when you already know the branch name.',
   },
   {
-    title: 'Create without setup or editor launch',
-    command: 'yggtree create feat/docs-pass --no-bootstrap --no-open',
-    detail: 'Useful for automation or when you want to inspect the worktree before installing dependencies.',
+    title: 'Create and return without setup or editor launch',
+    command: 'yggtree create feat/docs-pass --no-bootstrap --no-open --no-enter',
+    detail: 'Useful for automation or when you want to inspect the worktree path before installing dependencies.',
   },
   {
     title: 'Run an explicit startup command',
@@ -208,13 +208,14 @@ const commandGroups = [
       {
         command: 'yggtree create [branch]',
         description:
-          'Create a branch-backed task worktree. Interactive creation asks whether to open an editor, while `--exec` remains the explicit startup-command override.',
+          'Create a branch-backed task worktree, then enter its shell by default. Interactive creation asks whether to open an editor first, while `--exec` remains the explicit startup-command override.',
         flags: [
           flag('-b, --branch <name>', 'Branch name when not passed positionally.'),
           flag('--base <ref>', 'Base ref such as main.'),
           flag('--source <type>', 'Choose local or remote base source.'),
           flag('--no-bootstrap', 'Skip setup commands.'),
           flag('--open / --no-open', 'Choose whether to open an editor after creation.'),
+          flag('--enter / --no-enter', 'Choose whether to enter the worktree shell after creation.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
         ],
       },

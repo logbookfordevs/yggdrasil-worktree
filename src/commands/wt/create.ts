@@ -118,6 +118,38 @@ export function findExistingBranchWorktree(worktrees: GitWorktree[], branchName?
     );
 }
 
+function normalizeExistingPath(value: string): string {
+    try {
+        return fs.realpathSync(value);
+    } catch {
+        return path.resolve(value);
+    }
+}
+
+function findWorktreeByPath(worktrees: GitWorktree[], wtPath: string): GitWorktree | undefined {
+    const normalizedPath = normalizeExistingPath(wtPath);
+    return worktrees.find(wt => normalizeExistingPath(wt.path) === normalizedPath);
+}
+
+export function getWorktreePathCollisionMessage(
+    worktreeName: string,
+    wtPath: string,
+    worktrees: GitWorktree[],
+): string | undefined {
+    if (!fs.pathExistsSync(wtPath)) return undefined;
+
+    const occupyingWorktree = findWorktreeByPath(worktrees, wtPath);
+    if (occupyingWorktree?.branch) {
+        return `Worktree name "${worktreeName}" is already used by branch "${occupyingWorktree.branch}".`;
+    }
+
+    if (occupyingWorktree?.prunable) {
+        return `Worktree path exists but Git marks its metadata as prunable: ${occupyingWorktree.prunable}.`;
+    }
+
+    return 'Worktree path already exists.';
+}
+
 export async function createCommand(options: CreateOptions) {
     try {
         const repoRoot = await ensureRepoContext();
@@ -242,6 +274,8 @@ export async function createCommand(options: CreateOptions) {
 
         // 3. Gather remaining inputs
         const defaultSlug = toSlug(selectedBranch.branchName);
+        const repoName = await getRepoName();
+        const resolveWorktreePath = (name: string) => path.join(WORKTREES_ROOT, repoName, toSlug(name));
 
         const answers = await inquirer.prompt([
             {
@@ -250,7 +284,11 @@ export async function createCommand(options: CreateOptions) {
                 message: 'Worktree name (slug):',
                 default: options.name || defaultSlug,
                 when: !options.name,
-                validate: (input) => input.trim().length > 0 || 'Name is required',
+                validate: (input: string) => {
+                    const slug = toSlug(input);
+                    if (!slug) return 'Name is required';
+                    return getWorktreePathCollisionMessage(slug, resolveWorktreePath(input), existingWorktrees) || true;
+                },
             },
             {
                 type: 'confirm',
@@ -271,6 +309,22 @@ export async function createCommand(options: CreateOptions) {
         ]);
 
         const name = options.name || answers.name;
+        const slug = toSlug(name);
+        const wtPath = resolveWorktreePath(name);
+
+        // 4. Validation
+        if (!slug) throw new Error('Invalid name');
+
+        const pathCollisionMessage = getWorktreePathCollisionMessage(slug, wtPath, existingWorktrees);
+        if (pathCollisionMessage) {
+            log.actionableError(pathCollisionMessage, `yggtree wc --name ${slug}`, wtPath, [
+                'Choose a different worktree name with --name',
+                `Inspect the occupying path: ls ${wtPath}`,
+                'Use yggtree wt prune only if Git reports stale worktree metadata',
+            ]);
+            return;
+        }
+
         const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
         const shouldOpenTool = options.tool
             ? true
@@ -298,14 +352,6 @@ export async function createCommand(options: CreateOptions) {
                 });
             }
         }
-        
-        const slug = toSlug(name);
-        const repoName = await getRepoName();
-        const wtPath = path.join(WORKTREES_ROOT, repoName, slug);
-
-        // 4. Validation
-        if (!slug) throw new Error('Invalid name');
-
         // 5. Execution (checkout-style: attach to selected branch)
         const spinner = createSpinner(`Creating worktree at ${ui.path(wtPath)}...`).start();
         try {

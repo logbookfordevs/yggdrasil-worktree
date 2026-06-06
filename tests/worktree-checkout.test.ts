@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -338,6 +338,44 @@ describe('worktree checkout CLI', () => {
         }
     }, 15_000);
 
+    it('can hand off uncommitted work into a named sandbox worktree', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-handoff-cli-'));
+
+        try {
+            const repo = await createBranchCandidateRepo(tmp);
+            const home = path.join(tmp, 'home');
+            await mkdir(home);
+            await writeFile(path.join(repo, 'dirty.txt'), 'work in progress\n');
+
+            await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'handoff',
+                    '--name',
+                    'continue-work',
+                    '--no-open',
+                    '--no-bootstrap',
+                ],
+                {
+                    cwd: repo,
+                    env: {
+                        ...process.env,
+                        CI: 'true',
+                        HOME: home,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            const worktreePath = path.join(home, '.yggtree', 'repo', 'sandbox-continue-work');
+            const handedOffContent = await readFile(path.join(worktreePath, 'dirty.txt'), 'utf8');
+            expect(handedOffContent).toBe('work in progress\n');
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    }, 15_000);
+
     it('does not treat removed enter or close commands as interactive menu aliases', async () => {
         await expect(exec('node', [path.resolve('dist/index.js'), 'enter'])).rejects.toThrow(
             "unknown command 'enter'",
@@ -350,9 +388,15 @@ describe('worktree checkout CLI', () => {
     it('preserves Commander implicit help commands', async () => {
         const help = await exec('node', [path.resolve('dist/index.js'), 'help']);
         expect(help.stdout).toContain('Usage: yggtree');
+        expect(help.stdout).toContain('handoff');
 
         const openHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'open']);
         expect(openHelp.stdout).toContain('Usage: yggtree open');
         expect(openHelp.stdout).toContain('Open a worktree in an editor or supported app');
+
+        const handoffHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'handoff']);
+        expect(handoffHelp.stdout).toContain('Usage: yggtree handoff');
+        expect(handoffHelp.stdout).toContain('Carry uncommitted work into a sandbox worktree');
+        expect(handoffHelp.stdout).not.toContain('--no-carry');
     });
 });

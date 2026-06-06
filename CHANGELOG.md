@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - `--tool cmux` and `--tool tmux` can open a worktree directly in a Cmux panel or Tmux session without showing the open prompt.
 
 ### Changed
+- Redesigned and polished the website docs page around a calmer Refined Grove direction, with a compact workflow chooser, quieter command blocks, clearer keyboard focus states, a more restrained desktop title scale, and less repetitive panel styling.
 - Open-tool prompts now use a single-selection list without checkbox multi-select behavior or section separators, making Enter choose the highlighted action directly.
 - `create` now enters the newly created worktree shell by default; use `--no-enter` when the command should create the worktree and return.
 

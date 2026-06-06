@@ -453,7 +453,7 @@ Behavior:
 * Detects Cmux and Tmux when their CLI commands are available.
 * Lets you choose one editor, app, or terminal target interactively, or pass `--tool`.
 * Keeps Cmux, Tmux, and `Other command...` mutually exclusive by using a single action picker.
-* By default, `open` launches the selected targets and returns, except foreground terminal targets such as Tmux.
+* By default, `open` launches the selected target and returns, except foreground terminal targets such as Tmux.
 * Use `wc --open` when you want to open a worktree and continue in its shell.
 
 Options:

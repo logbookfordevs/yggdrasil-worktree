@@ -654,11 +654,11 @@ export default function Home() {
             Watch Yggdrasil in Action
           </h2>
           <p className="text-parchment/80 text-lg max-w-2xl mx-auto">
-            The story behind the tool + the real CLI running live.
+            The story behind the tool and the workflow it unlocks.
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           {/* Story Video */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -688,38 +688,6 @@ export default function Home() {
             <p className="text-parchment/50 text-sm text-center mt-4 italic">
               🌳 The core idea — how growing parallel worlds changes the way you develop.
             </p>
-          </motion.div>
-
-          {/* Live CLI Demo */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-100px' }}
-            transition={{ duration: 0.7, ease: 'easeOut', delay: 0.15 }}
-          >
-            <div className="relative group h-full">
-              {/* Glow effect */}
-              <div className="absolute -inset-1 bg-linear-to-r from-gold-rune/20 via-mist-green/15 to-gold-rune/20 rounded-2xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-700" />
-
-              <div className="relative bg-deep-forest/80 backdrop-blur-sm border border-gold-rune/30 rounded-2xl overflow-hidden shadow-2xl h-full flex flex-col">
-                {/* Terminal header bar */}
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-gold-rune/20 bg-mist-green/30">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                  </div>
-                  <span className="text-xs font-mono text-parchment/50 ml-2">yggtree — Live CLI Demo</span>
-                </div>
-
-                {/* Video player */}
-                <video className="w-full aspect-video flex-1" controls preload="metadata" poster="">
-                  <source src="/demo.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-            </div>
-            <p className="text-parchment/50 text-sm text-center mt-4 italic">🌿 The real CLI in action.</p>
           </motion.div>
         </div>
       </Section>

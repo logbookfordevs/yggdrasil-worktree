@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release - TBD
 
+## [v1.4.4] - 2026-06-06
+
 ### Added
 - `open`, `wc`, and checkout open prompts now detect `cmux` and `tmux` CLI commands, offering Cmux panels or Tmux sessions as terminal targets when available.
 - `--tool cmux` and `--tool tmux` can open a worktree directly in a Cmux panel or Tmux session without showing the open prompt.

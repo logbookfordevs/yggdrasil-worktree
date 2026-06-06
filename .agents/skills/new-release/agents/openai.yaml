@@ -1,0 +1,4 @@
+interface:
+  display_name: "New Release"
+  short_description: "Prepare and publish Yggtree releases"
+  default_prompt: "Use $new-release to prepare the next Yggtree release from the changelog."

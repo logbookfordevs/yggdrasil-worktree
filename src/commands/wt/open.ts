@@ -32,7 +32,7 @@ export interface OpenToolOption {
     id: string;
     name: string;
     command: string;
-    kind: 'editor' | 'app';
+    kind: 'editor' | 'app' | 'terminal';
     aliases?: string[];
     bundleId?: string;
 }
@@ -59,10 +59,14 @@ export const OPEN_TOOL_CANDIDATES: OpenToolOption[] = [
         aliases: ['codex', 'codex-app'],
         bundleId: 'com.openai.codex',
     },
+    { id: 'cmux', name: 'Cmux Panel', command: 'cmux', kind: 'terminal', aliases: ['cmux', 'cmux-panel'] },
+    { id: 'tmux', name: 'Tmux Session', command: 'tmux', kind: 'terminal', aliases: ['tmux', 'tmux-session'] },
 ];
 
 const OTHER_COMMAND_ACTION = '__other_command__';
 const NO_OPEN_ACTION = '__no_open__';
+const OPEN_ACTION_PAGE_SIZE = 16;
+const CMUX_TERMINAL_STARTUP_DELAY_MS = 350;
 const yggtreeAccent = chalk.hex('#DEADED');
 
 function truncateEnd(value: string, maxLen: number): string {
@@ -105,6 +109,60 @@ function formatOpenColumns(name: string, command: string, detail: string): strin
 
 export function formatOpenToolChoice(tool: OpenToolOption): string {
     return formatOpenColumns(tool.name, tool.command, '');
+}
+
+function shellQuote(value: string): string {
+    return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+function formatTerminalSessionName(wtPath: string): string {
+    const basename = path.basename(wtPath) || 'worktree';
+    const slug = basename.toLowerCase().replace(/[^a-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '');
+    return `yggtree-${slug || 'worktree'}`.slice(0, 80);
+}
+
+export function buildTmuxLaunchCommand(wtPath: string, env: NodeJS.ProcessEnv = process.env): { executable: string; args: string[] } {
+    const sessionName = formatTerminalSessionName(wtPath);
+    if (env.TMUX) {
+        return {
+            executable: 'tmux',
+            args: ['new-window', '-c', wtPath, '-n', sessionName],
+        };
+    }
+
+    return {
+        executable: 'tmux',
+        args: ['new-session', '-A', '-s', sessionName, '-c', wtPath],
+    };
+}
+
+export function buildCmuxNewPaneCommand(): { executable: string; args: string[] } {
+    return {
+        executable: 'cmux',
+        args: ['new-pane', '--type', 'terminal', '--direction', 'right', '--focus', 'true'],
+    };
+}
+
+export function parseCmuxSurfaceRef(output: string): string | undefined {
+    return output.match(/\bsurface:\S+/)?.[0];
+}
+
+function delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function buildCmuxSendCommand(surfaceRef: string, wtPath: string): { executable: string; args: string[] } {
+    return {
+        executable: 'cmux',
+        args: ['send', '--surface', surfaceRef, `cd ${shellQuote(wtPath)}`],
+    };
+}
+
+export function buildCmuxEnterCommand(surfaceRef: string): { executable: string; args: string[] } {
+    return {
+        executable: 'cmux',
+        args: ['send-key', '--surface', surfaceRef, 'Enter'],
+    };
 }
 
 export function formatOpenSpecialChoice(value: typeof OTHER_COMMAND_ACTION | typeof NO_OPEN_ACTION, allowShellAction: boolean): string {
@@ -196,8 +254,27 @@ export function resolveOpenToolOption(input: string, installed: OpenToolOption[]
     );
 }
 
+export function resolveOpenToolCandidate(input: string): OpenToolOption | undefined {
+    const normalized = input.trim().toLowerCase();
+    return OPEN_TOOL_CANDIDATES.find(tool =>
+        tool.id === normalized ||
+        tool.command.toLowerCase() === normalized ||
+        tool.aliases?.some(alias => alias.toLowerCase() === normalized)
+    );
+}
+
+async function resolveKnownOpenToolOption(input: string): Promise<OpenToolOption | undefined> {
+    const candidate = resolveOpenToolCandidate(input);
+    if (!candidate) return undefined;
+    const exists = candidate.bundleId
+        ? await macOSAppBundleExists(candidate.bundleId)
+        : await commandExists(candidate.command);
+
+    return exists ? candidate : undefined;
+}
+
 export async function resolveOpenToolAction(input: string, installed: OpenToolOption[]): Promise<OpenAction | undefined> {
-    let chosenTool = resolveOpenToolOption(input, installed);
+    let chosenTool = resolveOpenToolOption(input, installed) || await resolveKnownOpenToolOption(input);
     if (!chosenTool && await commandExists(input)) {
         chosenTool = {
             id: 'custom',
@@ -227,7 +304,7 @@ export async function promptOpenToolSelection(
             message,
             choices,
             loop: false,
-            pageSize: 10,
+            pageSize: OPEN_ACTION_PAGE_SIZE,
         },
     ]);
 
@@ -253,21 +330,16 @@ export function buildOpenActionsFromSelection(
     return [];
 }
 
-export async function promptOpenActions(
-    installedTools: OpenToolOption[],
-    options: { message?: string; allowShellAction?: boolean } = {},
-): Promise<OpenAction[]> {
-    const allowShellAction = options.allowShellAction ?? true;
-    const choices: any[] = [];
+interface OpenActionPromptChoice {
+    name: string;
+    value: string;
+}
 
-    if (installedTools.length > 0) {
-        choices.push(
-            ...installedTools.map(tool => ({
-                name: formatOpenToolChoice(tool),
-                value: `tool:${tool.id}`,
-            }))
-        );
-    }
+export function buildOpenActionChoices(installedTools: OpenToolOption[], allowShellAction: boolean): OpenActionPromptChoice[] {
+    const choices: OpenActionPromptChoice[] = installedTools.map(tool => ({
+        name: formatOpenToolChoice(tool),
+        value: `tool:${tool.id}`,
+    }));
 
     if (allowShellAction) {
         choices.push({
@@ -281,6 +353,16 @@ export async function promptOpenActions(
         value: NO_OPEN_ACTION,
     });
 
+    return choices;
+}
+
+export async function promptOpenActions(
+    installedTools: OpenToolOption[],
+    options: { message?: string; allowShellAction?: boolean } = {},
+): Promise<OpenAction[]> {
+    const allowShellAction = options.allowShellAction ?? true;
+    const choices = buildOpenActionChoices(installedTools, allowShellAction);
+
     const { selectedValue } = await inquirer.prompt<{ selectedValue: string }>([
         {
             type: 'list',
@@ -288,7 +370,7 @@ export async function promptOpenActions(
             message: options.message || 'Open anything before entering the shell?',
             choices,
             loop: false,
-            pageSize: 10,
+            pageSize: OPEN_ACTION_PAGE_SIZE,
         },
     ]);
 
@@ -309,6 +391,41 @@ export async function promptOpenActions(
 }
 
 export async function launchOpenTool(tool: OpenToolOption, wtPath: string): Promise<void> {
+    if (tool.id === 'cmux') {
+        const newPaneCommand = buildCmuxNewPaneCommand();
+        const newPaneResult = await execa(newPaneCommand.executable, newPaneCommand.args, {
+            cwd: wtPath,
+        });
+        const surfaceRef = parseCmuxSurfaceRef(newPaneResult.stdout);
+        if (!surfaceRef) {
+            throw new Error(`Cmux did not return a terminal surface handle: ${newPaneResult.stdout || '<empty output>'}`);
+        }
+
+        await delay(CMUX_TERMINAL_STARTUP_DELAY_MS);
+
+        const sendCommand = buildCmuxSendCommand(surfaceRef, wtPath);
+        await execa(sendCommand.executable, sendCommand.args, {
+            cwd: wtPath,
+            stdio: 'ignore',
+        });
+
+        const enterCommand = buildCmuxEnterCommand(surfaceRef);
+        await execa(enterCommand.executable, enterCommand.args, {
+            cwd: wtPath,
+            stdio: 'ignore',
+        });
+        return;
+    }
+
+    if (tool.id === 'tmux') {
+        const { executable, args } = buildTmuxLaunchCommand(wtPath);
+        await execa(executable, args, {
+            cwd: wtPath,
+            stdio: 'inherit',
+        });
+        return;
+    }
+
     const { executable, args } = buildOpenToolLaunchCommand(tool, wtPath);
 
     await execa(executable, args, {
@@ -332,10 +449,15 @@ export function buildOpenToolLaunchCommand(tool: OpenToolOption, wtPath: string)
 }
 
 export async function runOpenActions(actions: OpenAction[], wtPath: string, options: { enter?: boolean } = {}): Promise<void> {
+    let openedTerminal = false;
+
     for (const action of actions) {
         if (action.type === 'tool' && action.tool) {
             log.info(`Opening ${ui.path(wtPath)} in ${chalk.cyan(action.tool.name)}...`);
             await launchOpenTool(action.tool, wtPath);
+            if (action.tool.kind === 'terminal') {
+                openedTerminal = true;
+            }
         }
     }
 
@@ -345,7 +467,7 @@ export async function runOpenActions(actions: OpenAction[], wtPath: string, opti
         return;
     }
 
-    if (options.enter !== false) {
+    if (options.enter !== false && !openedTerminal) {
         await enterCommand(wtPath);
     }
 }

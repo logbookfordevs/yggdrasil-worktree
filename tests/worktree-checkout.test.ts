@@ -1,11 +1,15 @@
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
-import { findExistingBranchWorktree, listBranchCandidates } from '../src/commands/wt/create.js';
 import { shouldEnterCreatedWorktree } from '../src/commands/wt/create-branch.js';
+import {
+    findExistingBranchWorktree,
+    getWorktreePathCollisionMessage,
+    listBranchCandidates,
+} from '../src/commands/wt/create.js';
 import { parseWorktreeList } from '../src/lib/git.js';
 
 const exec = promisify(execFile);
@@ -166,6 +170,31 @@ describe('worktree checkout reuse', () => {
             await rm(tmp, { recursive: true, force: true });
         }
     });
+
+    it('reports when the default slug path is occupied by another branch', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-path-collision-'));
+
+        try {
+            const developmentPath = path.join(tmp, 'development');
+            await mkdir(developmentPath);
+
+            const collisionMessage = getWorktreePathCollisionMessage(
+                'development',
+                developmentPath,
+                [
+                    {
+                        path: developmentPath,
+                        HEAD: 'feature-head',
+                        branch: 'feat/other-work',
+                    },
+                ],
+            );
+
+            expect(collisionMessage).toBe('Worktree name "development" is already used by branch "feat/other-work".');
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    });
 });
 
 describe('worktree checkout CLI', () => {
@@ -208,6 +237,47 @@ describe('worktree checkout CLI', () => {
             await rm(tmp, { recursive: true, force: true });
         }
     });
+
+    it('reports occupied worktree slug paths before git worktree add runs', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-path-collision-cli-'));
+
+        try {
+            const repo = await createBranchCandidateRepo(tmp);
+            const home = path.join(tmp, 'home');
+            const occupiedPath = path.join(home, '.yggtree', 'repo', 'development');
+            await mkdir(path.dirname(occupiedPath), { recursive: true });
+            await git(repo, ['worktree', 'add', occupiedPath, 'local-only']);
+
+            const { stdout } = await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'wc',
+                    '--ref',
+                    'development',
+                    '--name',
+                    'development',
+                    '--no-open',
+                    '--no-enter',
+                    '--no-bootstrap',
+                ],
+                {
+                    cwd: repo,
+                    env: {
+                        ...process.env,
+                        CI: 'true',
+                        HOME: home,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            expect(stdout).toContain('Worktree name "development" is already used by branch "local-only".');
+            expect(stdout).not.toContain('fatal:');
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    }, 15_000);
 
     it('can checkout from outside a repo by using the registered repo reference', async () => {
         const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-registered-repo-'));
@@ -349,6 +419,44 @@ describe('worktree checkout CLI', () => {
         }
     }, 15_000);
 
+    it('can hand off uncommitted work into a named sandbox worktree', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-handoff-cli-'));
+
+        try {
+            const repo = await createBranchCandidateRepo(tmp);
+            const home = path.join(tmp, 'home');
+            await mkdir(home);
+            await writeFile(path.join(repo, 'dirty.txt'), 'work in progress\n');
+
+            await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'handoff',
+                    '--name',
+                    'continue-work',
+                    '--no-open',
+                    '--no-bootstrap',
+                ],
+                {
+                    cwd: repo,
+                    env: {
+                        ...process.env,
+                        CI: 'true',
+                        HOME: home,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            const worktreePath = path.join(home, '.yggtree', 'repo', 'sandbox-continue-work');
+            const handedOffContent = await readFile(path.join(worktreePath, 'dirty.txt'), 'utf8');
+            expect(handedOffContent).toBe('work in progress\n');
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    }, 15_000);
+
     it('does not treat removed enter or close commands as interactive menu aliases', async () => {
         await expect(exec('node', [path.resolve('dist/index.js'), 'enter'])).rejects.toThrow(
             "unknown command 'enter'",
@@ -361,9 +469,15 @@ describe('worktree checkout CLI', () => {
     it('preserves Commander implicit help commands', async () => {
         const help = await exec('node', [path.resolve('dist/index.js'), 'help']);
         expect(help.stdout).toContain('Usage: yggtree');
+        expect(help.stdout).toContain('handoff');
 
         const openHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'open']);
         expect(openHelp.stdout).toContain('Usage: yggtree open');
         expect(openHelp.stdout).toContain('Open a worktree in an editor or supported app');
+
+        const handoffHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'handoff']);
+        expect(handoffHelp.stdout).toContain('Usage: yggtree handoff');
+        expect(handoffHelp.stdout).toContain('Carry uncommitted work into a sandbox worktree');
+        expect(handoffHelp.stdout).not.toContain('--no-carry');
     });
 });

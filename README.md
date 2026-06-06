@@ -146,7 +146,10 @@ Create, manage, and navigate Git worktrees as a primary workflow, not an afterth
 Work on multiple branches at the same time, each in its own isolated environment.
 
 🧪 **Sandbox worktrees for experimentation**
-Prototyping something risky? Create a sandbox with a random name, try different strategies, and apply the winner back to your origin branch.
+Prototyping something risky? Create a sandbox, try different strategies, and apply the winner back to your origin branch.
+
+🤝 **Handoff current work**
+Started in your main checkout? Carry staged, unstaged, and untracked work into a named sandbox worktree and continue there.
 
 🤖 **AI-friendly isolation**
 One worktree per agent, per experiment, per idea. No shared state, no collisions.
@@ -217,7 +220,13 @@ Sometimes you don't want to "commit to a branch" yet. You just want to try somet
 3.  **Apply**: `yggtree apply` to "push" those file changes back to your origin directory.
 4.  **Unapply**: Don't like it? `yggtree unapply` restores your origin to exactly how it was before.
 
-Sandboxes are **not pushed to remote** and their names are randomly generated because they are meant to be temporary playgrounds.
+Sandboxes are **not pushed to remote**. Omit the name for a generated temporary sandbox, or provide one when the work needs to be easy to find later.
+
+Use `handoff` when you started in the origin checkout and want to continue that dirty work in a sandbox:
+
+```bash
+yggtree handoff --name auth-refactor
+```
 
 ---
 
@@ -353,6 +362,21 @@ Interactive flow:
 * Prompts for an optional sandbox name (leave empty to auto-generate one from current branch).
 * Instead of asking for a free-form `exec` command, yggtree now asks if you want to open an editor after creation.
 * `--exec` remains available as an advanced explicit override.
+
+---
+
+### `yggtree handoff`
+
+Carry uncommitted work from the current checkout into a sandbox worktree.
+
+Options:
+
+*   `-n, --name <name>`: Optional handoff name (prompted when omitted).
+*   `--no-bootstrap`
+*   `--open / --no-open`
+*   `--exec "<command>"`
+
+This is the continuation-focused version of `create-sandbox --carry`: it keeps sandbox metadata and apply/unapply behavior, but defaults to carrying staged, unstaged, and untracked files.
 
 ---
 
@@ -638,7 +662,7 @@ yggtree create-sandbox --carry
 **Scenario:**
 
 1.  You have 5 files changed in your main repo but aren't sure about the direction.
-2.  Run `create-sandbox --carry` to move those changes into an isolated `sandbox-a3f2_feature-branch` folder.
+2.  Run `handoff --name risky-refactor` to carry those changes into an isolated `sandbox-risky-refactor` folder.
 3.  Experiment freely.
 4.  If it works: `yggtree apply`.
 5.  If it fails: Just delete the sandbox or `unapply`.

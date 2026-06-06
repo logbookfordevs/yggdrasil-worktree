@@ -1,13 +1,15 @@
 # Sandbox Experiments
 
 Choose sandbox when the user is already in the middle of a task and wants to
-try alternate approaches locally. Sandbox creates a local-only branch, writes
-`.yggtree/sandbox-meta.json`, and can later apply or unapply file changes back
-to the origin realm. Interactive sandbox creation can also offer opt-in copying
-of local `.env` files before bootstrap.
+try alternate approaches locally, or use `handoff` when they want to continue
+current dirty work in a named sandbox worktree. Sandbox creates a local-only
+branch, writes `.yggtree/sandbox-meta.json`, and can later apply or unapply file
+changes back to the origin realm. Interactive sandbox creation can also offer
+opt-in copying of local `.env` files before bootstrap.
 
 ```bash
 yggtree create-sandbox
+yggtree handoff --name continue-auth-refactor
 ```
 
 ## Core Patterns
@@ -20,6 +22,15 @@ yggtree create-sandbox
 
 When prompted, keep `Carry uncommitted changes to sandbox?` enabled if the
 experiment should begin from the current working state.
+
+Hand off staged, unstaged, and untracked files into a named sandbox:
+
+```bash
+yggtree handoff --name continue-auth-refactor
+```
+
+`handoff` defaults to carrying current uncommitted work, but it does not delete
+those files from the origin checkout.
 
 When prompted about local env files, copy them only if the experiment needs the
 same machine-local secrets/configuration as the origin realm.
@@ -49,6 +60,12 @@ yggtree create feat/try-different-ui --base main --source remote
 ```
 
 Correct:
+
+```bash
+yggtree handoff --name try-alternate-ui
+```
+
+Or:
 
 ```bash
 yggtree create-sandbox

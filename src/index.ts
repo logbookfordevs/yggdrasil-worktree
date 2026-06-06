@@ -73,7 +73,7 @@ function registerWorktreeCommands(parent: Command) {
             .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
             .option('--open', 'Open editors or run a startup command before entering')
             .option('--no-open', 'Skip opening editors or startup commands before entering')
-            .option('--tool <command>', 'Editor or app command to open after checkout (skips open prompt)')
+            .option('--tool <command>', 'Editor, app, or terminal command to open after checkout (skips open prompt)')
             .addOption(new Option('--enter', 'Enter the worktree sub-shell after checkout/opening').hideHelp())
             .option('--no-enter', 'Do not enter the worktree sub-shell after checkout/opening')
             .option('--exec <command>', 'Command to execute after creation')
@@ -97,8 +97,8 @@ function registerWorktreeCommands(parent: Command) {
         });
 
     parent.command('open [worktree]')
-        .description('Open a worktree in an editor or supported app')
-        .option('--tool <command>', 'Editor or app command to use (e.g. cursor, code, codex-app)')
+        .description('Open a worktree in an editor, supported app, or terminal target')
+        .option('--tool <command>', 'Editor, app, or terminal command to use (e.g. cursor, code, codex-app, tmux)')
         .option('--enter', 'Enter the worktree sub-shell after opening')
         .addOption(new Option('--no-enter', 'Do not enter the worktree sub-shell after opening').hideHelp())
         .action(async (worktree, options) => {

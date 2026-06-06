@@ -318,15 +318,17 @@ Options:
 * `-r, --ref <ref>`: skip picker and use a specific branch (`feature/x` or `origin/feature/x`)
 * `--no-bootstrap`
 * `--open / --no-open`: choose whether to open editors or run a startup command before the worktree shell starts
-* `--tool <command>`: open a specific editor/app and skip the open prompt (`cursor`, `code`, `codex-app`)
+* `--tool <command>`: open a specific editor, app, or terminal target and skip the open prompt (`cursor`, `code`, `codex-app`, `cmux`, `tmux`)
 * `--no-enter`: finish after create/open and return to the caller
 * `--exec "<command>"`
 
 Interactive flow:
 
 * Yggtree asks what to open before starting the worktree shell.
-* Editor choices can be selected together.
-* Use `--tool` to skip the open prompt and launch one editor/app directly.
+* Shell-entry flows use a single action picker, so pressing Enter on Cmux or Tmux chooses that terminal target directly.
+* Plain `yggtree open` flows use the same single action picker and return after opening the selected target.
+* Use `--tool` to skip the open prompt and launch one editor/app or terminal target directly.
+* Cmux, Tmux, and `Other command...` are mutually exclusive because the open picker accepts one action.
 * `Other command...` runs a command in the Yggtree shell first, then leaves you there.
 * Use `--no-enter` when you only want the worktree created/opened and the command to return.
 * `--exec` remains available as an advanced explicit override.
@@ -441,20 +443,22 @@ Notes:
 
 ### `yggtree open [worktree]`
 
-Open a worktree in an editor or supported desktop app.
+Open a worktree in an editor, supported desktop app, or terminal target.
 
 Behavior:
 
 * If `[worktree]` is omitted, you can pick from the worktree list with type-to-filter search.
 * Detects available editor commands in your `PATH` (for example: `cursor`, `code`, `zed`, `webstorm`).
 * Detects Codex App on macOS and launches it with `open -b com.openai.codex`.
-* Lets you choose one or more editors/apps interactively, or pass `--tool`.
-* By default, `open` launches editors/apps and returns.
+* Detects Cmux and Tmux when their CLI commands are available.
+* Lets you choose one editor, app, or terminal target interactively, or pass `--tool`.
+* Keeps Cmux, Tmux, and `Other command...` mutually exclusive by using a single action picker.
+* By default, `open` launches the selected target and returns, except foreground terminal targets such as Tmux.
 * Use `wc --open` when you want to open a worktree and continue in its shell.
 
 Options:
 
-* `--tool <command>` (for example: `cursor`, `code`, `codex`, or `codex-app`)
+* `--tool <command>` (for example: `cursor`, `code`, `codex`, `codex-app`, `cmux`, or `tmux`)
 
 <details>
 <summary>Examples</summary>
@@ -463,6 +467,7 @@ Options:
 yggtree open
 yggtree open feat/new-ui --tool cursor
 yggtree open feat/new-ui --tool codex-app
+yggtree open feat/new-ui --tool tmux
 yggtree list --open
 ```
 

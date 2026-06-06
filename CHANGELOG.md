@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - **Tag-based npm releases**: Hardened the publish workflow so `v*` tags only publish when they match `package.json`, point at the current `main` tip, pass validation, and produce the expected npm package contents.
 - `yggtree wc` and `yggtree wt wc` now provide short aliases for the checkout-style `worktree-checkout` flow.
 - `open` now detects Codex App on macOS and supports `--tool codex-app` / `--tool codex` to launch the selected worktree with the desktop app.
+- `open` and checkout open prompts now detect Cmux and Tmux, offering `cmux` panels or `tmux` sessions when those terminal tools are available.
 
 ### Changed
 - Worktree commands are now available directly at the top level, so users can run `yggtree list`, `yggtree create`, `yggtree worktree-checkout`, `yggtree delete`, and the rest of the worktree command set without the `wt` prefix.
@@ -28,9 +29,9 @@ All notable changes to this project will be documented in this file.
 - `worktree-checkout` now defaults to ending inside the worktree shell; use `--no-enter` to keep the command fire-and-forget.
 - `worktree-checkout` / `wc` now accepts `--tool <command>` to open a specific editor/app after checkout while skipping the open prompt.
 - `open` stays editor-focused and returns by default; use `--enter` when opening should continue into the worktree shell.
-- Interactive open flows now use a grouped multi-action picker for editor/app launches, and `Other command...` is available when the flow will enter the normal Yggtree sub-shell.
+- Interactive open flows now use a single-action picker for editor/app launches, terminal targets, and `Other command...` when the flow will enter the normal Yggtree sub-shell.
 - Interactive mode now checks npm for a newer `yggtree` release and points users to `npm install -g yggtree` when their installed CLI is behind.
-- The open picker now uses a calmer Yggtree-styled left-rail layout with accent section headers, command labels, and clearer shell/no-action choices.
+- The open picker now uses a calmer Yggtree-styled left-rail layout with command labels and clearer shell/no-action choices.
 - Agent CLIs are no longer first-class `open` options; use `Other command...` for custom foreground commands until the dedicated agent workflow lands.
 - `wc` / `worktree-checkout` is now the primary path for branch-to-shell navigation, including non-interactive `--ref --name --no-open --no-enter` automation.
 - Worktree creation flows now offer to copy local `.env` files into the new worktree before bootstrap runs. The copy is opt-in, skips example/template env files, and covers `create`, `worktree-checkout`, `create-multi`, and `create-sandbox`.
@@ -51,6 +52,9 @@ All notable changes to this project will be documented in this file.
 - Removed the public `enter` and `close` commands from the CLI, menus, and current docs. The shell-entry primitive remains internal for checkout and open flows.
 
 ### Fixed
+- Cmux open actions now create a focused right-side terminal pane, wait for the fresh terminal, and send `cd <worktree>` plus Enter to that explicit Cmux surface, avoiding accidental sends to the caller surface.
+- The open-action picker now prevents selecting multiple shell targets such as Cmux, Tmux, and `Other command...` in the same flow.
+- Shell-entry open prompts now use a single-select picker so pressing Enter on Cmux or Tmux chooses that terminal target instead of submitting an empty checkbox selection and falling back to the sub-shell.
 - Worktree creation commands no longer prompt for local `.env` copying in CI or other non-interactive runs, so scripted flows such as `--exec` continue without hanging when root `.env` files exist.
 - `yggtree help` and `yggtree help <command>` now reach Commander’s help renderer instead of being rejected by the removed-command guard.
 - `worktree-checkout` now shows both local and `origin/*` choices when a branch exists in both places, so users can explicitly choose the local branch or the remote tip.

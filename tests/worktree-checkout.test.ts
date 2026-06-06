@@ -473,7 +473,7 @@ describe('worktree checkout CLI', () => {
 
         const openHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'open']);
         expect(openHelp.stdout).toContain('Usage: yggtree open');
-        expect(openHelp.stdout).toContain('Open a worktree in an editor or supported app');
+        expect(openHelp.stdout).toContain('Open a worktree in an editor, supported app, or terminal target');
 
         const handoffHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'handoff']);
         expect(handoffHelp.stdout).toContain('Usage: yggtree handoff');

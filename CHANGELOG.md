@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release - TBD
 
+### Changed
+- Open-tool prompts now use a single-selection list without checkbox multi-select behavior or section separators, making Enter choose the highlighted action directly.
+- `create` now enters the newly created worktree shell by default; use `--no-enter` when the command should create the worktree and return.
+
 ## [v1.4.3] - 2026-06-01
 
 ### Added

@@ -8,9 +8,10 @@ live in an isolated, branch-backed worktree.
 `create` makes a new branch, creates a worktree under
 `~/.yggtree/<repo>/<slug>`, tries to publish that branch to `origin`, and can
 offer to copy local `.env` files into the new worktree before bootstrap.
+After creation, it enters the new worktree shell by default.
 
 ```bash
-yggtree create feat/new-checkout-flow --base main --source remote --no-open
+yggtree create feat/new-checkout-flow --base main --source remote
 ```
 
 ## Core Patterns
@@ -27,10 +28,16 @@ Start from a local-only base branch:
 yggtree create feat/follow-up-fix --base feat/current-local-branch --source local
 ```
 
-Create the worktree without opening a tool:
+Create the worktree without opening a tool, then enter the shell:
 
 ```bash
 yggtree create feat/background-task --base main --source remote --no-open
+```
+
+Create the worktree and return to the caller for automation:
+
+```bash
+yggtree create feat/background-task --base main --source remote --no-open --no-enter
 ```
 
 In interactive creation, copy local `.env` files only when the user wants that

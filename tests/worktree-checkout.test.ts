@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { describe, expect, it } from 'vitest';
+import { shouldEnterCreatedWorktree } from '../src/commands/wt/create-branch.js';
 import {
     findExistingBranchWorktree,
     getWorktreePathCollisionMessage,
@@ -99,6 +100,16 @@ describe('worktree checkout branch candidates', () => {
             process.chdir(previousCwd);
             await rm(tmp, { recursive: true, force: true });
         }
+    });
+});
+
+describe('create command shell entry', () => {
+    it('enters the created worktree by default', () => {
+        expect(shouldEnterCreatedWorktree({})).toBe(true);
+    });
+
+    it('lets callers return after creation with --no-enter', () => {
+        expect(shouldEnterCreatedWorktree({ enter: false })).toBe(false);
     });
 });
 

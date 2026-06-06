@@ -7,7 +7,6 @@ import {
     OPEN_TOOL_CANDIDATES,
     OpenToolOption,
     resolveOpenToolOption,
-    validateOpenActionSelection,
 } from '../src/commands/wt/open.js';
 
 const cursorTool: OpenToolOption = {
@@ -34,36 +33,31 @@ const codexAppTool: OpenToolOption = {
 };
 
 describe('open action selection', () => {
-    it('builds multiple editor actions from one selection', () => {
+    it('builds one editor action from one selection', () => {
         const actions = buildOpenActionsFromSelection(
-            ['tool:cursor', 'tool:code'],
+            'tool:cursor',
             [cursorTool, codeTool],
         );
 
         expect(actions).toEqual([
             { type: 'tool', tool: cursorTool },
-            { type: 'tool', tool: codeTool },
         ]);
     });
 
     it('maps Other command to a shell startup command', () => {
         const actions = buildOpenActionsFromSelection(
-            ['tool:cursor', '__other_command__'],
+            '__other_command__',
             [cursorTool],
             'claude',
         );
 
         expect(actions).toEqual([
-            { type: 'tool', tool: cursorTool },
             { type: 'other-command', command: 'claude' },
         ]);
     });
 
-    it('keeps Nothing exclusive from other actions', () => {
-        expect(validateOpenActionSelection(['__no_open__'])).toBe(true);
-        expect(validateOpenActionSelection(['__no_open__', 'tool:cursor'])).toBe(
-            'Choose either "Nothing" or one or more actions, not both.',
-        );
+    it('maps Nothing to no actions', () => {
+        expect(buildOpenActionsFromSelection('__no_open__', [cursorTool])).toEqual([]);
     });
 
     it('keeps agent CLIs out while allowing Codex App as a macOS app opener', () => {

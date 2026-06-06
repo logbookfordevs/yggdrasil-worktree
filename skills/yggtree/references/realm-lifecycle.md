@@ -56,6 +56,10 @@ Use `open` for IDE-style opening:
 yggtree open my-feature --tool cursor
 ```
 
+By default, `open` launches the selected editor/app and returns. Its interactive
+tool picker is single-selection; run another `open` command later for additional
+tools.
+
 Use `codex` or `codex-app` to open the Codex desktop app on macOS:
 
 ```bash

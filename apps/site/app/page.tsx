@@ -145,6 +145,11 @@ export default function Home() {
                   content: '✓ Bootstrapping environment...',
                   delay: 600,
                 },
+                {
+                  type: 'output',
+                  content: '✓ Entering worktree shell...',
+                  delay: 500,
+                },
                 { type: 'command', content: 'yggtree list', delay: 1200 },
                 {
                   type: 'output',
@@ -247,8 +252,9 @@ export default function Home() {
               delay: 0.3,
             },
             {
-              title: 'Enter, Exec, and Exit',
-              description: 'Enter worktrees, execute commands, or run tasks without changing directories.',
+              title: 'Open Tools and Shells',
+              description:
+                'Launch editors, Codex App, Cmux panels, or Tmux sessions from the same worktree picker.',
               icon: (
                 <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -498,8 +504,8 @@ export default function Home() {
             },
             {
               title: 'Existing branch',
-              command: 'yggtree wc --ref main',
-              description: 'Review or fix another branch without stashing your current work.',
+              command: 'yggtree wc hotfix-auth main --tool tmux',
+              description: 'Review or fix another branch in a terminal target without stashing your current work.',
             },
             {
               title: 'Disposable experiment',

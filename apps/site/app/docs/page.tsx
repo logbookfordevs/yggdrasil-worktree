@@ -141,16 +141,16 @@ const checkoutExamples = [
     detail: 'Good for scripts: create or reuse the checkout, skip tools, and return to the caller.',
   },
   {
-    title: 'Open a specific tool after checkout',
-    command: 'yggtree wc hotfix-auth main --tool codex-app',
+    title: 'Open a terminal target after checkout',
+    command: 'yggtree wc hotfix-auth main --tool tmux',
     detail:
-      '`--tool` accepts detected editors and app aliases such as `codex` or `codex-app`, skips the picker, and still enters the worktree shell unless `--no-enter` is set.',
+      '`--tool` accepts editors, apps, and terminal targets such as `codex-app`, `cmux`, or `tmux`, then enters the worktree shell unless `--no-enter` is set.',
   },
   {
-    title: 'Open editors but stay in the current shell',
+    title: 'Open one target but stay in the current shell',
     command: 'yggtree wc hotfix-auth main --open --no-enter',
     detail:
-      'Use this when the command should prepare a worktree and return. The interactive open picker can select multiple tools or run `Other command...` before the shell starts.',
+      'Use this when the command should prepare a worktree, run one open action, and return. The picker is single-select, so Enter chooses the highlighted editor, app, terminal target, or `Other command...`.',
   },
 ];
 
@@ -159,12 +159,17 @@ const openExamples = [
     title: 'Pick a worktree and open tools',
     command: 'yggtree open',
     detail:
-      'Pick from a type-to-filter worktree list, then choose one or more detected editors or apps. Yggtree detects common tools such as Cursor, VS Code, Zed, WebStorm, and Codex App on macOS.',
+      'Pick from a type-to-filter worktree list, then choose one detected editor, app, or terminal target. Yggtree detects common tools such as Cursor, VS Code, Zed, WebStorm, Codex App, Cmux, and Tmux.',
   },
   {
     title: 'Open Codex App directly',
     command: 'yggtree open feat/new-ui --tool codex-app',
     detail: '`--tool` skips the picker. Codex App can be addressed as `codex` or `codex-app` when it is detected.',
+  },
+  {
+    title: 'Open a terminal target directly',
+    command: 'yggtree open feat/new-ui --tool cmux',
+    detail: '`--tool cmux` or `--tool tmux` opens the worktree in that terminal target without showing the picker.',
   },
   {
     title: 'Open tools and continue in the shell',
@@ -228,7 +233,10 @@ const commandGroups = [
           flag('-r, --ref <ref>', 'Branch or ref to use without the picker.'),
           flag('--no-bootstrap', 'Skip setup commands.'),
           flag('--open / --no-open', 'Choose whether to open tools before entering.'),
-          flag('--tool <command>', 'Open one editor or app directly, such as cursor, code, codex, or codex-app.'),
+          flag(
+            '--tool <command>',
+            'Open one editor, app, or terminal target directly, such as cursor, code, codex-app, cmux, or tmux.'
+          ),
           flag('--no-enter', 'Do not enter the worktree shell after checkout.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
         ],
@@ -261,11 +269,11 @@ const commandGroups = [
       {
         command: 'yggtree open [worktree]',
         description:
-          'Open a worktree in an editor or supported desktop app. Without a worktree argument, pick from a type-to-filter list. The interactive picker supports multiple tools; the command returns by default.',
+          'Open a worktree in an editor, supported desktop app, or terminal target. Without a worktree argument, pick from a type-to-filter list. The interactive picker chooses one action; the command returns by default.',
         flags: [
           flag(
             '--tool <command>',
-            'Use a specific editor or app such as cursor, code, zed, webstorm, codex, or codex-app.'
+            'Use a specific editor, app, or terminal target such as cursor, code, zed, webstorm, codex-app, cmux, or tmux.'
           ),
           flag('--enter', 'Enter the worktree shell after opening.'),
         ],
@@ -564,13 +572,13 @@ export default function DocsPage() {
 
             <section id="tools" className={sectionClass}>
               <div className="mb-8">
-                <h2 className={sectionTitleClass}>Open worktrees in editors and apps</h2>
+                <h2 className={sectionTitleClass}>Open worktrees in editors, apps, and terminals</h2>
                 <p className={sectionIntroClass}>
-                  Opening tools is separate from creating or checking out a worktree. Use{' '}
+                  Opening targets is separate from creating or checking out a worktree. Use{' '}
                   <code className={`${monoFaceClass} text-sm text-gold-rune`}>open</code> when you want to launch
-                  editors and return, and use{' '}
+                  an editor, app, Cmux panel, or Tmux session and return. Use{' '}
                   <code className={`${monoFaceClass} text-sm text-gold-rune`}>wc --open</code> when you want the
-                  checkout flow to open tools before entering the worktree shell.
+                  checkout flow to offer one open action before entering the worktree shell.
                 </p>
               </div>
               <div className="grid gap-5">

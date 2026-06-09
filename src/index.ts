@@ -1,7 +1,12 @@
 import { Command, Option } from 'commander';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
-import { welcome, log } from './lib/ui.js';
+import {
+    formatMainMenuChoice,
+    renderMainMenuIntro,
+    welcome,
+    log,
+} from './lib/ui.js';
 
 import { listCommand } from './commands/wt/list.js';
 import { createCommand } from './commands/wt/create.js';
@@ -18,13 +23,49 @@ import { applyCommand } from './commands/wt/apply.js';
 import { unapplyCommand } from './commands/wt/unapply.js';
 import { handoffCommand } from './commands/wt/handoff.js';
 import { getVersion } from './lib/version.js';
-import { notifyIfUpdateAvailable } from './lib/update-check.js';
+import { checkForUpdate } from './lib/update-check.js';
 import { findSandboxRoot } from './lib/sandbox.js';
 import { bifrostCommand } from './commands/bifrost.js';
 import { thorCommand } from './commands/thor.js';
 
 const program = new Command();
 const argv = process.argv.map((arg) => arg === '-v' || arg === '—version' ? '--version' : arg);
+
+type MainMenuAction =
+    | 'create-smart'
+    | 'worktree-checkout'
+    | 'create-multi'
+    | 'handoff'
+    | 'create-sandbox'
+    | 'list'
+    | 'open'
+    | 'delete'
+    | 'bootstrap'
+    | 'prune'
+    | 'exec'
+    | 'path'
+    | 'apply'
+    | 'unapply'
+    | 'bifrost'
+    | 'thor'
+    | 'exit';
+
+function mainMenuChoice(
+    value: MainMenuAction,
+    glyph: string,
+    label: string,
+    detail: string,
+    tone: Parameters<typeof formatMainMenuChoice>[0]['tone'],
+) {
+    return {
+        name: formatMainMenuChoice({ glyph, label, detail, tone }),
+        value,
+    };
+}
+
+function mainMenuSeparator(label: string) {
+    return new inquirer.Separator(chalk.dim(`  · ${label}`));
+}
 
 function registerWorktreeCommands(parent: Command) {
     parent.command('list')
@@ -183,58 +224,74 @@ program
     .version(getVersion())
     .allowExcessArguments(false)
     .action(async () => {
-        // Interactive Menu if no command is provided
-        await welcome();
-        await notifyIfUpdateAvailable();
+        const update = await checkForUpdate();
+        await welcome({ update });
         const isInSandbox = Boolean(await findSandboxRoot(process.cwd()));
 
-        const realmChoices = [
-            { name: `🌿 Grow New Realm ${chalk.dim('(create worktree)')}`, value: 'create-smart' },
-            { name: `🔀 Traverse to Another Realm ${chalk.dim('(checkout existing branch in new worktree)')}`, value: 'worktree-checkout' },
-            { name: `🌳 Grow Many Realms ${chalk.dim('(create multiple worktrees)')}`, value: 'create-multi' },
-            { name: `🤝 Hand Off Current Work ${chalk.dim('(carry dirty work into a sandbox)')}`, value: 'handoff' },
-            { name: `🧪 Forge Sandbox Realm ${chalk.dim('(create sandbox worktree)')}`, value: 'create-sandbox' },
-            { name: `🗺️  Survey Realms ${chalk.dim('(list worktrees)')}`, value: 'list' },
-            { name: `🧭 Open Realm in Editor ${chalk.dim('(open worktree in editor)')}`, value: 'open' },
-            { name: `🪓 Fell a Realm ${chalk.dim('(delete worktree)')}`, value: 'delete' },
-            { name: `🚀 Bless Realm Setup ${chalk.dim('(bootstrap worktree)')}`, value: 'bootstrap' },
-            { name: `🧹 Prune Withered Realms ${chalk.dim('(prune stale worktrees)')}`, value: 'prune' },
-            { name: `🐚 Cast a Command ${chalk.dim('(exec command in worktree)')}`, value: 'exec' },
-            { name: `📍 Reveal Realm Path ${chalk.dim('(show worktree path)')}`, value: 'path' },
+        const dailyChoices = [
+            mainMenuChoice('create-smart', '◆', 'Grow new realm', 'create a branch-backed worktree', 'growth'),
+            mainMenuChoice('worktree-checkout', '⇄', 'Check out branch', 'open an existing ref in a new realm', 'travel'),
+            mainMenuChoice('handoff', '✦', 'Hand off current work', 'carry dirty work into a named sandbox', 'sandbox'),
+            mainMenuChoice('open', '◇', 'Open realm', 'jump into an existing worktree', 'travel'),
+            mainMenuChoice('list', '○', 'Survey realms', 'scan active worktrees and PR state', 'tending'),
+        ];
+
+        const growthChoices = [
+            mainMenuChoice('create-multi', '✧', 'Grow many realms', 'create multiple branch worktrees', 'growth'),
+            mainMenuChoice('create-sandbox', '△', 'Forge sandbox', 'create a local experiment realm', 'sandbox'),
+        ];
+
+        const tendingChoices = [
+            mainMenuChoice('bootstrap', '↳', 'Bootstrap realm', 'install dependencies and submodules', 'tending'),
+            mainMenuChoice('exec', '⌁', 'Cast command', 'run a command inside a worktree', 'tending'),
+            mainMenuChoice('path', '⌖', 'Reveal path', 'print a worktree cd command', 'tending'),
+            mainMenuChoice('delete', '×', 'Fell realm', 'delete managed worktrees', 'danger'),
+            mainMenuChoice('prune', '⌫', 'Prune stale realms', 'remove stale worktree metadata', 'danger'),
         ];
 
         const sandboxChoices = [
-            { name: `✅ Graft Sandbox Changes ${chalk.dim('(apply sandbox changes)')}`, value: 'apply' },
-            { name: `↩️ Undo Sandbox Graft ${chalk.dim('(unapply sandbox changes)')}`, value: 'unapply' },
+            mainMenuChoice('apply', '◆', 'Graft sandbox changes', 'apply sandbox changes to origin', 'sandbox'),
+            mainMenuChoice('unapply', '↶', 'Undo sandbox graft', 'restore origin from sandbox backups', 'sandbox'),
+        ];
+
+        const loreChoices = [
+            mainMenuChoice('bifrost', '✺', 'Summon the Bifrost', 'open the long way around', 'lore'),
+            mainMenuChoice('thor', 'ϟ', 'Consult Thor', 'ask the thunder route', 'lore'),
+            mainMenuChoice('exit', '·', 'Leave Yggdrasil', 'exit without changing anything', 'exit'),
         ];
 
         const choices = isInSandbox
             ? [
                 ...sandboxChoices,
-                new inquirer.Separator(),
-                ...realmChoices,
-                new inquirer.Separator(),
-                { name: `🌈 Summon the Bifrost ${chalk.dim('(easter egg)')}`, value: 'bifrost' },
-                { name: `⚡ Consult Thor ${chalk.dim('(easter egg)')}`, value: 'thor' },
-                { name: `🚪 Leave Yggdrasil ${chalk.dim('(exit)')}`, value: 'exit' },
+                mainMenuSeparator('Daily routes'),
+                ...dailyChoices,
+                mainMenuSeparator('Growth and experiments'),
+                ...growthChoices,
+                mainMenuSeparator('Tend realms'),
+                ...tendingChoices,
+                mainMenuSeparator('Lore'),
+                ...loreChoices,
             ]
             : [
-                ...realmChoices,
-                new inquirer.Separator(),
+                ...dailyChoices,
+                mainMenuSeparator('Growth and experiments'),
+                ...growthChoices,
+                mainMenuSeparator('Tend realms'),
+                ...tendingChoices,
+                mainMenuSeparator('Sandbox grafts'),
                 ...sandboxChoices,
-                new inquirer.Separator(),
-                { name: `🌈 Summon the Bifrost ${chalk.dim('(easter egg)')}`, value: 'bifrost' },
-                { name: `⚡ Consult Thor ${chalk.dim('(easter egg)')}`, value: 'thor' },
-                { name: `🚪 Leave Yggdrasil ${chalk.dim('(exit)')}`, value: 'exit' },
+                mainMenuSeparator('Lore'),
+                ...loreChoices,
             ];
-        
+
+        console.log(renderMainMenuIntro({ isInSandbox }));
         const { action } = await inquirer.prompt([
             {
                 type: 'list',
                 name: 'action',
-                message: 'What would you like to do?',
+                message: 'Which route should Yggtree follow?',
                 loop: false,
-                pageSize: 12,
+                pageSize: 14,
                 choices,
             },
         ]);

@@ -3,7 +3,7 @@ import inquirer from 'inquirer';
 import path from 'path';
 import { getRepoRoot, getRepoName, getCurrentBranch } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
-import { WORKTREES_ROOT } from '../../lib/paths.js';
+import { buildManagedWorktreePath, getWorktreePathConfig } from '../../lib/global-config.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { generateSandboxName, normalizeSandboxName, writeSandboxMeta } from '../../lib/sandbox.js';
 import { promptAndCopyEnvFiles } from '../../lib/env-files.js';
@@ -161,7 +161,8 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
 
         // 5. Create worktree
         const repoName = await getRepoName();
-        const wtPath = path.join(WORKTREES_ROOT, repoName, sandboxName);
+        const worktreePathConfig = await getWorktreePathConfig();
+        const wtPath = buildManagedWorktreePath(repoName, sandboxName, worktreePathConfig);
 
         const spinner = createSpinner('Creating sandbox worktree...').start();
 

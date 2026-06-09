@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 import { GitWorktree, PrStatus } from './git.js';
-import { WORKTREES_ROOT } from './paths.js';
+import { YGG_ROOT } from './paths.js';
 import { getSandboxMetaPath } from './sandbox.js';
 
 export type WorktreeType = 'MAIN' | 'MANAGED' | 'SANDBOX' | 'LINKED';
@@ -18,21 +18,26 @@ export function getWorktreeBranchName(worktree: GitWorktree): string {
     return worktree.branch || worktree.HEAD || 'detached';
 }
 
-export function isManagedWorktreePath(worktreePath: string): boolean {
-    return worktreePath.startsWith(WORKTREES_ROOT);
+function isPathInsideRoot(worktreePath: string, managedRoot: string): boolean {
+    const relative = path.relative(managedRoot, worktreePath);
+    return relative === '' || Boolean(relative && !relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
-export function formatWorktreeDisplayPath(worktreePath: string): string {
-    if (isManagedWorktreePath(worktreePath)) {
-        return path.relative(WORKTREES_ROOT, worktreePath);
+export function isManagedWorktreePath(worktreePath: string, managedRoot = YGG_ROOT): boolean {
+    return isPathInsideRoot(path.resolve(worktreePath), path.resolve(managedRoot));
+}
+
+export function formatWorktreeDisplayPath(worktreePath: string, managedRoot = YGG_ROOT): string {
+    if (isManagedWorktreePath(worktreePath, managedRoot)) {
+        return path.relative(managedRoot, worktreePath);
     }
     return worktreePath.replace(process.env.HOME || '', '~');
 }
 
-export function findWorktreeByName(worktrees: GitWorktree[], worktreeName: string): GitWorktree | undefined {
+export function findWorktreeByName(worktrees: GitWorktree[], worktreeName: string, managedRoot = YGG_ROOT): GitWorktree | undefined {
     return worktrees.find(worktree => {
         const branchName = getWorktreeBranchName(worktree);
-        const relativePath = path.relative(WORKTREES_ROOT, worktree.path);
+        const relativePath = path.relative(managedRoot, worktree.path);
         const basename = path.basename(worktree.path);
         return branchName === worktreeName ||
             relativePath === worktreeName ||
@@ -41,8 +46,8 @@ export function findWorktreeByName(worktrees: GitWorktree[], worktreeName: strin
     });
 }
 
-export async function detectWorktreeType(worktree: GitWorktree, mainWorktreePath: string): Promise<WorktreeType> {
-    const isManaged = isManagedWorktreePath(worktree.path);
+export async function detectWorktreeType(worktree: GitWorktree, mainWorktreePath: string, managedRoot = YGG_ROOT): Promise<WorktreeType> {
+    const isManaged = isManagedWorktreePath(worktree.path, managedRoot);
     if (!isManaged) {
         return worktree.path === mainWorktreePath ? 'MAIN' : 'LINKED';
     }
@@ -71,4 +76,3 @@ export function formatPrStatus(pr: PrStatus): string {
         default:         return chalk.dim(`#${pr.number} ${pr.label}`);
     }
 }
-

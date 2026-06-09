@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { listWorktrees, getRepoRoot, isGitClean, getLastActivity, isGhAvailable, getPrStatusBatch, PrStatus } from '../../lib/git.js';
+import { getManagedWorktreesRoot } from '../../lib/global-config.js';
 import { log, timeAgo, createSpinner } from '../../lib/ui.js';
 import {
     detectWorktreeType,
@@ -14,6 +15,7 @@ export async function listCommand() {
         await getRepoRoot(); // Verify we are in a git repo
         const worktrees = await listWorktrees();
         const mainWorktreePath = worktrees[0]?.path || '';
+        const managedRoot = await getManagedWorktreesRoot();
         
         if (worktrees.length === 0) {
             log.info('No worktrees found.');
@@ -37,7 +39,7 @@ export async function listCommand() {
 
         const rows = await Promise.all(worktrees.map(async (wt, index) => {
             const [typeKey, isClean, lastActive] = await Promise.all([
-                detectWorktreeType(wt, mainWorktreePath),
+                detectWorktreeType(wt, mainWorktreePath, managedRoot),
                 isGitClean(wt.path),
                 getLastActivity(wt.path),
             ]);

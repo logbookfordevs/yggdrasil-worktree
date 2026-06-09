@@ -1,5 +1,6 @@
 import inquirer from 'inquirer';
 import { GitWorktree, listWorktrees, getRepoRoot } from '../../lib/git.js';
+import { getManagedWorktreesRoot } from '../../lib/global-config.js';
 import { log } from '../../lib/ui.js';
 import { findWorktreeByName, formatWorktreeDisplayPath, getWorktreeBranchName } from '../../lib/worktree.js';
 
@@ -7,6 +8,7 @@ export async function pathCommand(wtName?: string) {
     try {
         await getRepoRoot();
         const worktrees = await listWorktrees();
+        const managedRoot = await getManagedWorktreesRoot();
 
         if (worktrees.length === 0) {
             log.info('No worktrees found.');
@@ -16,7 +18,7 @@ export async function pathCommand(wtName?: string) {
         let targetWt: GitWorktree | undefined;
 
         if (wtName) {
-            targetWt = findWorktreeByName(worktrees, wtName);
+            targetWt = findWorktreeByName(worktrees, wtName, managedRoot);
 
             if (!targetWt) {
                 log.error(`Worktree "${wtName}" not found.`);
@@ -26,7 +28,7 @@ export async function pathCommand(wtName?: string) {
             // Interactive Selection
             const choices = worktrees.map(wt => {
                 const branchName = getWorktreeBranchName(wt);
-                const displayPath = formatWorktreeDisplayPath(wt.path);
+                const displayPath = formatWorktreeDisplayPath(wt.path, managedRoot);
                 
                 return {
                     name: `${branchName.padEnd(20)} ${displayPath}`,

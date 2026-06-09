@@ -17,6 +17,13 @@ import { openCommand } from './commands/wt/open.js';
 import { applyCommand } from './commands/wt/apply.js';
 import { unapplyCommand } from './commands/wt/unapply.js';
 import { handoffCommand } from './commands/wt/handoff.js';
+import {
+    configGetCommand,
+    configResetCommand,
+    configSetWorktreeLayoutCommand,
+    configSetWorktreesRootCommand,
+    configUseCommand,
+} from './commands/config.js';
 import { getVersion } from './lib/version.js';
 import { notifyIfUpdateAvailable } from './lib/update-check.js';
 import { findSandboxRoot } from './lib/sandbox.js';
@@ -91,7 +98,7 @@ function registerWorktreeCommands(parent: Command) {
 
     parent.command('delete')
         .description('Delete managed worktrees')
-        .option('-a, --all', 'Include repo-linked worktrees outside ~/.yggtree (except main/current)')
+        .option('-a, --all', 'Include repo-linked worktrees outside the managed root (except main/current)')
         .action(async (options) => {
             await deleteCommand(options);
         });
@@ -307,6 +314,23 @@ program.command('bifrost')
 program.command('thor')
     .description('Consult the God of Thunder (Easter Egg)')
     .action(thorCommand);
+
+const config = program.command('config').description('Inspect or update global Yggtree settings');
+config.command('get')
+    .description('Show resolved global settings')
+    .action(configGetCommand);
+config.command('use <preset>')
+    .description('Use a global worktree path preset (default, yggtree, codex)')
+    .action(configUseCommand);
+config.command('set-worktrees-root <path>')
+    .description('Set the global managed worktrees root')
+    .action(configSetWorktreesRootCommand);
+config.command('set-worktree-layout <layout>')
+    .description('Set the managed worktree path layout (yggtree or codex)')
+    .action(configSetWorktreeLayoutCommand);
+config.command('reset')
+    .description('Reset global settings to defaults')
+    .action(configResetCommand);
 
 rejectUnknownTopLevelCommand(argv);
 program.parse(argv);

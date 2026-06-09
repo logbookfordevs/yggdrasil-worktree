@@ -3,7 +3,7 @@ import inquirer from 'inquirer';
 import path from 'path';
 import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch, ensureCorrectUpstream, publishBranch } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
-import { WORKTREES_ROOT } from '../../lib/paths.js';
+import { buildManagedWorktreePath, getWorktreePathConfig } from '../../lib/global-config.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { promptAndCopyEnvFiles } from '../../lib/env-files.js';
 import {
@@ -109,7 +109,8 @@ export async function createCommandNew(options: NewCreateOptions) {
         // e.g. feat/new-button -> feat-new-button
         const slug = branchName.replace(/[\/\\]/g, '-').replace(/\s+/g, '-');
         const repoName = await getRepoName();
-        const wtPath = path.join(WORKTREES_ROOT, repoName, slug);
+        const worktreePathConfig = await getWorktreePathConfig();
+        const wtPath = buildManagedWorktreePath(repoName, slug, worktreePathConfig);
 
         // 2. Validation
         if (!slug) throw new Error('Invalid name');

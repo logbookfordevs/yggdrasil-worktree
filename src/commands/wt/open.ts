@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import { constants as fsConstants } from 'fs';
 import { execa } from 'execa';
 import { GitWorktree, listWorktrees, getRepoRoot } from '../../lib/git.js';
+import { getManagedWorktreesRoot } from '../../lib/global-config.js';
 import { log, ui } from '../../lib/ui.js';
 import { ensureAutocompletePrompt } from '../../lib/prompt.js';
 import {
@@ -241,8 +242,8 @@ export async function detectInstalledOpenTools(): Promise<OpenToolOption[]> {
         .map(check => check.tool);
 }
 
-function resolveWorktreeByName(worktrees: GitWorktree[], wtName: string): GitWorktree | undefined {
-    return findWorktreeByName(worktrees, wtName);
+function resolveWorktreeByName(worktrees: GitWorktree[], wtName: string, managedRoot: string): GitWorktree | undefined {
+    return findWorktreeByName(worktrees, wtName, managedRoot);
 }
 
 export function resolveOpenToolOption(input: string, installed: OpenToolOption[]): OpenToolOption | undefined {
@@ -477,6 +478,7 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
         await getRepoRoot();
         const worktrees = await listWorktrees();
         const mainWorktreePath = worktrees[0]?.path || '';
+        const managedRoot = await getManagedWorktreesRoot();
 
         if (worktrees.length === 0) {
             log.info('No worktrees found.');
@@ -485,7 +487,7 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
 
         let targetWt: GitWorktree | undefined;
         if (wtName) {
-            targetWt = resolveWorktreeByName(worktrees, wtName);
+            targetWt = resolveWorktreeByName(worktrees, wtName, managedRoot);
             if (!targetWt) {
                 log.error(`Worktree "${wtName}" not found.`);
                 return;
@@ -494,9 +496,9 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
             ensureAutocompletePrompt();
             const terminalColumns = process.stdout.columns || 100;
             const candidates: OpenWorktreeCandidate[] = await Promise.all(worktrees.map(async (wt) => {
-                const type = await detectWorktreeType(wt, mainWorktreePath);
+                const type = await detectWorktreeType(wt, mainWorktreePath, managedRoot);
                 const branchName = getWorktreeBranchName(wt);
-                const displayPath = formatWorktreeDisplayPath(wt.path);
+                const displayPath = formatWorktreeDisplayPath(wt.path, managedRoot);
                 const rawType = type.toLowerCase();
                 const rawDisplayPath = displayPath.toLowerCase();
                 const rawBranchName = branchName.toLowerCase();

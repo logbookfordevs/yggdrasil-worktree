@@ -9,6 +9,7 @@ import {
     buildTmuxLaunchCommand,
     formatOpenSpecialChoice,
     formatOpenToolChoice,
+    isOpenToolAvailable,
     OPEN_TOOL_CANDIDATES,
     OpenToolOption,
     parseCmuxSurfaceRef,
@@ -37,6 +38,7 @@ const codexAppTool: OpenToolOption = {
     kind: 'app',
     aliases: ['codex', 'codex-app'],
     bundleId: 'com.openai.codex',
+    requiredCommand: 'codex',
 };
 
 const tmuxTool: OpenToolOption = {
@@ -127,6 +129,18 @@ describe('open action selection', () => {
     it('resolves codex aliases to Codex App when the app is installed', () => {
         expect(resolveOpenToolOption('codex', [codexAppTool])).toBe(codexAppTool);
         expect(resolveOpenToolOption('codex-app', [codexAppTool])).toBe(codexAppTool);
+    });
+
+    it('requires the Codex CLI before offering Codex App launch', async () => {
+        await expect(isOpenToolAvailable(codexAppTool, {
+            commandExists: async () => false,
+            macOSAppBundleExists: async () => true,
+        })).resolves.toBe(false);
+
+        await expect(isOpenToolAvailable(codexAppTool, {
+            commandExists: async (command: string) => command === 'codex',
+            macOSAppBundleExists: async () => true,
+        })).resolves.toBe(true);
     });
 
     it('resolves tmux aliases when tmux is installed', () => {

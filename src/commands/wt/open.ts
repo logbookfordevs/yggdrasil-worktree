@@ -36,6 +36,12 @@ export interface OpenToolOption {
     kind: 'editor' | 'app' | 'terminal';
     aliases?: string[];
     bundleId?: string;
+    requiredCommand?: string;
+}
+
+interface OpenToolAvailabilityChecks {
+    commandExists?: (command: string) => Promise<boolean>;
+    macOSAppBundleExists?: (bundleId: string) => Promise<boolean>;
 }
 
 export interface OpenAction {
@@ -59,6 +65,7 @@ export const OPEN_TOOL_CANDIDATES: OpenToolOption[] = [
         kind: 'app',
         aliases: ['codex', 'codex-app'],
         bundleId: 'com.openai.codex',
+        requiredCommand: 'codex',
     },
     { id: 'cmux', name: 'Cmux Panel', command: 'cmux', kind: 'terminal', aliases: ['cmux', 'cmux-panel'] },
     { id: 'tmux', name: 'Tmux Session', command: 'tmux', kind: 'terminal', aliases: ['tmux', 'tmux-session'] },
@@ -231,15 +238,32 @@ export async function detectInstalledOpenTools(): Promise<OpenToolOption[]> {
     const checks = await Promise.all(
         OPEN_TOOL_CANDIDATES.map(async tool => ({
             tool,
-            exists: tool.bundleId
-                ? await macOSAppBundleExists(tool.bundleId)
-                : await commandExists(tool.command),
+            exists: await isOpenToolAvailable(tool),
         }))
     );
 
     return checks
         .filter(check => check.exists)
         .map(check => check.tool);
+}
+
+export async function isOpenToolAvailable(
+    tool: OpenToolOption,
+    checks: OpenToolAvailabilityChecks = {},
+): Promise<boolean> {
+    const hasCommand = checks.commandExists || commandExists;
+    const hasAppBundle = checks.macOSAppBundleExists || macOSAppBundleExists;
+
+    if (tool.requiredCommand) {
+        const commandAvailable = await hasCommand(tool.requiredCommand);
+        if (!commandAvailable) return false;
+    }
+
+    if (tool.bundleId) {
+        return hasAppBundle(tool.bundleId);
+    }
+
+    return hasCommand(tool.command);
 }
 
 function resolveWorktreeByName(worktrees: GitWorktree[], wtName: string, managedRoot: string): GitWorktree | undefined {
@@ -267,9 +291,7 @@ export function resolveOpenToolCandidate(input: string): OpenToolOption | undefi
 async function resolveKnownOpenToolOption(input: string): Promise<OpenToolOption | undefined> {
     const candidate = resolveOpenToolCandidate(input);
     if (!candidate) return undefined;
-    const exists = candidate.bundleId
-        ? await macOSAppBundleExists(candidate.bundleId)
-        : await commandExists(candidate.command);
+    const exists = await isOpenToolAvailable(candidate);
 
     return exists ? candidate : undefined;
 }

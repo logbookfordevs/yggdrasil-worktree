@@ -5,6 +5,7 @@ import { listWorktrees, getRepoRoot } from '../../lib/git.js';
 import { getManagedWorktreesRoot } from '../../lib/global-config.js';
 import { log } from '../../lib/ui.js';
 import { runBootstrap } from '../../lib/config.js';
+import { isManagedWorktreePath } from '../../lib/worktree.js';
 
 export async function bootstrapCommand() {
     try {
@@ -15,7 +16,7 @@ export async function bootstrapCommand() {
         // 1. Select Worktree
         // Filter managed or just show all? The prompt said "managed", let's prioritize managed but maybe allow all if needed?
         // User requirements say "managed", sticking to that for consistency.
-        const managedWts = worktrees.filter(wt => wt.path.startsWith(managedRoot));
+        const managedWts = worktrees.filter(wt => isManagedWorktreePath(wt.path, managedRoot));
 
         if (managedWts.length === 0) {
             log.info('No managed worktrees found to bootstrap.');

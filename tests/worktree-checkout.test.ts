@@ -1,5 +1,5 @@
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { promisify } from 'node:util';
@@ -12,6 +12,7 @@ import {
 } from '../src/commands/wt/create.js';
 import { parseWorktreeList } from '../src/lib/git.js';
 import { buildManagedWorktreePath } from '../src/lib/global-config.js';
+import { isManagedWorktreePath } from '../src/lib/worktree.js';
 
 const exec = promisify(execFile);
 
@@ -125,6 +126,11 @@ describe('managed worktree path config', () => {
             root: '/tmp/.codex/worktrees',
             layout: 'codex',
         })).toBe(path.join('/tmp/.codex/worktrees', 'feature-login', 'repo'));
+    });
+
+    it('matches managed roots on path boundaries only', () => {
+        expect(isManagedWorktreePath('/tmp/ygg/repo/feature-login', '/tmp/ygg')).toBe(true);
+        expect(isManagedWorktreePath('/tmp/ygg-old/repo/feature-login', '/tmp/ygg')).toBe(false);
     });
 });
 
@@ -393,6 +399,42 @@ describe('worktree checkout CLI', () => {
             const worktreePath = path.join(home, '.codex', 'worktrees', 'remote-only-checkout', 'repo');
             const { stdout } = await exec('git', ['branch', '--show-current'], { cwd: worktreePath });
             expect(stdout.trim()).toBe('remote-only');
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    }, 15_000);
+
+    it('persists custom worktree roots as absolute paths', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-config-root-'));
+
+        try {
+            const repo = await createBranchCandidateRepo(tmp);
+            const home = path.join(tmp, 'home');
+            await mkdir(home);
+
+            await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'config',
+                    'set-worktrees-root',
+                    'worktrees',
+                ],
+                {
+                    cwd: repo,
+                    env: {
+                        ...process.env,
+                        HOME: home,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            const rawConfig = JSON.parse(
+                await readFile(path.join(home, '.yggtree', 'config.json'), 'utf8'),
+            ) as { worktreesRoot?: string };
+
+            expect(rawConfig.worktreesRoot).toBe(path.join(await realpath(repo), 'worktrees'));
         } finally {
             await rm(tmp, { recursive: true, force: true });
         }

@@ -3,6 +3,7 @@ import {
     formatGlobalConfig,
     getPresetConfig,
     getWorktreePathConfig,
+    normalizeWorktreesRootInput,
     readGlobalConfig,
     writeGlobalConfig,
     WorktreeLayout,
@@ -38,7 +39,7 @@ export async function configSetWorktreesRootCommand(root: string) {
     const currentConfig = await readGlobalConfig();
     await writeGlobalConfig({
         ...currentConfig,
-        worktreesRoot: root,
+        worktreesRoot: normalizeWorktreesRootInput(root),
         worktreeLayout: currentConfig.worktreeLayout || 'yggtree',
     });
     log.success('Updated worktrees root.');

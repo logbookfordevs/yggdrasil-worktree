@@ -35,6 +35,10 @@ function normalizeRoot(value?: string): string {
     return path.resolve(expandHome(value || YGG_ROOT));
 }
 
+export function normalizeWorktreesRootInput(value: string): string {
+    return path.resolve(expandHome(value));
+}
+
 function normalizeLayout(value?: WorktreeLayout): WorktreeLayout {
     return value || DEFAULT_WORKTREE_LAYOUT;
 }

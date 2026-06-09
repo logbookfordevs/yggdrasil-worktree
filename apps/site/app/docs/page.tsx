@@ -151,7 +151,7 @@ const openExamples = [
     title: 'Open Codex App directly',
     command: 'yggtree open feat/new-ui --tool codex-app',
     detail:
-      '`--tool` skips the picker. Codex App can be addressed as `codex` or `codex-app` when it is detected.',
+      '`--tool` skips the picker. Codex App can be addressed as `codex` or `codex-app`; Yggtree launches it with `codex app <path>` so the selected worktree becomes the active project.',
   },
   {
     title: 'Open tools and continue in the shell',

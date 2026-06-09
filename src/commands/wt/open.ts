@@ -436,6 +436,13 @@ export async function launchOpenTool(tool: OpenToolOption, wtPath: string): Prom
 }
 
 export function buildOpenToolLaunchCommand(tool: OpenToolOption, wtPath: string): { executable: string; args: string[] } {
+    if (tool.id === 'codex-app') {
+        return {
+            executable: 'codex',
+            args: ['app', wtPath],
+        };
+    }
+
     if (tool.bundleId) {
         return {
             executable: '/usr/bin/open',

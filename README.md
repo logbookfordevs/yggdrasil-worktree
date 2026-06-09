@@ -492,7 +492,7 @@ Behavior:
 
 * If `[worktree]` is omitted, you can pick from the worktree list with type-to-filter search.
 * Detects available editor commands in your `PATH` (for example: `cursor`, `code`, `zed`, `webstorm`).
-* Detects Codex App on macOS and launches it with `open -b com.openai.codex`.
+* Detects Codex App on macOS and launches the selected worktree with `codex app <path>`.
 * Detects Cmux and Tmux when their CLI commands are available.
 * Lets you choose one editor, app, or terminal target interactively, or pass `--tool`.
 * Keeps Cmux, Tmux, and `Other command...` mutually exclusive by using a single action picker.

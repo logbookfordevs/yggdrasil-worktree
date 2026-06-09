@@ -117,10 +117,10 @@ describe('open action selection', () => {
         });
     });
 
-    it('launches macOS app tools by bundle id with the worktree path', () => {
+    it('launches Codex App through the Codex CLI so the worktree becomes the active project', () => {
         expect(buildOpenToolLaunchCommand(codexAppTool, '/tmp/worktree')).toEqual({
-            executable: '/usr/bin/open',
-            args: ['-b', 'com.openai.codex', '/tmp/worktree'],
+            executable: 'codex',
+            args: ['app', '/tmp/worktree'],
         });
     });
 

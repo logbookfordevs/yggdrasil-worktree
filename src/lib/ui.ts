@@ -12,14 +12,111 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // --- Personality & Branding ---
 
-export const welcome = async () => {
-    console.log('');
+interface WelcomeOptions {
+    update?: {
+        currentVersion: string;
+        latestVersion: string;
+        updateAvailable: boolean;
+    } | null;
+}
+
+interface MainMenuIntroOptions {
+    isInSandbox: boolean;
+}
+
+interface MainMenuChoiceOptions {
+    glyph: string;
+    label: string;
+    detail: string;
+    tone: MenuTone;
+}
+
+type MenuTone = 'growth' | 'travel' | 'sandbox' | 'tending' | 'danger' | 'lore' | 'exit';
+
+const yggAccent = chalk.hex('#DEADED');
+const yggLeaf = chalk.hex('#9AD68B');
+const yggSky = chalk.hex('#7AC7D8');
+const yggBark = chalk.hex('#C99A5B');
+const yggRoot = chalk.hex('#B48AE8');
+const yggWarn = chalk.hex('#E4B85E');
+const yggDanger = chalk.hex('#E06C75');
+const yggMuted = chalk.hex('#8D8D8D');
+
+export function renderWelcome(options: WelcomeOptions = {}): string {
+    const rule = yggAccent('─'.repeat(54));
     const title = figlet.textSync('Yggdrasil', { font: 'Standard' });
-    console.log(gradient.mind.multiline(title));
     const version = getVersion();
-    console.log(chalk.dim(`  v${version} • The World Tree Worktree Assistant`));
-    console.log('');
+    const updateLines = renderUpdateNotice(options.update);
+
+    return [
+        '',
+        rule,
+        gradient.mind.multiline(title),
+        chalk.bold(yggAccent('  Yggdrasil')),
+        chalk.dim(`  v${version} • The World Tree Worktree Assistant`),
+        ...updateLines,
+        rule,
+        '',
+    ].join('\n');
+}
+
+export const welcome = async (options: WelcomeOptions = {}) => {
+    console.log(renderWelcome(options));
 };
+
+export function renderMainMenuIntro(options: MainMenuIntroOptions): string {
+    const detail = options.isInSandbox
+        ? 'Sandbox tools appear first because this realm can apply or undo grafted changes.'
+        : 'Create, enter, inspect, or tend your worktrees.';
+
+    return [
+        'Choose the next realm action.',
+        yggMuted('Daily routes first. Maintenance and lore wait below.'),
+        '',
+        `${yggBark('┌')}   ${badge('route 01')} ${chalk.bold('Realm')}`,
+        `${yggBark('│')}   ${yggMuted(detail)}`,
+    ].join('\n');
+}
+
+export function formatMainMenuChoice(options: MainMenuChoiceOptions): string {
+    const tone = menuTone(options.tone);
+    const label = options.label.padEnd(24);
+
+    return `${tone(options.glyph)}  ${chalk.bold(label)} ${yggMuted(options.detail)}`;
+}
+
+function renderUpdateNotice(update: WelcomeOptions['update']): string[] {
+    if (!update?.updateAvailable) return [];
+
+    return [
+        '',
+        `${yggWarn('Update available')} ${yggMuted(`yggtree ${update.currentVersion} -> ${update.latestVersion}`)}`,
+        yggMuted('Run: npm install -g yggtree'),
+    ];
+}
+
+function badge(value: string): string {
+    return yggRoot(` ${value} `);
+}
+
+function menuTone(tone: MenuTone): (value: string) => string {
+    switch (tone) {
+        case 'growth':
+            return yggLeaf;
+        case 'travel':
+            return yggSky;
+        case 'sandbox':
+            return yggRoot;
+        case 'tending':
+            return yggBark;
+        case 'danger':
+            return yggDanger;
+        case 'lore':
+            return yggAccent;
+        case 'exit':
+            return yggMuted;
+    }
+}
 
 // --- Logger ---
 
@@ -78,4 +175,3 @@ export function timeAgo(date: Date): string {
     if (seconds < 31536000)    return `${Math.floor(seconds / 2592000)}mo ago`;
     return `${Math.floor(seconds / 31536000)}y ago`;
 }
-

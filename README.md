@@ -110,6 +110,7 @@ All managed worktrees live under:
 ```
 
 This keeps your main repository clean while enabling true parallelism.
+You can change the global managed worktree location with `yggtree config`.
 
 ---
 
@@ -161,7 +162,7 @@ Run installs, submodules, and setup scripts automatically for each worktree.
 Enter worktrees, execute commands, or run tasks without changing directories.
 
 📍 **Predictable structure**
-All managed worktrees live under `~/.yggtree`, keeping your repository clean.
+Managed worktrees default to `~/.yggtree`, with an optional global path setting for agent-native layouts.
 
 🧭 **Interactive or scriptable**
 Use the interactive UI or drive everything through commands and flags.
@@ -256,6 +257,48 @@ Resolution order:
   ]
 }
 ```
+
+---
+
+## 🗂️ Global Worktree Paths
+
+By default, managed worktrees use the Yggtree layout:
+
+```bash
+~/.yggtree/<repo-name>/<worktree-slug>
+```
+
+Show the active global setting:
+
+```bash
+yggtree config get
+```
+
+Use the Codex-style layout when you want Yggtree-created worktrees to live under Codex's worktree root:
+
+```bash
+yggtree config use codex
+```
+
+That preset creates new managed worktrees like:
+
+```bash
+~/.codex/worktrees/<worktree-slug>/<repo-name>
+```
+
+Set a custom managed root while keeping the Yggtree layout:
+
+```bash
+yggtree config set-worktrees-root ~/Worktrees
+```
+
+Return to defaults:
+
+```bash
+yggtree config reset
+```
+
+Claude and Cursor do not currently have a confirmed native worktree directory pattern in Yggtree. Until that is explicit, use `set-worktrees-root` with the directory you want rather than relying on an unverified preset.
 
 ---
 
@@ -434,7 +477,7 @@ Columns:
 Notes:
 
 * Entries are grouped by `TYPE`.
-* `SANDBOX` and `MANAGED` are worktrees inside `~/.yggtree`.
+* `SANDBOX` and `MANAGED` are worktrees inside the configured managed worktree root.
 * External worktrees are labeled `LINKED`.
 * Use `--open` to switch this flow into "pick and open in tool" mode.
 * The **PR** column shows the pull request status for each branch (e.g. `OPEN`, `IN REVIEW`, `APPROVED`, `MERGED`, `DRAFT`, `CHANGES`). It only appears when `gh` CLI is installed and authenticated — otherwise it's silently omitted.
@@ -449,7 +492,7 @@ Behavior:
 
 * If `[worktree]` is omitted, you can pick from the worktree list with type-to-filter search.
 * Detects available editor commands in your `PATH` (for example: `cursor`, `code`, `zed`, `webstorm`).
-* Detects Codex App on macOS and launches it with `open -b com.openai.codex`.
+* Detects Codex App on macOS and launches the selected worktree with `codex app <path>`.
 * Detects Cmux and Tmux when their CLI commands are available.
 * Lets you choose one editor, app, or terminal target interactively, or pass `--tool`.
 * Keeps Cmux, Tmux, and `Other command...` mutually exclusive by using a single action picker.
@@ -517,7 +560,7 @@ Behavior:
 
 Optional:
 
-* `--all` includes linked worktrees outside `~/.yggtree` (main/current worktree is excluded for safety)
+* `--all` includes linked worktrees outside the configured managed root (main/current worktree is excluded for safety)
 
 ---
 

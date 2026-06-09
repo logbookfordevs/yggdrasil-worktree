@@ -3,7 +3,7 @@ import inquirer from 'inquirer';
 import path from 'path';
 import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch, ensureCorrectUpstream, publishBranch } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
-import { WORKTREES_ROOT } from '../../lib/paths.js';
+import { buildManagedWorktreePath, getWorktreePathConfig } from '../../lib/global-config.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { findLocalEnvFiles, promptAndCopyEnvFilesToWorktrees } from '../../lib/env-files.js';
 import { execa } from 'execa';
@@ -86,9 +86,10 @@ export async function createCommandMulti(options: MultiCreateOptions) {
 
         // 3. Execution for each branch
         const repoName = await getRepoName();
+        const worktreePathConfig = await getWorktreePathConfig();
         for (const branchName of branchNames) {
             const slug = branchName.replace(/[\/\\]/g, '-').replace(/\s+/g, '-');
-            const wtPath = path.join(WORKTREES_ROOT, repoName, slug);
+            const wtPath = buildManagedWorktreePath(repoName, slug, worktreePathConfig);
 
             log.header(`Processing: ${branchName}`);
             const wtSpinner = createSpinner(`Creating worktree at ${ui.path(wtPath)}...`).start();

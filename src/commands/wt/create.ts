@@ -3,7 +3,7 @@ import inquirer from 'inquirer';
 import path from 'path';
 import { GitWorktree, getRepoName, createWorktree, fetchAll, listWorktrees } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
-import { WORKTREES_ROOT } from '../../lib/paths.js';
+import { buildManagedWorktreePath, getWorktreePathConfig } from '../../lib/global-config.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { ensureAutocompletePrompt } from '../../lib/prompt.js';
 import { promptAndCopyEnvFiles } from '../../lib/env-files.js';
@@ -275,7 +275,9 @@ export async function createCommand(options: CreateOptions) {
         // 3. Gather remaining inputs
         const defaultSlug = toSlug(selectedBranch.branchName);
         const repoName = await getRepoName();
-        const resolveWorktreePath = (name: string) => path.join(WORKTREES_ROOT, repoName, toSlug(name));
+        const worktreePathConfig = await getWorktreePathConfig();
+        const resolveWorktreePath = (name: string) =>
+            buildManagedWorktreePath(repoName, toSlug(name), worktreePathConfig);
 
         const answers = await inquirer.prompt([
             {

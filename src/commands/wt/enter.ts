@@ -3,6 +3,7 @@ import { spawn } from 'child_process';
 import { execa } from 'execa';
 import chalk from 'chalk';
 import { GitWorktree, listWorktrees } from '../../lib/git.js';
+import { getManagedWorktreesRoot } from '../../lib/global-config.js';
 import { log, ui } from '../../lib/ui.js';
 import { ensureRepoContext } from '../../lib/repo-context.js';
 import {
@@ -48,6 +49,7 @@ export async function enterCommand(wtName?: string, options: { exec?: string } =
 
         const worktrees = await listWorktrees();
         const mainWorktreePath = worktrees[0]?.path || '';
+        const managedRoot = await getManagedWorktreesRoot();
 
         if (worktrees.length === 0) {
             log.info('No worktrees found.');
@@ -57,7 +59,7 @@ export async function enterCommand(wtName?: string, options: { exec?: string } =
         let targetWt: GitWorktree | undefined;
 
         if (wtName) {
-            targetWt = findWorktreeByName(worktrees, wtName);
+            targetWt = findWorktreeByName(worktrees, wtName, managedRoot);
 
             if (!targetWt) {
                 log.error(`Worktree "${wtName}" not found.`);
@@ -67,9 +69,9 @@ export async function enterCommand(wtName?: string, options: { exec?: string } =
             // Interactive Selection
             const terminalColumns = process.stdout.columns || 100;
             const choices = await Promise.all(worktrees.map(async (wt) => {
-                const type = await detectWorktreeType(wt, mainWorktreePath);
+                const type = await detectWorktreeType(wt, mainWorktreePath, managedRoot);
                 const branchName = getWorktreeBranchName(wt);
-                const displayPath = formatWorktreeDisplayPath(wt.path);
+                const displayPath = formatWorktreeDisplayPath(wt.path, managedRoot);
                 
                 return {
                     name: formatChoiceLabel(type, branchName, displayPath, terminalColumns),

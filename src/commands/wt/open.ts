@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import { constants as fsConstants } from 'fs';
 import { execa } from 'execa';
 import { GitWorktree, listWorktrees, getRepoRoot } from '../../lib/git.js';
+import { getManagedWorktreesRoot } from '../../lib/global-config.js';
 import { log, ui } from '../../lib/ui.js';
 import { ensureAutocompletePrompt } from '../../lib/prompt.js';
 import {
@@ -35,6 +36,12 @@ export interface OpenToolOption {
     kind: 'editor' | 'app' | 'terminal';
     aliases?: string[];
     bundleId?: string;
+    requiredCommand?: string;
+}
+
+interface OpenToolAvailabilityChecks {
+    commandExists?: (command: string) => Promise<boolean>;
+    macOSAppBundleExists?: (bundleId: string) => Promise<boolean>;
 }
 
 export interface OpenAction {
@@ -58,6 +65,7 @@ export const OPEN_TOOL_CANDIDATES: OpenToolOption[] = [
         kind: 'app',
         aliases: ['codex', 'codex-app'],
         bundleId: 'com.openai.codex',
+        requiredCommand: 'codex',
     },
     { id: 'cmux', name: 'Cmux Panel', command: 'cmux', kind: 'terminal', aliases: ['cmux', 'cmux-panel'] },
     { id: 'tmux', name: 'Tmux Session', command: 'tmux', kind: 'terminal', aliases: ['tmux', 'tmux-session'] },
@@ -230,9 +238,7 @@ export async function detectInstalledOpenTools(): Promise<OpenToolOption[]> {
     const checks = await Promise.all(
         OPEN_TOOL_CANDIDATES.map(async tool => ({
             tool,
-            exists: tool.bundleId
-                ? await macOSAppBundleExists(tool.bundleId)
-                : await commandExists(tool.command),
+            exists: await isOpenToolAvailable(tool),
         }))
     );
 
@@ -241,8 +247,27 @@ export async function detectInstalledOpenTools(): Promise<OpenToolOption[]> {
         .map(check => check.tool);
 }
 
-function resolveWorktreeByName(worktrees: GitWorktree[], wtName: string): GitWorktree | undefined {
-    return findWorktreeByName(worktrees, wtName);
+export async function isOpenToolAvailable(
+    tool: OpenToolOption,
+    checks: OpenToolAvailabilityChecks = {},
+): Promise<boolean> {
+    const hasCommand = checks.commandExists || commandExists;
+    const hasAppBundle = checks.macOSAppBundleExists || macOSAppBundleExists;
+
+    if (tool.requiredCommand) {
+        const commandAvailable = await hasCommand(tool.requiredCommand);
+        if (!commandAvailable) return false;
+    }
+
+    if (tool.bundleId) {
+        return hasAppBundle(tool.bundleId);
+    }
+
+    return hasCommand(tool.command);
+}
+
+function resolveWorktreeByName(worktrees: GitWorktree[], wtName: string, managedRoot: string): GitWorktree | undefined {
+    return findWorktreeByName(worktrees, wtName, managedRoot);
 }
 
 export function resolveOpenToolOption(input: string, installed: OpenToolOption[]): OpenToolOption | undefined {
@@ -266,9 +291,7 @@ export function resolveOpenToolCandidate(input: string): OpenToolOption | undefi
 async function resolveKnownOpenToolOption(input: string): Promise<OpenToolOption | undefined> {
     const candidate = resolveOpenToolCandidate(input);
     if (!candidate) return undefined;
-    const exists = candidate.bundleId
-        ? await macOSAppBundleExists(candidate.bundleId)
-        : await commandExists(candidate.command);
+    const exists = await isOpenToolAvailable(candidate);
 
     return exists ? candidate : undefined;
 }
@@ -435,6 +458,13 @@ export async function launchOpenTool(tool: OpenToolOption, wtPath: string): Prom
 }
 
 export function buildOpenToolLaunchCommand(tool: OpenToolOption, wtPath: string): { executable: string; args: string[] } {
+    if (tool.id === 'codex-app') {
+        return {
+            executable: 'codex',
+            args: ['app', wtPath],
+        };
+    }
+
     if (tool.bundleId) {
         return {
             executable: '/usr/bin/open',
@@ -477,6 +507,7 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
         await getRepoRoot();
         const worktrees = await listWorktrees();
         const mainWorktreePath = worktrees[0]?.path || '';
+        const managedRoot = await getManagedWorktreesRoot();
 
         if (worktrees.length === 0) {
             log.info('No worktrees found.');
@@ -485,7 +516,7 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
 
         let targetWt: GitWorktree | undefined;
         if (wtName) {
-            targetWt = resolveWorktreeByName(worktrees, wtName);
+            targetWt = resolveWorktreeByName(worktrees, wtName, managedRoot);
             if (!targetWt) {
                 log.error(`Worktree "${wtName}" not found.`);
                 return;
@@ -494,9 +525,9 @@ export async function openCommand(wtName?: string, options: OpenOptions = {}) {
             ensureAutocompletePrompt();
             const terminalColumns = process.stdout.columns || 100;
             const candidates: OpenWorktreeCandidate[] = await Promise.all(worktrees.map(async (wt) => {
-                const type = await detectWorktreeType(wt, mainWorktreePath);
+                const type = await detectWorktreeType(wt, mainWorktreePath, managedRoot);
                 const branchName = getWorktreeBranchName(wt);
-                const displayPath = formatWorktreeDisplayPath(wt.path);
+                const displayPath = formatWorktreeDisplayPath(wt.path, managedRoot);
                 const rawType = type.toLowerCase();
                 const rawDisplayPath = displayPath.toLowerCase();
                 const rawBranchName = branchName.toLowerCase();

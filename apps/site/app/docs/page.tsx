@@ -164,7 +164,8 @@ const openExamples = [
   {
     title: 'Open Codex App directly',
     command: 'yggtree open feat/new-ui --tool codex-app',
-    detail: '`--tool` skips the picker. Codex App can be addressed as `codex` or `codex-app` when it is detected.',
+    detail:
+      '`--tool` skips the picker. Codex App can be addressed as `codex` or `codex-app`; Yggtree launches it with `codex app <path>` so the selected worktree becomes the active project.',
   },
   {
     title: 'Open a terminal target directly',
@@ -309,7 +310,7 @@ const commandGroups = [
         command: 'yggtree delete',
         description: 'Delete managed worktrees interactively.',
         flags: [
-          flag('-a, --all', 'Include linked worktrees outside `~/.yggtree`, excluding main and current safety cases.'),
+          flag('-a, --all', 'Include linked worktrees outside the configured managed root, excluding main and current safety cases.'),
         ],
       },
       {
@@ -346,6 +347,39 @@ const commandGroups = [
         command: 'yggtree unapply',
         description: 'Restore origin files from the sandbox backup created by `apply`.',
         flags: [flag('Constraint', 'Only works while the sandbox and its backup metadata still exist.')],
+      },
+    ],
+  },
+  {
+    title: 'Configure paths',
+    commands: [
+      {
+        command: 'yggtree config get',
+        description: 'Show the resolved global Yggtree settings, including the active managed worktree root and layout.',
+        flags: [flag('Output', 'Prints the resolved root, layout, config file path, and whether the config is still default.')],
+      },
+      {
+        command: 'yggtree config use <preset>',
+        description:
+          'Apply a bundled path preset. `codex` sets both the worktree root and Codex-style path layout; `default` and `yggtree` reset to the normal Yggtree layout.',
+        flags: [flag('Presets', 'Available presets: `default`, `yggtree`, and `codex`.')],
+      },
+      {
+        command: 'yggtree config set-worktrees-root <path>',
+        description:
+          'Set the managed worktree root manually while keeping the current layout, or defaulting to the Yggtree layout when no layout is set yet.',
+        flags: [flag('Example', '`yggtree config set-worktrees-root ~/Worktrees` keeps paths under your chosen directory.')],
+      },
+      {
+        command: 'yggtree config set-worktree-layout <layout>',
+        description:
+          'Change only the path shape. Use this when you want a custom root with either Yggtree or Codex-style nesting.',
+        flags: [flag('Layouts', '`yggtree` uses `<root>/<repo>/<slug>`; `codex` uses `<root>/<slug>/<repo>`.')],
+      },
+      {
+        command: 'yggtree config reset',
+        description: 'Clear global settings and return managed worktrees to the default Yggtree layout under `~/.yggtree`.',
+        flags: [flag('Effect', 'Does not move or delete existing worktrees; it only changes where new managed worktrees are created.')],
       },
     ],
   },
@@ -658,31 +692,67 @@ export default function DocsPage() {
             <section id="configuration" className={sectionClass}>
               <h2 className={sectionTitleClass}>Configuration</h2>
               <p className={sectionIntroClass}>
-                If a repository needs something other than the fallback{' '}
-                <code className={`${monoFaceClass} text-sm text-gold-rune`}>npm install</code>, define setup commands
-                once and let every new worktree inherit them. When local env files such as{' '}
-                <code className={`${monoFaceClass} text-sm text-gold-rune`}>.env</code> or{' '}
-                <code className={`${monoFaceClass} text-sm text-gold-rune`}>.env.local</code> exist, interactive
-                creation flows offer to copy them into the new worktree. Example and template env files are skipped, and
-                CI or other non-interactive runs skip the prompt entirely.
+                Yggtree has two kinds of configuration: repository setup commands, which prepare each new worktree, and
+                global path settings, which decide where managed worktrees are created. Keep setup close to the repo.
+                Use global path settings when you want Yggtree to follow a different workspace layout.
               </p>
-              <div className={`mt-6 ${referenceShellClass}`}>
-                <p className={`scrollbar-none mb-4 overflow-x-auto whitespace-nowrap ${kickerClass}`}>
-                  .yggtree/worktree-setup.json
-                </p>
-                <pre className="scrollbar-none overflow-x-auto rounded-md border border-gold-rune/10 bg-deep-forest/82 p-4 font-mono text-[0.8125rem] leading-6 text-frost-white sm:p-5 sm:text-[0.875rem]">
-                  <code>{`{
-          "setup-worktree": [
-            "pnpm install",
-            "git submodule sync --recursive",
-            "git submodule update --init --recursive"
-          ]
-        }`}</code>
-                </pre>
-                <p className={`mt-4 ${noteClass}`}>
-                  Bootstrap runs after worktree creation unless you pass `--no-bootstrap`. The same config is used by
-                  `create`, `worktree-checkout`, `wc`, `create-multi`, and `create-sandbox`.
-                </p>
+              <div className="mt-6 grid gap-5">
+                <div className={referenceShellClass}>
+                  <p className={`scrollbar-none mb-4 overflow-x-auto whitespace-nowrap ${kickerClass}`}>
+                    .yggtree/worktree-setup.json
+                  </p>
+                  <pre className="scrollbar-none overflow-x-auto rounded-md border border-gold-rune/10 bg-deep-forest/82 p-4 font-mono text-[0.8125rem] leading-6 text-frost-white sm:p-5 sm:text-[0.875rem]">
+                    <code>{`{
+  "setup-worktree": [
+    "pnpm install",
+    "git submodule sync --recursive",
+    "git submodule update --init --recursive"
+  ]
+}`}</code>
+                  </pre>
+                  <p className={`mt-4 ${noteClass}`}>
+                    Bootstrap runs after worktree creation unless you pass `--no-bootstrap`. The same config is used by
+                    `create`, `worktree-checkout`, `wc`, `create-multi`, and `create-sandbox`. When local env files such
+                    as `.env` or `.env.local` exist, interactive creation flows offer to copy them. Example and template
+                    env files are skipped, and CI or other non-interactive runs skip the prompt entirely.
+                  </p>
+                </div>
+
+                <div className={referenceShellClass}>
+                  <p className={`mb-4 ${kickerClass}`}>Global worktree paths</p>
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div>
+                      <h3 className={exampleTitleClass}>Default layout</h3>
+                      <p className={`mt-2 ${noteClass}`}>
+                        New managed worktrees normally live at `~/.yggtree/&lt;repo-name&gt;/&lt;worktree-slug&gt;`.
+                        Existing worktrees are not moved when you change this setting.
+                      </p>
+                      <CommandBlock command="yggtree config get" className="mt-4" />
+                    </div>
+                    <div>
+                      <h3 className={exampleTitleClass}>Codex-style layout</h3>
+                      <p className={`mt-2 ${noteClass}`}>
+                        Use the Codex preset when you want new Yggtree worktrees under Codex&apos;s worktree root:
+                        `~/.codex/worktrees/&lt;worktree-slug&gt;/&lt;repo-name&gt;`.
+                      </p>
+                      <CommandBlock command="yggtree config use codex" className="mt-4" />
+                    </div>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 rounded-md border border-gold-rune/10 bg-deep-forest/45 p-4">
+                    <p className={bodyPanelClass}>
+                      `use` applies a preset bundle. `set-worktree-layout` changes only the path shape and keeps the
+                      current root.
+                    </p>
+                    <CommandBlock command="yggtree config set-worktrees-root ~/Worktrees" />
+                    <CommandBlock command="yggtree config set-worktree-layout codex" />
+                    <CommandBlock command="yggtree config reset" />
+                  </div>
+                  <p className={`mt-4 ${noteClass}`}>
+                    Claude and Cursor presets are intentionally not listed until their native worktree directory pattern
+                    is confirmed. Use `set-worktrees-root` for those tools when you already know the directory you want.
+                  </p>
+                </div>
               </div>
             </section>
 
@@ -704,9 +774,8 @@ export default function DocsPage() {
                 </p>
                 <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
                   Use <code className={`${monoFaceClass} text-sm text-gold-rune`}>delete --all</code> carefully. It can
-                  include linked worktrees outside{' '}
-                  <code className={`${monoFaceClass} text-sm text-gold-rune`}>~/.yggtree</code>, while still protecting
-                  the main and current worktree.
+                  include linked worktrees outside the configured managed root, while still protecting the main and
+                  current worktree.
                 </p>
               </div>
             </section>

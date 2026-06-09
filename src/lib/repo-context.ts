@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { getRepoRoot } from './git.js';
+import { getManagedWorktreesRoot } from './global-config.js';
 import { getValidRegisteredRepos } from './registry.js';
 import { log } from './ui.js';
 import { formatWorktreeDisplayPath } from './worktree.js';
@@ -11,6 +12,7 @@ export async function ensureRepoContext(): Promise<string> {
     } catch {
         const validRepos = await getValidRegisteredRepos();
         const repoEntries = Object.entries(validRepos);
+        const managedRoot = await getManagedWorktreesRoot();
 
         if (repoEntries.length === 0) {
             log.error('Not inside a git repository and no registered realms found.');
@@ -38,7 +40,7 @@ export async function ensureRepoContext(): Promise<string> {
                 name: 'selectedRepoPath',
                 message: 'Select a realm:',
                 choices: repoEntries.map(([name, repoPath]) => ({
-                    name: `${chalk.bold.yellow(name)} ${chalk.dim(formatWorktreeDisplayPath(repoPath))}`,
+                    name: `${chalk.bold.yellow(name)} ${chalk.dim(formatWorktreeDisplayPath(repoPath, managedRoot))}`,
                     value: repoPath,
                 })),
                 pageSize: 10,

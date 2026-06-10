@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Yggtree docs and packaged skill guidance now teach `handoff` as the default dirty-work sandbox path, clarify `create-sandbox` as disposable local experimentation, and describe `apply`/`unapply` as sandbox-backed file transfer rather than Git merge semantics.
+- `yggtree --help` and nested command help now include compact intent routing and semantic guardrails so agents can choose between `create`, `wc`, `handoff`, `create-sandbox`, `apply`, and `create-multi` without loading the full skill.
 
 ### Fixed
 - Opening Codex App from Yggtree now uses `codex app <path>` so the selected worktree opens as the active Codex project instead of only launching the desktop app.

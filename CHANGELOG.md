@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Global `yggtree config` settings can now move managed worktrees out of `~/.yggtree`, including a Codex-style preset that creates new worktrees under `~/.codex/worktrees/<worktree-slug>/<repo-name>`.
 
+### Changed
+- Yggtree docs and packaged skill guidance now teach `handoff` as the default dirty-work sandbox path, clarify `create-sandbox` as disposable local experimentation, and describe `apply`/`unapply` as sandbox-backed file transfer rather than Git merge semantics.
+
 ### Fixed
 - Opening Codex App from Yggtree now uses `codex app <path>` so the selected worktree opens as the active Codex project instead of only launching the desktop app.
 

@@ -1,11 +1,13 @@
 # Sandbox Experiments
 
-Choose sandbox when the user is already in the middle of a task and wants to
-try alternate approaches locally, or use `handoff` when they want to continue
-current dirty work in a named sandbox worktree. Sandbox creates a local-only
-branch, writes `.yggtree/sandbox-meta.json`, and can later apply or unapply file
-changes back to the origin realm. Interactive sandbox creation can also offer
-opt-in copying of local `.env` files before bootstrap.
+Choose `create-sandbox` when the user wants a disposable local experiment, and
+choose `handoff` when they already have staged, unstaged, or untracked work in
+the origin checkout and want to continue that dirty work in a named sandbox.
+Sandboxes create local-only branches, write `.yggtree/sandbox-meta.json`, and can
+later copy file changes back to the origin realm with `apply`.
+
+`apply` and `unapply` are file transfer and restore commands backed by sandbox
+metadata. They are not Git merge, rebase, patch, or cherry-pick flows.
 
 ```bash
 yggtree create-sandbox
@@ -20,8 +22,9 @@ Create a local-only experimental realm from current work:
 yggtree create-sandbox
 ```
 
-When prompted, keep `Carry uncommitted changes to sandbox?` enabled if the
-experiment should begin from the current working state.
+Use this for a clean disposable experiment. If the user is specifically moving
+current dirty work into a sandbox to continue, prefer `handoff` instead of
+teaching `create-sandbox --carry`.
 
 Hand off staged, unstaged, and untracked files into a named sandbox:
 
@@ -40,6 +43,11 @@ Apply the winner back to the origin realm:
 ```bash
 yggtree apply
 ```
+
+Run `apply` from inside the sandbox. It detects changed sandbox files, backs up
+the corresponding origin files in sandbox metadata, then copies sandbox files
+over the origin checkout. Deleted sandbox files are not a complete Git-style
+delete propagation model, so review the origin diff after applying.
 
 Undo a previous apply:
 
@@ -113,7 +121,8 @@ git diff --name-only
 ```
 
 Carry copies changed files that still exist on disk, but it intentionally skips
-submodule paths and is not a full Git-history transfer.
+submodule paths and is not a full Git-history transfer. For current dirty work,
+prefer `handoff --name <task>` so the intent is explicit.
 
 Source: `src/commands/wt/create-sandbox.ts`
 

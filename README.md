@@ -40,8 +40,8 @@ worktree workflow first, then load the smallest reference they need:
   the work already in progress.
 * **Bootstrap and use a realm**: prepare a worktree, open it in your IDE, or
   run commands inside it.
-* **Run sandbox experiments**: try alternative approaches locally and
-  apply/unapply the winner safely.
+* **Run sandbox experiments**: try alternative approaches locally, then copy the
+  winner back with sandbox-backed apply/unapply.
 
 This skill is especially useful with agents like **Claude Code**,
 **Codex**, **Cursor**, **Gemini CLI**, and other tools that support the open
@@ -147,7 +147,7 @@ Create, manage, and navigate Git worktrees as a primary workflow, not an afterth
 Work on multiple branches at the same time, each in its own isolated environment.
 
 🧪 **Sandbox worktrees for experimentation**
-Prototyping something risky? Create a sandbox, try different strategies, and apply the winner back to your origin branch.
+Prototyping something risky? Create a sandbox, try different strategies, and copy the winner back to your origin checkout.
 
 🤝 **Handoff current work**
 Started in your main checkout? Carry staged, unstaged, and untracked work into a named sandbox worktree and continue there.
@@ -218,12 +218,12 @@ Sometimes you don't want to "commit to a branch" yet. You just want to try somet
 
 1.  **Create**: `yggtree create-sandbox` (creates something like `sandbox-a3f2_feature-branch`).
 2.  **Experiment**: Change files, run tests, try that risky refactor.
-3.  **Apply**: `yggtree apply` to "push" those file changes back to your origin directory.
-4.  **Unapply**: Don't like it? `yggtree unapply` restores your origin to exactly how it was before.
+3.  **Apply**: `yggtree apply` to copy changed sandbox files back to your origin directory with backups.
+4.  **Unapply**: Don't like it? `yggtree unapply` restores those backed-up origin files while the sandbox still exists.
 
 Sandboxes are **not pushed to remote**. Omit the name for a generated temporary sandbox, or provide one when the work needs to be easy to find later.
 
-Use `handoff` when you started in the origin checkout and want to continue that dirty work in a sandbox:
+Use `handoff` when you started in the origin checkout and want to continue that dirty work in a sandbox. This is the taught path for staged, unstaged, or untracked work:
 
 ```bash
 yggtree handoff --name auth-refactor
@@ -392,12 +392,12 @@ yggtree wc hotfix-auth main --open --no-enter
 
 ### `yggtree create-sandbox`
 
-Create a temporary sandbox from your current local branch.
+Create a temporary local-only sandbox from your current branch.
 
 Options:
 
 *   `-n, --name <name>`: Optional sandbox name (auto-generated if omitted).
-*   `--carry / --no-carry`: Bring uncommitted changes (staged/unstaged/untracked) with you.
+*   `--carry / --no-carry`: Explicitly choose whether to copy uncommitted changes into the sandbox. Prefer `handoff` when the intent is continuing dirty work.
 *   `--no-bootstrap`
 *   `--open / --no-open`
 *   `--exec "<command>"`
@@ -421,29 +421,32 @@ Options:
 *   `--open / --no-open`
 *   `--exec "<command>"`
 
-This is the continuation-focused version of `create-sandbox --carry`: it keeps sandbox metadata and apply/unapply behavior, but defaults to carrying staged, unstaged, and untracked files.
+This is the continuation-focused semantic path for dirty work. It uses sandbox metadata and apply/unapply behavior, but defaults to carrying staged, unstaged, and untracked files.
 
 ---
 
 ### `yggtree apply`
 
-Apply changes from the current sandbox back to the origin repository. 
-*   **Backs up** origin files before overwriting.
+Copy changed files from the current sandbox back to the origin checkout.
+*   **Backs up** origin files in sandbox metadata before overwriting.
 *   **Offers to delete** the sandbox after applying.
+*   **Is not a Git merge**: review the origin diff after applying, especially when deletions are involved.
 
 ---
 
 ### `yggtree unapply`
 
 Undo a previous `apply` operation.
-*   Restores origin files from the sandbox's backup.
+*   Restores origin files from the sandbox's backup metadata.
 *   *Note: Only works if the sandbox worktree still exists.*
 
 ---
 
 ### `yggtree create-multi`
 
-Create multiple worktrees at once.
+Create multiple official branch-backed worktrees at once. This is a bulk setup
+command; it does not have the full `create` lifecycle flags such as `--open`,
+`--enter`, or `--exec`.
 
 Options:
 
@@ -704,7 +707,7 @@ Useful when you want to manually navigate or copy the path into scripts.
 **Command:**
 
 ```bash
-yggtree create-sandbox --carry
+yggtree handoff --name risky-refactor
 ```
 
 **Scenario:**
@@ -713,7 +716,7 @@ yggtree create-sandbox --carry
 2.  Run `handoff --name risky-refactor` to carry those changes into an isolated `sandbox-risky-refactor` folder.
 3.  Experiment freely.
 4.  If it works: `yggtree apply`.
-5.  If it fails: Just delete the sandbox or `unapply`.
+5.  If it fails after applying: run `yggtree unapply` before deleting the sandbox.
 
 </details>
 

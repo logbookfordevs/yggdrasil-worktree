@@ -1,12 +1,11 @@
 ---
 name: yggtree
 description: >
-  Use this skill when the user wants help with yggtree worktree workflows:
-  creating branch-backed task worktrees, checking out existing branches without
-  stashing, bootstrapping a realm, opening a realm in an IDE,
-  running commands inside a worktree, handing off dirty work into a sandbox,
-  creating sandbox experiments, or applying sandbox results back to the origin
-  checkout.
+  Guides agents through Yggtree worktree workflows for branch-backed tasks,
+  checkout-style interruptions, realm lifecycle commands, sandbox experiments,
+  dirty-work handoffs, and sandbox transfer/restore. Use when the user asks to
+  create, open, bootstrap, enter, manage, or transfer work between Yggtree
+  worktrees, sandboxes, or realms.
 ---
 
 # Yggtree
@@ -28,7 +27,7 @@ only the reference file for that path.
   named sandbox worktree to continue there. Read
   `references/sandbox-experiments.md`.
 - **Local experiment:** use `yggtree create-sandbox` when the user wants to
-  try alternative approaches locally, then maybe apply the winner back. Read
+  try alternative approaches locally, then maybe copy the winner back. Read
   `references/sandbox-experiments.md`.
 - **Prepare or act inside a realm:** use `bootstrap`, `open`, or `exec` only
   after the target worktree is known. Read `references/realm-lifecycle.md`.
@@ -38,6 +37,10 @@ only the reference file for that path.
 - Prefer a sandbox for disposable alternatives inside an active task.
 - Prefer `handoff --name <task>` over `create-sandbox --carry` when the user
   describes moving current dirty work into a worktree to continue.
+- Treat `create-sandbox --carry` as an explicit advanced/compatibility path,
+  not the taught default for dirty-work continuation.
+- Treat `apply` / `unapply` as sandbox-backed file transfer and restore, not as
+  Git merge, rebase, patch, or cherry-pick flows.
 - Prefer `create` for real new scopes that deserve their own branch and
   remote tracking.
 - Prefer `worktree-checkout` over stash or temporary commits when the user is
@@ -54,7 +57,8 @@ only the reference file for that path.
   `--no-enter` when a create/checkout command should prepare the worktree and
   return to the caller.
 - Keep `create-multi` out of the default path unless the user explicitly asks
-  for multiple official worktrees.
+  for multiple official worktrees; it does not share `create`'s open/enter/exec
+  lifecycle.
 
 ## Quick Commands
 
@@ -78,6 +82,8 @@ yggtree exec my-feature codex --approval-mode auto
 - Do not use `create` for throwaway experimentation; it is the official
   branch-backed workflow and may publish to `origin`.
 - Do not reach for `git stash` when the user really needs a second realm.
+- Do not describe `apply` as landing a branch; it copies changed sandbox files
+  into the origin checkout and stores undo data in sandbox metadata.
 - Do not delete a sandbox before running `unapply` if the user may need to
   undo an applied sandbox result.
 - Do not treat `open` as the nested-agent workflow; the dedicated orchestration

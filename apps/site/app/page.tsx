@@ -461,19 +461,21 @@ export default function Home() {
             <div className="bg-mist-green/30 backdrop-blur-sm border border-gold-rune/20 rounded-xl p-6">
               <h3 className="text-xl font-display font-semibold text-frost-white mb-4">The Workflow</h3>
               <div className="space-y-4">
-                <CommandBlock command="yggtree create-sandbox --carry" />
+                <CommandBlock command="yggtree handoff --name risky-refactor" />
                 <p className="text-parchment/60 text-sm">
-                  Creates a temporary, <strong className="text-parchment/80">local-only</strong> worktree with a random
-                  name. Carries your uncommitted changes. Never pushes to remote.
+                  Creates a named, <strong className="text-parchment/80">local-only</strong> sandbox and carries your
+                  staged, unstaged, and untracked changes. Never pushes to remote.
                 </p>
 
                 <CommandBlock command="yggtree apply" />
                 <p className="text-parchment/60 text-sm">
-                  Liked the result? Apply the file changes back to your origin directory.
+                  Liked the result? Copy changed sandbox files back to your origin directory with backups.
                 </p>
 
                 <CommandBlock command="yggtree unapply" />
-                <p className="text-parchment/60 text-sm">Didn&apos;t work out? Revert to exactly how it was before.</p>
+                <p className="text-parchment/60 text-sm">
+                  Didn&apos;t work out? Restore the backed-up origin files before deleting the sandbox.
+                </p>
               </div>
             </div>
           </motion.div>
@@ -509,8 +511,8 @@ export default function Home() {
             },
             {
               title: 'Disposable experiment',
-              command: 'yggtree create-sandbox --carry',
-              description: 'Try a local-only approach and apply it back only if it wins.',
+              command: 'yggtree create-sandbox',
+              description: 'Try a local-only approach and copy it back only if it wins.',
             },
           ].map((item, index) => (
             <motion.div

@@ -216,7 +216,8 @@ yggtree create feat/new-ui --base main --exec "cursor ."
 
 ### `yggtree create-multi`
 
-Create multiple worktrees at once.
+Create multiple official branch-backed worktrees at once. This is bulk setup,
+not the full guided `create` lifecycle.
 
 <details>
 <summary>Example</summary>

@@ -81,7 +81,7 @@ const workflowChoices: WorkflowChoice[] = [
     title: 'Try risky edits',
     when: 'You want an experiment that may be discarded.',
     command: 'yggtree create-sandbox',
-    result: 'Keeps the idea local until you apply it back.',
+    result: 'Keeps the idea local until you copy the result back.',
   },
 ];
 
@@ -191,14 +191,14 @@ const sandboxExamples = [
     detail: 'Creates a sandbox from the current local branch with an auto-generated name.',
   },
   {
-    title: 'Carry current edits into a sandbox',
-    command: 'yggtree create-sandbox --carry',
-    detail: 'Moves staged, unstaged, and untracked work into the sandbox path for isolated exploration.',
+    title: 'Continue current edits in a sandbox',
+    command: 'yggtree handoff --name risky-refactor',
+    detail: 'Copies staged, unstaged, and untracked work into a named sandbox so you can continue there.',
   },
   {
     title: 'Apply sandbox changes back',
     command: 'yggtree apply',
-    detail: 'Run inside the sandbox. Yggtree backs up overwritten origin files before applying changes.',
+    detail: 'Run inside the sandbox. Yggtree copies changed files to origin and stores backups in sandbox metadata.',
   },
   {
     title: 'Undo an apply while the sandbox still exists',
@@ -249,7 +249,8 @@ const commandGroups = [
       },
       {
         command: 'yggtree create-multi',
-        description: 'Create multiple official task worktrees when explicitly needed.',
+        description:
+          'Create multiple official task worktrees when explicitly needed. This is bulk setup, not the full `create` open/enter/exec lifecycle.',
         flags: [
           flag('--base <ref>', 'Base ref.'),
           flag('--source <type>', 'Local or remote.'),
@@ -326,10 +327,21 @@ const commandGroups = [
       {
         command: 'yggtree create-sandbox',
         description:
-          'Create a local-only sandbox for experiments. The interactive flow can name it, carry staged/unstaged/untracked edits, and ask whether to open an editor after creation.',
+          'Create a local-only sandbox for disposable experiments. The interactive flow can name it, ask whether to copy uncommitted edits, and ask whether to open an editor after creation.',
         flags: [
           flag('-n, --name <name>', 'Optional sandbox name.'),
-          flag('--carry / --no-carry', 'Choose whether to move uncommitted changes into the sandbox.'),
+          flag('--carry / --no-carry', 'Explicitly choose whether to copy uncommitted changes. Prefer `handoff` for dirty-work continuation.'),
+          flag('--no-bootstrap', 'Skip setup commands.'),
+          flag('--open / --no-open', 'Choose whether to open an editor after creation.'),
+          flag('--exec <command>', 'Run an explicit command after creation.'),
+        ],
+      },
+      {
+        command: 'yggtree handoff',
+        description:
+          'Carry staged, unstaged, and untracked work from the current checkout into a named sandbox so you can continue there.',
+        flags: [
+          flag('-n, --name <name>', 'Optional handoff name.'),
           flag('--no-bootstrap', 'Skip setup commands.'),
           flag('--open / --no-open', 'Choose whether to open an editor after creation.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
@@ -338,9 +350,9 @@ const commandGroups = [
       {
         command: 'yggtree apply',
         description:
-          'Apply sandbox file changes back to the origin checkout, backing up overwritten files and offering to delete the sandbox afterward.',
+          'Copy changed sandbox files back to the origin checkout, backing up overwritten files in sandbox metadata and offering to delete the sandbox afterward.',
         flags: [
-          flag('Run location', 'Run from inside the sandbox. Yggtree creates backups before overwriting origin files.'),
+          flag('Run location', 'Run from inside the sandbox. This is file transfer, not a Git merge; review the origin diff afterward.'),
         ],
       },
       {
@@ -544,7 +556,7 @@ export default function DocsPage() {
                 <p className={sectionIntroClass}>
                   The consolidated Yggtree skill helps agents choose the right worktree workflow before loading the
                   smallest reference they need: create a task worktree, branch off without stashing, manage a realm, or
-                  run a sandbox experiment.
+                  run a sandbox experiment without confusing handoff, apply, and branch creation semantics.
                 </p>
               </div>
               <div className="grid gap-5">
@@ -633,7 +645,8 @@ export default function DocsPage() {
                 <h2 className={sectionTitleClass}>Use sandboxes for risky edits</h2>
                 <p className={sectionIntroClass}>
                   Sandboxes are local-only worktrees for experiments, refactors, and trial runs. They are useful when
-                  the idea may be thrown away, but you still want a clean path to apply the result back.
+                  the idea may be thrown away, but you still want a clean path to copy the result back. Use `handoff`
+                  when the experiment starts from dirty work in your current checkout.
                 </p>
               </div>
               <div className="grid gap-5">
@@ -762,11 +775,12 @@ export default function DocsPage() {
                 <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
                   Use <code className={`${monoFaceClass} text-sm text-gold-rune`}>create</code> for task branches. Use{' '}
                   <code className={`${monoFaceClass} text-sm text-gold-rune`}>create-sandbox</code> for disposable
-                  alternatives.
+                  alternatives, and <code className={`${monoFaceClass} text-sm text-gold-rune`}>handoff</code> for
+                  continuing current dirty work in a sandbox.
                 </p>
                 <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
                   Run <code className={`${monoFaceClass} text-sm text-gold-rune`}>unapply</code> before deleting a
-                  sandbox if you may need to undo changes applied back to the origin.
+                  sandbox if you may need to undo files copied back to the origin with `apply`.
                 </p>
                 <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
                   Prefer <code className={`${monoFaceClass} text-sm text-gold-rune`}>worktree-checkout</code> over stash

@@ -7,6 +7,17 @@ import {
     welcome,
     log,
 } from './lib/ui.js';
+import {
+    applyHelp,
+    checkoutHelp,
+    createHelp,
+    createMultiHelp,
+    createSandboxHelp,
+    handoffHelp,
+    intentRouterHelp,
+    openHelp,
+    unapplyHelp,
+} from './lib/help.js';
 
 import { listCommand } from './commands/wt/list.js';
 import { createCommand } from './commands/wt/create.js';
@@ -87,7 +98,7 @@ function registerWorktreeCommands(parent: Command) {
         });
 
     parent.command('create [branch]')
-        .description('Create a new worktree (Smart branch detection)')
+        .description('Create an official branch-backed task worktree')
         .option('-b, --branch <name>', 'Branch name (e.g. feat/new-ui)')
         .option('--base <ref>', 'Base ref (e.g. main)')
         .option('--source <type>', 'Base source (local or remote)')
@@ -97,6 +108,7 @@ function registerWorktreeCommands(parent: Command) {
         .option('--enter', 'Enter the worktree sub-shell after creation')
         .option('--no-enter', 'Do not enter the worktree sub-shell after creation')
         .option('--exec <command>', 'Command to execute after creation')
+        .addHelpText('after', createHelp)
         .action(async (branch, options) => {
             await createCommandNew({
                 ...options,
@@ -105,10 +117,11 @@ function registerWorktreeCommands(parent: Command) {
         });
 
     parent.command('create-multi')
-        .description('Create multiple worktrees (Smart branch detection)')
+        .description('Bulk-create official branch-backed worktrees')
         .option('--base <ref>', 'Base ref (e.g. main)')
         .option('--source <type>', 'Base source (local or remote)')
         .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .addHelpText('after', createMultiHelp)
         .action(async (options) => {
             await createCommandMulti(options);
         });
@@ -125,6 +138,7 @@ function registerWorktreeCommands(parent: Command) {
             .addOption(new Option('--enter', 'Enter the worktree sub-shell after checkout/opening').hideHelp())
             .option('--no-enter', 'Do not enter the worktree sub-shell after checkout/opening')
             .option('--exec <command>', 'Command to execute after creation')
+            .addHelpText('after', checkoutHelp)
             .action(async (name, ref, options) => {
                 await createCommand({
                     ...options,
@@ -149,6 +163,7 @@ function registerWorktreeCommands(parent: Command) {
         .option('--tool <command>', 'Editor, app, or terminal command to use (e.g. cursor, code, codex-app, tmux)')
         .option('--enter', 'Enter the worktree sub-shell after opening')
         .addOption(new Option('--no-enter', 'Do not enter the worktree sub-shell after opening').hideHelp())
+        .addHelpText('after', openHelp)
         .action(async (worktree, options) => {
             await openCommand(worktree, options);
         });
@@ -176,22 +191,23 @@ function registerWorktreeCommands(parent: Command) {
         });
 
     parent.command('create-sandbox')
-        .description('Create a sandbox worktree from current branch')
+        .description('Create a local-only disposable experiment sandbox')
         .option('-n, --name <name>', 'Optional sandbox name (auto-generated when omitted)')
-        .option('--carry', 'Carry uncommitted changes to sandbox')
-        .option('--no-carry', 'Do not carry uncommitted changes')
+        .option('--carry', 'Copy uncommitted changes to sandbox')
+        .option('--no-carry', 'Do not copy uncommitted changes')
         .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
         .option('--open', 'Open an editor after creation')
         .option('--no-open', 'Skip opening an editor after creation')
         .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
         .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
         .option('--exec <command>', 'Command to execute after creation')
+        .addHelpText('after', createSandboxHelp)
         .action(async (options) => {
             await createSandboxCommand(options);
         });
 
     parent.command('handoff')
-        .description('Carry uncommitted work into a sandbox worktree')
+        .description('Carry dirty current work into a named sandbox')
         .option('-n, --name <name>', 'Optional handoff name (prompted when omitted)')
         .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
         .option('--open', 'Open an editor after creation')
@@ -199,16 +215,19 @@ function registerWorktreeCommands(parent: Command) {
         .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
         .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
         .option('--exec <command>', 'Command to execute after creation')
+        .addHelpText('after', handoffHelp)
         .action(async (options) => {
             await handoffCommand(options);
         });
 
     parent.command('apply')
-        .description('Apply sandbox changes to origin directory')
+        .description('Copy sandbox file changes to the origin checkout')
+        .addHelpText('after', applyHelp)
         .action(applyCommand);
 
     parent.command('unapply')
-        .description('Undo applied sandbox changes in origin')
+        .description('Restore origin files from sandbox apply backups')
+        .addHelpText('after', unapplyHelp)
         .action(unapplyCommand);
 }
 
@@ -230,6 +249,7 @@ program
     .description('Interactive CLI for managing git worktrees and configs')
     .version(getVersion())
     .allowExcessArguments(false)
+    .addHelpText('after', intentRouterHelp)
     .action(async () => {
         const update = await checkForUpdate();
         await welcome({ update });
@@ -360,6 +380,7 @@ program
 
 // --- Worktree Commands ---
 const wt = program.command('wt').description('Manage git worktrees');
+wt.addHelpText('after', intentRouterHelp);
 registerWorktreeCommands(program);
 registerWorktreeCommands(wt);
 program.addHelpCommand(true);

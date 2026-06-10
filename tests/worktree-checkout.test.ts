@@ -585,14 +585,46 @@ describe('worktree checkout CLI', () => {
         const help = await exec('node', [path.resolve('dist/index.js'), 'help']);
         expect(help.stdout).toContain('Usage: yggtree');
         expect(help.stdout).toContain('handoff');
+        expect(help.stdout).toContain('Choose by intent:');
+        expect(help.stdout).toContain('Continue dirty current work');
+        expect(help.stdout).toContain('Copy sandbox files to origin');
+        expect(help.stdout).toContain('not a Git merge');
+        expect(help.stdout).toContain('More detail: run yggtree help <command>');
 
         const openHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'open']);
         expect(openHelp.stdout).toContain('Usage: yggtree open');
         expect(openHelp.stdout).toContain('Open a worktree in an editor, supported app, or terminal target');
+        expect(openHelp.stdout).toContain('Opens an existing worktree');
+        expect(openHelp.stdout).toContain('Returns by default after opening.');
+
+        const checkoutHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'wc']);
+        expect(checkoutHelp.stdout).toContain('Usage: yggtree wc');
+        expect(checkoutHelp.stdout).toContain('Creates or reuses a worktree for an existing branch or ref');
+        expect(checkoutHelp.stdout).toContain('Use create for a new official task branch.');
+
+        const createHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'create']);
+        expect(createHelp.stdout).toContain('Use for real task branches.');
+        expect(createHelp.stdout).toContain('For disposable experiments, use create-sandbox.');
+
+        const createMultiHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'create-multi']);
+        expect(createMultiHelp.stdout).toContain('Bulk-creates official branch-backed worktrees.');
+        expect(createMultiHelp.stdout).toContain("does not share create's open/enter/exec lifecycle");
+
+        const createSandboxHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'create-sandbox']);
+        expect(createSandboxHelp.stdout).toContain('Creates a local-only disposable experiment from the current branch.');
+        expect(createSandboxHelp.stdout).toContain('prefer handoff');
 
         const handoffHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'handoff']);
         expect(handoffHelp.stdout).toContain('Usage: yggtree handoff');
-        expect(handoffHelp.stdout).toContain('Carry uncommitted work into a sandbox worktree');
+        expect(handoffHelp.stdout).toContain('Carry staged, unstaged, and untracked work into a named sandbox');
         expect(handoffHelp.stdout).not.toContain('--no-carry');
+
+        const applyHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'apply']);
+        expect(applyHelp.stdout).toContain('Copies changed files from the current sandbox back to the origin checkout.');
+        expect(applyHelp.stdout).toContain('Not a Git merge, rebase, patch, or cherry-pick.');
+
+        const unapplyHelp = await exec('node', [path.resolve('dist/index.js'), 'help', 'unapply']);
+        expect(unapplyHelp.stdout).toContain('Restores origin files from sandbox metadata created by apply.');
+        expect(unapplyHelp.stdout).toContain('Only works while the sandbox still exists.');
     });
 });

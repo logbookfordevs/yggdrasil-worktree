@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release - TBD
 
+## [v1.4.5] - 2026-06-14
+
 ### Added
 - Global `yggtree config` settings can now move managed worktrees out of `~/.yggtree`, including a Codex-style preset that creates new worktrees under `~/.codex/worktrees/<worktree-slug>/<repo-name>`.
 

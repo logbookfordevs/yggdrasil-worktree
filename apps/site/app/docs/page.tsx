@@ -57,9 +57,9 @@ const commandCodeClass = `block max-w-full whitespace-normal break-words ${monoF
 const flagTermClass = `${monoFaceClass} text-[0.8125rem] font-medium leading-6 text-gold-rune/95`;
 const flagDescriptionClass = 'text-[0.9375rem] leading-6 text-parchment/70 [text-wrap:pretty]';
 const sectionClass = 'border-t border-gold-rune/12 py-14';
-const exampleShellClass =
-  'min-w-0 rounded-lg border border-gold-rune/16 bg-mist-green/16 p-4 transition-colors hover:border-gold-rune/28 hover:bg-mist-green/22 sm:p-5';
-const referenceShellClass = 'min-w-0 rounded-lg border border-gold-rune/14 bg-deep-forest/45 p-4 sm:p-5';
+const exampleShellClass = 'min-w-0 border-t border-gold-rune/10 py-5 first:border-t-0 first:pt-0';
+const referenceShellClass = 'min-w-0 border-t border-gold-rune/14 pt-6 first:border-t-0 first:pt-0';
+const safetyNoteClass = `border-t border-gold-rune/10 py-4 ${bodyPanelClass}`;
 
 const workflowChoices: WorkflowChoice[] = [
   {
@@ -492,7 +492,7 @@ export default function DocsPage() {
                 <section
                   id="workflows"
                   aria-labelledby="workflows-heading"
-                  className="min-w-0 scroll-mt-8 rounded-lg border border-gold-rune/18 bg-mist-green/14 p-4 sm:p-5"
+                  className="min-w-0 scroll-mt-8 border-t border-gold-rune/16 pt-5 xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0"
                 >
                   <h2
                     id="workflows-heading"
@@ -509,7 +509,7 @@ export default function DocsPage() {
                       <a
                         key={choice.href}
                         href={choice.href}
-                        className="group block rounded-md border border-gold-rune/12 bg-deep-forest/42 p-4 transition-colors hover:border-gold-rune/34 hover:bg-deep-forest/62 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-rune/55"
+                        className="group block border-t border-gold-rune/10 py-4 first:border-t-0 first:pt-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-rune/55"
                       >
                         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                           <h3 className={exampleTitleClass}>{choice.title}</h3>
@@ -736,7 +736,7 @@ export default function DocsPage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 grid gap-3 rounded-md border border-gold-rune/10 bg-deep-forest/45 p-4">
+                  <div className="mt-5 grid gap-3 border-t border-gold-rune/10 pt-4">
                     <p className={bodyPanelClass}>
                       `use` applies a preset bundle. `set-worktree-layout` changes only the path shape and keeps the
                       current root.
@@ -756,22 +756,22 @@ export default function DocsPage() {
 
             <section id="safety" className={sectionClass}>
               <h2 className={sectionTitleClass}>Safety notes</h2>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+              <div className="mt-6 grid gap-x-8 sm:grid-cols-2">
+                <p className={safetyNoteClass}>
                   Use <code className={`${monoFaceClass} text-sm text-gold-rune`}>create</code> for task branches. Use{' '}
                   <code className={`${monoFaceClass} text-sm text-gold-rune`}>create-sandbox</code> for disposable
                   alternatives, and <code className={`${monoFaceClass} text-sm text-gold-rune`}>handoff</code> for
                   continuing current dirty work in a sandbox.
                 </p>
-                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+                <p className={safetyNoteClass}>
                   Run <code className={`${monoFaceClass} text-sm text-gold-rune`}>unapply</code> before deleting a
                   sandbox if you may need to undo files copied back to the origin with `apply`.
                 </p>
-                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+                <p className={safetyNoteClass}>
                   Prefer <code className={`${monoFaceClass} text-sm text-gold-rune`}>worktree-checkout</code> over stash
                   when the current checkout contains work you do not want to disturb.
                 </p>
-                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+                <p className={safetyNoteClass}>
                   Use <code className={`${monoFaceClass} text-sm text-gold-rune`}>delete --all</code> carefully. It can
                   include linked worktrees outside the configured managed root, while still protecting the main and
                   current worktree.

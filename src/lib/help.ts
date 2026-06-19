@@ -12,10 +12,18 @@ Choose by intent:
 More detail: run yggtree help <command>, for example yggtree help handoff.
 `;
 
+const agentPathTip = `
+Agent-native paths:
+  Add --config claude for Claude Code's repo-local .claude/worktrees layout.
+  Add --config codex for Codex's ~/.codex/worktrees layout.
+`;
+
 export const createHelp = `
 Behavior:
   Creates an official branch-backed worktree, publishes the branch to origin, and enters the shell by default.
   Use for real task branches. For disposable experiments, use create-sandbox.
+
+${agentPathTip}
 
 Examples:
   yggtree create feat/new-flow --base main --source remote
@@ -28,6 +36,8 @@ Behavior:
   Bulk-creates official branch-backed worktrees.
   This does not share create's open/enter/exec lifecycle. Use create for one task branch.
 
+${agentPathTip}
+
 Example:
   yggtree create-multi --base main --source remote
   yggtree create-multi --base main --source remote --config codex
@@ -38,6 +48,8 @@ Behavior:
   Creates or reuses a worktree for an existing branch or ref without disturbing current work.
   Use for interruptions and branch review. Use create for a new official task branch.
   Enters the worktree shell by default; add --no-enter when automation should return.
+
+${agentPathTip}
 
 Examples:
   yggtree wc --ref hotfix/payment-timeout
@@ -74,6 +86,8 @@ Behavior:
   Creates a local-only disposable experiment from the current branch.
   For continuing current dirty work, prefer handoff instead of teaching create-sandbox --carry.
 
+${agentPathTip}
+
 Examples:
   yggtree create-sandbox
   yggtree create-sandbox --name ui-option-a --no-open
@@ -88,6 +102,8 @@ export const handoffHelp = `
 Behavior:
   Carry staged, unstaged, and untracked work into a named sandbox so you can continue there.
   The origin checkout is not cleaned; review or reset it separately if needed.
+
+${agentPathTip}
 
 Example:
   yggtree handoff --name continue-auth-refactor

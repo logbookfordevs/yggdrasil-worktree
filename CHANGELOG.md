@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Create-style commands now accept `--config <preset>` to use `yggtree`, `codex`, or `claude` path settings for one run without changing the saved global config.
 - `yggtree delete` now supports non-interactive deletion with explicit worktree targets and `--yes`.
 - The interactive lobby now includes an option to open the Yggtree documentation page.
+- Create-style command help now calls out `--config claude` and `--config codex` for agent-native worktree layouts.
 
 ## [v1.4.5] - 2026-06-14
 

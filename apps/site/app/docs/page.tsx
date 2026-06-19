@@ -98,11 +98,6 @@ const agentExamples = [
     detail:
       'Use this when your agent runtime supports targeted skill installs and you want the compact Yggtree workflow guide.',
   },
-  {
-    title: 'Target Codex directly',
-    command: 'npx skills add logbookfordevs/yggdrasil-worktree --agent codex',
-    detail: 'Useful for Codex setups that support agent-specific skill installation.',
-  },
 ];
 
 const creationExamples = [
@@ -118,19 +113,9 @@ const creationExamples = [
     detail: 'Use this for reviewable task work when you already know the branch name.',
   },
   {
-    title: 'Create and return without setup or editor launch',
-    command: 'yggtree create feat/docs-pass --no-bootstrap --no-open --no-enter',
-    detail: 'Useful for automation or when you want to inspect the worktree path before installing dependencies.',
-  },
-  {
     title: 'Use an agent-native path once',
     command: 'yggtree create feat/agent-native --config claude',
     detail: '`--config` changes the path preset for this run only; it does not update the saved global config.',
-  },
-  {
-    title: 'Run an explicit startup command',
-    command: 'yggtree create feat/ui-polish --exec "code ."',
-    detail: '`--exec` is the advanced escape hatch when the normal editor picker is not specific enough.',
   },
 ];
 
@@ -150,18 +135,6 @@ const checkoutExamples = [
     command: 'yggtree wc fresh-main main --config yggtree --no-open --no-enter',
     detail: 'Useful when the global preset is Claude or Codex but this checkout should use the classic Yggtree root.',
   },
-  {
-    title: 'Open a terminal target after checkout',
-    command: 'yggtree wc hotfix-auth main --tool tmux',
-    detail:
-      '`--tool` accepts editors, apps, and terminal targets such as `codex-app`, `cmux`, or `tmux`, then enters the worktree shell unless `--no-enter` is set.',
-  },
-  {
-    title: 'Open one target but stay in the current shell',
-    command: 'yggtree wc hotfix-auth main --open --no-enter',
-    detail:
-      'Use this when the command should prepare a worktree, run one open action, and return. The picker is single-select, so Enter chooses the highlighted editor, app, terminal target, or `Other command...`.',
-  },
 ];
 
 const openExamples = [
@@ -178,19 +151,9 @@ const openExamples = [
       '`--tool` skips the picker. Codex App can be addressed as `codex` or `codex-app`; Yggtree launches it with `codex app <path>` so the selected worktree becomes the active project.',
   },
   {
-    title: 'Open a terminal target directly',
-    command: 'yggtree open feat/new-ui --tool cmux',
-    detail: '`--tool cmux` or `--tool tmux` opens the worktree in that terminal target without showing the picker.',
-  },
-  {
-    title: 'Open tools and continue in the shell',
+    title: 'Open and continue in the shell',
     command: 'yggtree open feat/new-ui --tool code --enter',
     detail: '`open` returns by default. Add `--enter` when opening should continue into the worktree shell.',
-  },
-  {
-    title: 'Open from the worktree list',
-    command: 'yggtree list --open',
-    detail: 'Switches the list command into the same pick-and-open flow without printing the table first.',
   },
 ];
 
@@ -209,11 +172,6 @@ const sandboxExamples = [
     title: 'Apply sandbox changes back',
     command: 'yggtree apply',
     detail: 'Run inside the sandbox. Yggtree copies changed files to origin and stores backups in sandbox metadata.',
-  },
-  {
-    title: 'Undo an apply while the sandbox still exists',
-    command: 'yggtree unapply',
-    detail: 'Restores the origin files from the sandbox backup created by `apply`.',
   },
 ];
 

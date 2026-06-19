@@ -71,7 +71,7 @@ export function renderMainMenuIntro(options: MainMenuIntroOptions): string {
         }
 
         if (options.context === 'worktree') {
-            return 'Current-realm tools appear alongside the usual routes for this worktree.';
+            return 'Current-realm tools appear first for this worktree.';
         }
 
         return 'Create, enter, inspect, or tend your worktrees.';

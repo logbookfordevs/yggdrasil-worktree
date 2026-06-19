@@ -40,7 +40,7 @@ describe('terminal UI', () => {
     it('renders a worktree-specific intro for regular worktrees', () => {
         const intro = renderMainMenuIntro({ context: 'worktree' });
 
-        expect(intro).toContain('Current-realm tools appear alongside the usual routes');
+        expect(intro).toContain('Current-realm tools appear first');
     });
 
     it('formats menu choices with a glyph rail, label, and detail', () => {

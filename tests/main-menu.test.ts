@@ -19,14 +19,13 @@ describe('main menu entries', () => {
         expect(actionsFor('sandbox').slice(0, 2)).toEqual(['apply', 'unapply']);
     });
 
-    it('keeps regular worktree menus additive instead of restrictive', () => {
+    it('prioritizes current-realm actions inside a regular worktree', () => {
         const actions = actionsFor('worktree');
 
-        expect(actions.slice(0, 5)).toEqual(actionsFor('main').slice(0, 5));
+        expect(actions.slice(0, 4)).toEqual(['copy-env', 'path', 'exec', 'bootstrap']);
         expect(actions).toContain('create-smart');
         expect(actions).toContain('worktree-checkout');
         expect(actions).toContain('create-sandbox');
-        expect(actions).toContain('copy-env');
     });
 
     it('only shows current-realm env actions inside a regular worktree', () => {

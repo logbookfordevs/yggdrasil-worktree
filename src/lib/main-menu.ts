@@ -75,13 +75,13 @@ export function buildMainMenuEntries(context: MainMenuContext): MainMenuEntry[] 
 
     if (context === 'worktree') {
         return [
+            ...actions(['copy-env', 'path', 'exec', 'bootstrap']),
+            separator('Daily routes'),
             ...dailyChoices,
             separator('Growth and experiments'),
             ...growthChoices,
             separator('Tend realms'),
-            ...tendingChoices,
-            separator('Current realm'),
-            ...actions(['copy-env']),
+            ...actions(['delete', 'prune']),
             separator('Lore'),
             ...loreChoices,
         ];

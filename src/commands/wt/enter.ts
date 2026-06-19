@@ -45,11 +45,11 @@ function formatChoiceLabel(type: WorktreeType, branchName: string, displayPath: 
 
 export async function enterCommand(wtName?: string, options: { exec?: string } = {}) {
     try {
-        await ensureRepoContext();
+        const repoRoot = await ensureRepoContext();
 
         const worktrees = await listWorktrees();
         const mainWorktreePath = worktrees[0]?.path || '';
-        const managedRoot = await getManagedWorktreesRoot();
+        const managedRoot = await getManagedWorktreesRoot(repoRoot);
 
         if (worktrees.length === 0) {
             log.info('No worktrees found.');

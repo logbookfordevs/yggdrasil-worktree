@@ -57,9 +57,9 @@ const commandCodeClass = `block max-w-full whitespace-normal break-words ${monoF
 const flagTermClass = `${monoFaceClass} text-[0.8125rem] font-medium leading-6 text-gold-rune/95`;
 const flagDescriptionClass = 'text-[0.9375rem] leading-6 text-parchment/70 [text-wrap:pretty]';
 const sectionClass = 'border-t border-gold-rune/12 py-14';
-const exampleShellClass =
-  'min-w-0 rounded-lg border border-gold-rune/16 bg-mist-green/16 p-4 transition-colors hover:border-gold-rune/28 hover:bg-mist-green/22 sm:p-5';
-const referenceShellClass = 'min-w-0 rounded-lg border border-gold-rune/14 bg-deep-forest/45 p-4 sm:p-5';
+const exampleShellClass = 'min-w-0 border-t border-gold-rune/10 py-5 first:border-t-0 first:pt-0';
+const referenceShellClass = 'min-w-0 border-t border-gold-rune/14 pt-6 first:border-t-0 first:pt-0';
+const safetyNoteClass = `border-t border-gold-rune/10 py-4 ${bodyPanelClass}`;
 
 const workflowChoices: WorkflowChoice[] = [
   {
@@ -98,11 +98,6 @@ const agentExamples = [
     detail:
       'Use this when your agent runtime supports targeted skill installs and you want the compact Yggtree workflow guide.',
   },
-  {
-    title: 'Target Codex directly',
-    command: 'npx skills add logbookfordevs/yggdrasil-worktree --agent codex',
-    detail: 'Useful for Codex setups that support agent-specific skill installation.',
-  },
 ];
 
 const creationExamples = [
@@ -118,14 +113,9 @@ const creationExamples = [
     detail: 'Use this for reviewable task work when you already know the branch name.',
   },
   {
-    title: 'Create and return without setup or editor launch',
-    command: 'yggtree create feat/docs-pass --no-bootstrap --no-open --no-enter',
-    detail: 'Useful for automation or when you want to inspect the worktree path before installing dependencies.',
-  },
-  {
-    title: 'Run an explicit startup command',
-    command: 'yggtree create feat/ui-polish --exec "code ."',
-    detail: '`--exec` is the advanced escape hatch when the normal editor picker is not specific enough.',
+    title: 'Use an agent-native path once',
+    command: 'yggtree create feat/agent-native --config claude',
+    detail: '`--config` changes the path preset for this run only; it does not update the saved global config.',
   },
 ];
 
@@ -141,16 +131,9 @@ const checkoutExamples = [
     detail: 'Good for scripts: create or reuse the checkout, skip tools, and return to the caller.',
   },
   {
-    title: 'Open a terminal target after checkout',
-    command: 'yggtree wc hotfix-auth main --tool tmux',
-    detail:
-      '`--tool` accepts editors, apps, and terminal targets such as `codex-app`, `cmux`, or `tmux`, then enters the worktree shell unless `--no-enter` is set.',
-  },
-  {
-    title: 'Open one target but stay in the current shell',
-    command: 'yggtree wc hotfix-auth main --open --no-enter',
-    detail:
-      'Use this when the command should prepare a worktree, run one open action, and return. The picker is single-select, so Enter chooses the highlighted editor, app, terminal target, or `Other command...`.',
+    title: 'Override the active path preset once',
+    command: 'yggtree wc fresh-main main --config yggtree --no-open --no-enter',
+    detail: 'Useful when the global preset is Claude or Codex but this checkout should use the classic Yggtree root.',
   },
 ];
 
@@ -168,19 +151,9 @@ const openExamples = [
       '`--tool` skips the picker. Codex App can be addressed as `codex` or `codex-app`; Yggtree launches it with `codex app <path>` so the selected worktree becomes the active project.',
   },
   {
-    title: 'Open a terminal target directly',
-    command: 'yggtree open feat/new-ui --tool cmux',
-    detail: '`--tool cmux` or `--tool tmux` opens the worktree in that terminal target without showing the picker.',
-  },
-  {
-    title: 'Open tools and continue in the shell',
+    title: 'Open and continue in the shell',
     command: 'yggtree open feat/new-ui --tool code --enter',
     detail: '`open` returns by default. Add `--enter` when opening should continue into the worktree shell.',
-  },
-  {
-    title: 'Open from the worktree list',
-    command: 'yggtree list --open',
-    detail: 'Switches the list command into the same pick-and-open flow without printing the table first.',
   },
 ];
 
@@ -200,11 +173,6 @@ const sandboxExamples = [
     command: 'yggtree apply',
     detail: 'Run inside the sandbox. Yggtree copies changed files to origin and stores backups in sandbox metadata.',
   },
-  {
-    title: 'Undo an apply while the sandbox still exists',
-    command: 'yggtree unapply',
-    detail: 'Restores the origin files from the sandbox backup created by `apply`.',
-  },
 ];
 
 const commandGroups = [
@@ -223,6 +191,7 @@ const commandGroups = [
           flag('--open / --no-open', 'Choose whether to open an editor after creation.'),
           flag('--enter / --no-enter', 'Choose whether to enter the worktree shell after creation.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
+          flag('--config <preset>', 'Use `yggtree`, `codex`, or `claude` path settings for this run only.'),
         ],
       },
       {
@@ -240,6 +209,7 @@ const commandGroups = [
           ),
           flag('--no-enter', 'Do not enter the worktree shell after checkout.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
+          flag('--config <preset>', 'Use `yggtree`, `codex`, or `claude` path settings for this run only.'),
         ],
       },
       {
@@ -255,6 +225,7 @@ const commandGroups = [
           flag('--base <ref>', 'Base ref.'),
           flag('--source <type>', 'Local or remote.'),
           flag('--no-bootstrap', 'Skip setup commands.'),
+          flag('--config <preset>', 'Use `yggtree`, `codex`, or `claude` path settings for this run only.'),
         ],
       },
     ],
@@ -308,10 +279,13 @@ const commandGroups = [
         ],
       },
       {
-        command: 'yggtree delete',
-        description: 'Delete managed worktrees interactively.',
+        command: 'yggtree delete [worktrees...]',
+        description:
+          'Delete managed worktrees interactively, or delete explicit worktree names non-interactively with `--yes`. Main and current worktrees are protected.',
         flags: [
-          flag('-a, --all', 'Include linked worktrees outside the configured managed root, excluding main and current safety cases.'),
+          flag('-a, --all', 'Include external worktrees labeled `LINKED` in `yggtree list`, excluding main and current safety cases.'),
+          flag('-y, --yes', 'Confirm deletion without prompts. Required for non-interactive deletion.'),
+          flag('Examples', '`yggtree delete my-feature --yes`; `yggtree delete external-feature --all --yes`.'),
         ],
       },
       {
@@ -334,6 +308,7 @@ const commandGroups = [
           flag('--no-bootstrap', 'Skip setup commands.'),
           flag('--open / --no-open', 'Choose whether to open an editor after creation.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
+          flag('--config <preset>', 'Use `yggtree`, `codex`, or `claude` path settings for this run only.'),
         ],
       },
       {
@@ -345,6 +320,7 @@ const commandGroups = [
           flag('--no-bootstrap', 'Skip setup commands.'),
           flag('--open / --no-open', 'Choose whether to open an editor after creation.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
+          flag('--config <preset>', 'Use `yggtree`, `codex`, or `claude` path settings for this run only.'),
         ],
       },
       {
@@ -373,8 +349,8 @@ const commandGroups = [
       {
         command: 'yggtree config use <preset>',
         description:
-          'Apply a bundled path preset. `codex` sets both the worktree root and Codex-style path layout; `default` and `yggtree` reset to the normal Yggtree layout.',
-        flags: [flag('Presets', 'Available presets: `default`, `yggtree`, and `codex`.')],
+          "Apply a bundled path preset. `claude` uses Claude Code's repo-local worktree directory, `codex` uses Codex's global worktree root, and `default` or `yggtree` reset to the normal Yggtree layout.",
+        flags: [flag('Presets', 'Available presets: `default`, `yggtree`, `codex`, and `claude`.')],
       },
       {
         command: 'yggtree config set-worktrees-root <path>',
@@ -385,8 +361,8 @@ const commandGroups = [
       {
         command: 'yggtree config set-worktree-layout <layout>',
         description:
-          'Change only the path shape. Use this when you want a custom root with either Yggtree or Codex-style nesting.',
-        flags: [flag('Layouts', '`yggtree` uses `<root>/<repo>/<slug>`; `codex` uses `<root>/<slug>/<repo>`.')],
+          'Change only the path shape. Use this when you want a custom root with Yggtree, Codex, or Claude-style nesting.',
+        flags: [flag('Layouts', '`yggtree` uses `<root>/<repo>/<slug>`; `codex` uses `<root>/<slug>/<repo>`; `claude` uses `<root>/<slug>`.')],
       },
       {
         command: 'yggtree config reset',
@@ -516,7 +492,7 @@ export default function DocsPage() {
                 <section
                   id="workflows"
                   aria-labelledby="workflows-heading"
-                  className="min-w-0 scroll-mt-8 rounded-lg border border-gold-rune/18 bg-mist-green/14 p-4 sm:p-5"
+                  className="min-w-0 scroll-mt-8 border-t border-gold-rune/16 pt-5 xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0"
                 >
                   <h2
                     id="workflows-heading"
@@ -533,7 +509,7 @@ export default function DocsPage() {
                       <a
                         key={choice.href}
                         href={choice.href}
-                        className="group block rounded-md border border-gold-rune/12 bg-deep-forest/42 p-4 transition-colors hover:border-gold-rune/34 hover:bg-deep-forest/62 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-rune/55"
+                        className="group block border-t border-gold-rune/10 py-4 first:border-t-0 first:pt-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-rune/55"
                       >
                         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                           <h3 className={exampleTitleClass}>{choice.title}</h3>
@@ -750,20 +726,29 @@ export default function DocsPage() {
                       </p>
                       <CommandBlock command="yggtree config use codex" className="mt-4" />
                     </div>
+                    <div>
+                      <h3 className={exampleTitleClass}>Claude-style layout</h3>
+                      <p className={`mt-2 ${noteClass}`}>
+                        Use the Claude preset when you want new Yggtree worktrees in Claude Code&apos;s repo-local
+                        directory: `&lt;repo-root&gt;/.claude/worktrees/&lt;worktree-slug&gt;`.
+                      </p>
+                      <CommandBlock command="yggtree config use claude" className="mt-4" />
+                    </div>
                   </div>
 
-                  <div className="mt-5 grid gap-3 rounded-md border border-gold-rune/10 bg-deep-forest/45 p-4">
+                  <div className="mt-5 grid gap-3 border-t border-gold-rune/10 pt-4">
                     <p className={bodyPanelClass}>
                       `use` applies a preset bundle. `set-worktree-layout` changes only the path shape and keeps the
                       current root.
                     </p>
                     <CommandBlock command="yggtree config set-worktrees-root ~/Worktrees" />
                     <CommandBlock command="yggtree config set-worktree-layout codex" />
+                    <CommandBlock command="yggtree create feat/agent-native --config claude" />
                     <CommandBlock command="yggtree config reset" />
                   </div>
                   <p className={`mt-4 ${noteClass}`}>
-                    Claude and Cursor presets are intentionally not listed until their native worktree directory pattern
-                    is confirmed. Use `set-worktrees-root` for those tools when you already know the directory you want.
+                    Cursor presets are intentionally not listed until their native worktree directory pattern is
+                    confirmed. Use `set-worktrees-root` when you already know the directory you want.
                   </p>
                 </div>
               </div>
@@ -771,22 +756,22 @@ export default function DocsPage() {
 
             <section id="safety" className={sectionClass}>
               <h2 className={sectionTitleClass}>Safety notes</h2>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+              <div className="mt-6 grid gap-x-8 sm:grid-cols-2">
+                <p className={safetyNoteClass}>
                   Use <code className={`${monoFaceClass} text-sm text-gold-rune`}>create</code> for task branches. Use{' '}
                   <code className={`${monoFaceClass} text-sm text-gold-rune`}>create-sandbox</code> for disposable
                   alternatives, and <code className={`${monoFaceClass} text-sm text-gold-rune`}>handoff</code> for
                   continuing current dirty work in a sandbox.
                 </p>
-                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+                <p className={safetyNoteClass}>
                   Run <code className={`${monoFaceClass} text-sm text-gold-rune`}>unapply</code> before deleting a
                   sandbox if you may need to undo files copied back to the origin with `apply`.
                 </p>
-                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+                <p className={safetyNoteClass}>
                   Prefer <code className={`${monoFaceClass} text-sm text-gold-rune`}>worktree-checkout</code> over stash
                   when the current checkout contains work you do not want to disturb.
                 </p>
-                <p className={`rounded-lg border border-gold-rune/14 bg-mist-green/16 p-5 ${bodyPanelClass}`}>
+                <p className={safetyNoteClass}>
                   Use <code className={`${monoFaceClass} text-sm text-gold-rune`}>delete --all</code> carefully. It can
                   include linked worktrees outside the configured managed root, while still protecting the main and
                   current worktree.

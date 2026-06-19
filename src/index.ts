@@ -1,6 +1,7 @@
 import { Command, Option } from 'commander';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
+import { execa } from 'execa';
 import {
     formatMainMenuChoice,
     renderMainMenuIntro,
@@ -13,6 +14,7 @@ import {
     createHelp,
     createMultiHelp,
     createSandboxHelp,
+    deleteHelp,
     handoffHelp,
     intentRouterHelp,
     openHelp,
@@ -48,6 +50,7 @@ import { thorCommand } from './commands/thor.js';
 
 const program = new Command();
 const argv = process.argv.map((arg) => arg === '-v' || arg === '—version' ? '--version' : arg);
+const DOCS_URL = 'https://yggtree.logbookfordevs.com/docs';
 
 type MainMenuAction =
     | 'create-smart'
@@ -66,6 +69,7 @@ type MainMenuAction =
     | 'unapply'
     | 'bifrost'
     | 'thor'
+    | 'docs'
     | 'exit';
 
 function mainMenuChoice(
@@ -83,6 +87,25 @@ function mainMenuChoice(
 
 function mainMenuSeparator(label: string) {
     return new inquirer.Separator(chalk.dim(`  · ${label}`));
+}
+
+async function openDocs() {
+    const command = process.platform === 'darwin'
+        ? 'open'
+        : process.platform === 'win32'
+            ? 'cmd'
+            : 'xdg-open';
+    const args = process.platform === 'win32'
+        ? ['/c', 'start', '', DOCS_URL]
+        : [DOCS_URL];
+
+    try {
+        await execa(command, args, { stdio: 'ignore' });
+        log.success(`Opened docs: ${DOCS_URL}`);
+    } catch {
+        log.warning('Could not open the docs in your browser.');
+        log.info(DOCS_URL);
+    }
 }
 
 function registerWorktreeCommands(parent: Command) {
@@ -108,6 +131,7 @@ function registerWorktreeCommands(parent: Command) {
         .option('--enter', 'Enter the worktree sub-shell after creation')
         .option('--no-enter', 'Do not enter the worktree sub-shell after creation')
         .option('--exec <command>', 'Command to execute after creation')
+        .option('--config <preset>', 'Use a path preset for this run only (yggtree, codex, claude)')
         .addHelpText('after', createHelp)
         .action(async (branch, options) => {
             await createCommandNew({
@@ -121,6 +145,7 @@ function registerWorktreeCommands(parent: Command) {
         .option('--base <ref>', 'Base ref (e.g. main)')
         .option('--source <type>', 'Base source (local or remote)')
         .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .option('--config <preset>', 'Use a path preset for this run only (yggtree, codex, claude)')
         .addHelpText('after', createMultiHelp)
         .action(async (options) => {
             await createCommandMulti(options);
@@ -138,6 +163,7 @@ function registerWorktreeCommands(parent: Command) {
             .addOption(new Option('--enter', 'Enter the worktree sub-shell after checkout/opening').hideHelp())
             .option('--no-enter', 'Do not enter the worktree sub-shell after checkout/opening')
             .option('--exec <command>', 'Command to execute after creation')
+            .option('--config <preset>', 'Use a path preset for this run only (yggtree, codex, claude)')
             .addHelpText('after', checkoutHelp)
             .action(async (name, ref, options) => {
                 await createCommand({
@@ -151,11 +177,13 @@ function registerWorktreeCommands(parent: Command) {
     registerWorktreeCheckout('worktree-checkout', 'Create a checkout-style worktree from an existing branch');
     registerWorktreeCheckout('wc', 'Alias for worktree-checkout');
 
-    parent.command('delete')
+    parent.command('delete [worktrees...]')
         .description('Delete managed worktrees')
-        .option('-a, --all', 'Include repo-linked worktrees outside the managed root (except main/current)')
-        .action(async (options) => {
-            await deleteCommand(options);
+        .option('-a, --all', 'Include external LINKED worktrees outside the managed root (except main/current)')
+        .option('-y, --yes', 'Confirm deletion without prompts')
+        .addHelpText('after', deleteHelp)
+        .action(async (worktrees, options) => {
+            await deleteCommand(worktrees, options);
         });
 
     parent.command('open [worktree]')
@@ -201,6 +229,7 @@ function registerWorktreeCommands(parent: Command) {
         .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
         .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
         .option('--exec <command>', 'Command to execute after creation')
+        .option('--config <preset>', 'Use a path preset for this run only (yggtree, codex, claude)')
         .addHelpText('after', createSandboxHelp)
         .action(async (options) => {
             await createSandboxCommand(options);
@@ -215,6 +244,7 @@ function registerWorktreeCommands(parent: Command) {
         .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
         .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
         .option('--exec <command>', 'Command to execute after creation')
+        .option('--config <preset>', 'Use a path preset for this run only (yggtree, codex, claude)')
         .addHelpText('after', handoffHelp)
         .action(async (options) => {
             await handoffCommand(options);
@@ -284,6 +314,7 @@ program
         const loreChoices = [
             mainMenuChoice('bifrost', '✺', 'Summon the Bifrost', 'open the long way around', 'lore'),
             mainMenuChoice('thor', 'ϟ', 'Consult Thor', 'ask the thunder route', 'lore'),
+            mainMenuChoice('docs', '?', 'Open docs', 'read the Yggtree documentation', 'tending'),
             mainMenuChoice('exit', '·', 'Leave Yggdrasil', 'exit without changing anything', 'exit'),
         ];
 
@@ -372,6 +403,9 @@ program
             case 'thor':
                 await thorCommand();
                 break;
+            case 'docs':
+                await openDocs();
+                break;
             case 'exit':
                 log.info('Bye! 👋');
                 process.exit(0);
@@ -398,13 +432,13 @@ config.command('get')
     .description('Show resolved global settings')
     .action(configGetCommand);
 config.command('use <preset>')
-    .description('Use a global worktree path preset (default, yggtree, codex)')
+    .description('Use a global worktree path preset (default, yggtree, codex, claude)')
     .action(configUseCommand);
 config.command('set-worktrees-root <path>')
     .description('Set the global managed worktrees root')
     .action(configSetWorktreesRootCommand);
 config.command('set-worktree-layout <layout>')
-    .description('Set the managed worktree path layout (yggtree or codex)')
+    .description('Set the managed worktree path layout (yggtree, codex, or claude)')
     .action(configSetWorktreeLayoutCommand);
 config.command('reset')
     .description('Reset global settings to defaults')

@@ -13,6 +13,7 @@ interface MultiCreateOptions {
     base?: string;
     bootstrap: boolean;
     source?: 'local' | 'remote';
+    config?: string;
 }
 
 export async function createCommandMulti(options: MultiCreateOptions) {
@@ -86,7 +87,7 @@ export async function createCommandMulti(options: MultiCreateOptions) {
 
         // 3. Execution for each branch
         const repoName = await getRepoName();
-        const worktreePathConfig = await getWorktreePathConfig();
+        const worktreePathConfig = await getWorktreePathConfig(repoRoot, options.config);
         for (const branchName of branchNames) {
             const slug = branchName.replace(/[\/\\]/g, '-').replace(/\s+/g, '-');
             const wtPath = buildManagedWorktreePath(repoName, slug, worktreePathConfig);

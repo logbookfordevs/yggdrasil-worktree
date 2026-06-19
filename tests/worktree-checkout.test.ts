@@ -11,7 +11,7 @@ import {
     listBranchCandidates,
 } from '../src/commands/wt/create.js';
 import { parseWorktreeList } from '../src/lib/git.js';
-import { buildManagedWorktreePath } from '../src/lib/global-config.js';
+import { buildManagedWorktreePath, getWorktreePathConfig, readGlobalConfig, writeGlobalConfig } from '../src/lib/global-config.js';
 import { isManagedWorktreePath } from '../src/lib/worktree.js';
 
 const exec = promisify(execFile);
@@ -116,7 +116,7 @@ describe('create command shell entry', () => {
 });
 
 describe('managed worktree path config', () => {
-    it('builds default and Codex-style managed worktree paths', () => {
+    it('builds default, Codex-style, and Claude-style managed worktree paths', () => {
         expect(buildManagedWorktreePath('repo', 'feature-login', {
             root: '/tmp/.yggtree',
             layout: 'yggtree',
@@ -126,11 +126,51 @@ describe('managed worktree path config', () => {
             root: '/tmp/.codex/worktrees',
             layout: 'codex',
         })).toBe(path.join('/tmp/.codex/worktrees', 'feature-login', 'repo'));
+
+        expect(buildManagedWorktreePath('repo', 'feature-login', {
+            root: '/tmp/repo/.claude/worktrees',
+            layout: 'claude',
+        })).toBe(path.join('/tmp/repo/.claude/worktrees', 'feature-login'));
     });
 
     it('matches managed roots on path boundaries only', () => {
         expect(isManagedWorktreePath('/tmp/ygg/repo/feature-login', '/tmp/ygg')).toBe(true);
         expect(isManagedWorktreePath('/tmp/ygg-old/repo/feature-login', '/tmp/ygg')).toBe(false);
+    });
+
+    it('resolves the Claude preset root inside the current repo', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-claude-config-'));
+
+        try {
+            await writeGlobalConfig({ worktreeLayout: 'claude' });
+            const config = await getWorktreePathConfig(tmp);
+
+            expect(config).toEqual({
+                root: path.join(tmp, '.claude', 'worktrees'),
+                layout: 'claude',
+            });
+        } finally {
+            await writeGlobalConfig({});
+            await rm(tmp, { recursive: true, force: true });
+        }
+    });
+
+    it('uses a one-time path preset without changing saved config', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-one-time-config-'));
+
+        try {
+            await writeGlobalConfig({ worktreeLayout: 'claude' });
+            const config = await getWorktreePathConfig(tmp, 'codex');
+
+            expect(config).toEqual({
+                root: path.join(os.homedir(), '.codex', 'worktrees'),
+                layout: 'codex',
+            });
+            expect(await readGlobalConfig()).toEqual({ worktreeLayout: 'claude' });
+        } finally {
+            await writeGlobalConfig({});
+            await rm(tmp, { recursive: true, force: true });
+        }
     });
 });
 
@@ -226,6 +266,7 @@ describe('worktree checkout CLI', () => {
             const repo = await createBranchCandidateRepo(tmp);
             const home = path.join(tmp, 'home');
             await mkdir(home);
+            const realHome = await realpath(home);
 
             await exec(
                 'node',
@@ -245,19 +286,79 @@ describe('worktree checkout CLI', () => {
                     env: {
                         ...process.env,
                         CI: 'true',
-                        HOME: home,
+                        HOME: realHome,
                     },
                     timeout: 15_000,
                 },
             );
 
-            const worktreePath = path.join(home, '.yggtree', 'repo', 'remote-only-checkout');
+            const worktreePath = path.join(realHome, '.yggtree', 'repo', 'remote-only-checkout');
             const { stdout } = await exec('git', ['branch', '--show-current'], { cwd: worktreePath });
             expect(stdout.trim()).toBe('remote-only');
         } finally {
             await rm(tmp, { recursive: true, force: true });
         }
     });
+
+    it('can delete a named worktree non-interactively', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-delete-cli-'));
+
+        try {
+            const repo = await createBranchCandidateRepo(tmp);
+            const home = path.join(tmp, 'home');
+            await mkdir(home);
+            const realHome = await realpath(home);
+
+            await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'wc',
+                    '--ref',
+                    'remote-only',
+                    '--name',
+                    'remote-only-checkout',
+                    '--no-open',
+                    '--no-enter',
+                    '--no-bootstrap',
+                ],
+                {
+                    cwd: repo,
+                    env: {
+                        ...process.env,
+                        CI: 'true',
+                        HOME: realHome,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            const worktreePath = path.join(realHome, '.yggtree', 'repo', 'remote-only-checkout');
+            await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'delete',
+                    'remote-only-checkout',
+                    '--yes',
+                ],
+                {
+                    cwd: repo,
+                    env: {
+                        ...process.env,
+                        CI: 'true',
+                        HOME: realHome,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            const { stdout } = await exec('git', ['worktree', 'list', '--porcelain'], { cwd: repo });
+            expect(stdout).not.toContain(worktreePath);
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    }, 15_000);
 
     it('reports occupied worktree slug paths before git worktree add runs', async () => {
         const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-path-collision-cli-'));

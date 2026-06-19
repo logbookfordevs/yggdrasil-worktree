@@ -103,6 +103,13 @@ yggtree unapply
 Apply stores backups in sandbox metadata, so deleting the sandbox removes the
 history needed to undo the transfer.
 
+For automation that intentionally deletes a known sandbox or worktree, pass the
+target and `--yes`:
+
+```bash
+yggtree delete sandbox-my-test --yes
+```
+
 Source: `src/commands/wt/apply.ts`
 
 ### HIGH Expecting sandbox carry to include everything automatically

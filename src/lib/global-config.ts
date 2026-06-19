@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { YGG_ROOT } from './paths.js';
 
-export type WorktreeLayout = 'yggtree' | 'codex';
+export type WorktreeLayout = 'yggtree' | 'codex' | 'claude';
 
 export interface GlobalConfig {
     worktreesRoot?: string;
@@ -31,8 +31,12 @@ export function formatHome(value: string): string {
     return value;
 }
 
-function normalizeRoot(value?: string): string {
-    return path.resolve(expandHome(value || YGG_ROOT));
+function normalizeRoot(value: string | undefined, layout: WorktreeLayout, repoRoot?: string): string {
+    if (value) return path.resolve(expandHome(value));
+    if (layout === 'claude') {
+        return path.join(path.resolve(repoRoot || process.cwd()), '.claude', 'worktrees');
+    }
+    return path.resolve(YGG_ROOT);
 }
 
 export function normalizeWorktreesRootInput(value: string): string {
@@ -43,13 +47,17 @@ function normalizeLayout(value?: WorktreeLayout): WorktreeLayout {
     return value || DEFAULT_WORKTREE_LAYOUT;
 }
 
+function isWorktreeLayout(value: unknown): value is WorktreeLayout {
+    return value === 'yggtree' || value === 'codex' || value === 'claude';
+}
+
 export async function readGlobalConfig(): Promise<GlobalConfig> {
     try {
         if (await fs.pathExists(CONFIG_PATH)) {
             const config = await fs.readJSON(CONFIG_PATH) as GlobalConfig;
             return {
                 worktreesRoot: typeof config.worktreesRoot === 'string' ? config.worktreesRoot : undefined,
-                worktreeLayout: config.worktreeLayout === 'codex' ? 'codex' : undefined,
+                worktreeLayout: isWorktreeLayout(config.worktreeLayout) ? config.worktreeLayout : undefined,
             };
         }
     } catch {
@@ -64,22 +72,34 @@ export async function writeGlobalConfig(config: GlobalConfig): Promise<void> {
     await fs.writeJSON(CONFIG_PATH, config, { spaces: 2 });
 }
 
-export async function getWorktreePathConfig(): Promise<WorktreePathConfig> {
-    const config = await readGlobalConfig();
+export async function getWorktreePathConfig(repoRoot?: string, presetOverride?: string): Promise<WorktreePathConfig> {
+    const config = presetOverride === undefined
+        ? await readGlobalConfig()
+        : getPresetConfig(presetOverride);
+
+    if (!config) {
+        throw new Error(`Unknown config preset "${presetOverride}". Available presets: default, yggtree, codex, claude.`);
+    }
+
+    const layout = normalizeLayout(config.worktreeLayout);
     return {
-        root: normalizeRoot(config.worktreesRoot),
-        layout: normalizeLayout(config.worktreeLayout),
+        root: normalizeRoot(config.worktreesRoot, layout, repoRoot),
+        layout,
     };
 }
 
-export async function getManagedWorktreesRoot(): Promise<string> {
-    const config = await getWorktreePathConfig();
+export async function getManagedWorktreesRoot(repoRoot?: string): Promise<string> {
+    const config = await getWorktreePathConfig(repoRoot);
     return config.root;
 }
 
 export function buildManagedWorktreePath(repoName: string, worktreeSlug: string, config: WorktreePathConfig): string {
     if (config.layout === 'codex') {
         return path.join(config.root, worktreeSlug, repoName);
+    }
+
+    if (config.layout === 'claude') {
+        return path.join(config.root, worktreeSlug);
     }
 
     return path.join(config.root, repoName, worktreeSlug);
@@ -98,7 +118,20 @@ export function getPresetConfig(preset: string): GlobalConfig | undefined {
         };
     }
 
+    if (normalized === 'claude') {
+        return {
+            worktreeLayout: 'claude',
+        };
+    }
+
     return undefined;
+}
+
+function inferPreset(config: GlobalConfig): string {
+    if (!config.worktreesRoot && !config.worktreeLayout) return 'default';
+    if (!config.worktreesRoot && config.worktreeLayout === 'claude') return 'claude';
+    if (config.worktreesRoot === '~/.codex/worktrees' && config.worktreeLayout === 'codex') return 'codex';
+    return 'custom';
 }
 
 export function formatGlobalConfig(config: GlobalConfig, resolved: WorktreePathConfig): string[] {
@@ -106,8 +139,6 @@ export function formatGlobalConfig(config: GlobalConfig, resolved: WorktreePathC
         `worktreesRoot: ${formatHome(resolved.root)}`,
         `worktreeLayout: ${resolved.layout}`,
         `configFile: ${formatHome(CONFIG_PATH)}`,
-        config.worktreesRoot || config.worktreeLayout
-            ? 'preset: custom'
-            : 'preset: default',
+        `preset: ${inferPreset(config)}`,
     ];
 }

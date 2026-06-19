@@ -31,6 +31,13 @@ only the reference file for that path.
   `references/sandbox-experiments.md`.
 - **Prepare or act inside a realm:** use `bootstrap`, `open`, or `exec` only
   after the target worktree is known. Read `references/realm-lifecycle.md`.
+- **Agent-native worktree paths:** use `yggtree config use claude` when new
+  Yggtree worktrees should live in Claude Code's repo-local
+  `.claude/worktrees/<slug>` layout, or `yggtree config use codex` for
+  `~/.codex/worktrees/<slug>/<repo>` paths.
+- **One-time path override:** add `--config claude`, `--config codex`, or
+  `--config yggtree` to create-style commands when only that run should use a
+  different path preset. This does not change `yggtree config get`.
 
 ## Default Decision Rules
 
@@ -50,6 +57,9 @@ only the reference file for that path.
 - Prefer `open` for IDE-style opening that returns by default; add `--enter`
   only when editor/app launch should continue into a worktree shell.
 - Prefer `exec` for simple non-interactive process launch inside a chosen realm.
+- For non-interactive deletion, pass explicit targets and `--yes`; add `--all`
+  only when deleting an external worktree that appears as `LINKED` in
+  `yggtree list`.
 - Expect interactive creation flows to offer opt-in local `.env` file copying
   before bootstrap; skip or disable it for scripted/non-interactive runs unless
   the user explicitly asks to carry local environment files.
@@ -75,6 +85,12 @@ yggtree open my-feature --tool codex
 yggtree open my-feature --tool codex-app
 yggtree list --open
 yggtree exec my-feature codex --approval-mode auto
+yggtree delete my-feature --yes
+yggtree delete external-feature --all --yes
+yggtree config use claude
+yggtree config use codex
+yggtree create feat/agent-native --base main --source remote --config claude
+yggtree wc --ref main --name fresh-main --config yggtree
 ```
 
 ## Common Mistakes

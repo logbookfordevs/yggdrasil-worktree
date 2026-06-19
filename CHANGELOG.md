@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - `yggtree config use claude` now creates new managed worktrees in Claude Code's native repo-local `.claude/worktrees/<worktree-slug>` layout.
 - Create-style commands now accept `--config <preset>` to use `yggtree`, `codex`, or `claude` path settings for one run without changing the saved global config.
+- `yggtree delete` now supports non-interactive deletion with explicit worktree targets and `--yes`.
 
 ## [v1.4.5] - 2026-06-14
 

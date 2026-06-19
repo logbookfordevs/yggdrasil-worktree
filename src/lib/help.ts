@@ -7,6 +7,7 @@ Choose by intent:
   Copy sandbox files to origin  yggtree apply   # from inside sandbox, not a Git merge
   Bulk official worktrees       yggtree create-multi
   Agent-native path layout      yggtree config use claude   # or codex
+  Delete without prompts        yggtree delete branch-name --yes
 
 More detail: run yggtree help <command>, for example yggtree help handoff.
 `;
@@ -53,6 +54,19 @@ Examples:
   yggtree open my-feature --tool cursor
   yggtree open my-feature --tool codex-app
   yggtree list --open
+`;
+
+export const deleteHelp = `
+Behavior:
+  Deletes selected worktrees. Main and current worktrees are always protected.
+  Without arguments, delete stays interactive. For automation, pass explicit targets and --yes.
+  Add --all only when the target is outside Yggtree's managed root and appears as LINKED in list.
+
+Examples:
+  yggtree delete my-feature --yes
+  yggtree delete my-feature other-feature --yes
+  yggtree delete --all --yes
+  yggtree delete external-feature --all --yes
 `;
 
 export const createSandboxHelp = `

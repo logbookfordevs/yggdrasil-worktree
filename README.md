@@ -574,20 +574,31 @@ Re‑run bootstrap commands for a worktree.
 
 ---
 
-### `yggtree delete`
+### `yggtree delete [worktrees...]`
 
-Interactively delete worktrees.
+Delete worktrees interactively or by explicit name.
 
 Behavior:
 
 * Default flow targets managed worktrees.
 * In interactive mode, yggtree asks whether to include external linked worktrees.
-* In direct CLI usage, `--all` includes external linked worktrees (main/current are still excluded for safety).
+* In direct CLI usage, `--all` includes external worktrees labeled `LINKED` in `yggtree list` (main/current are still excluded for safety).
+* Non-interactive deletion requires explicit targets or `--all`, plus `--yes`.
 * The delete selector shows 6 items per page.
 
 Optional:
 
-* `--all` includes linked worktrees outside the configured managed root (main/current worktree is excluded for safety)
+* `--all` includes external worktrees outside the configured managed root (main/current worktree is excluded for safety)
+* `-y, --yes` confirms deletion without prompts
+
+Examples:
+
+```bash
+yggtree delete my-feature --yes
+yggtree delete my-feature other-feature --yes
+yggtree delete external-feature --all --yes
+yggtree delete --all --yes
+```
 
 ---
 

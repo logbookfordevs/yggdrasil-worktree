@@ -321,10 +321,13 @@ const commandGroups = [
         ],
       },
       {
-        command: 'yggtree delete',
-        description: 'Delete managed worktrees interactively.',
+        command: 'yggtree delete [worktrees...]',
+        description:
+          'Delete managed worktrees interactively, or delete explicit worktree names non-interactively with `--yes`. Main and current worktrees are protected.',
         flags: [
-          flag('-a, --all', 'Include linked worktrees outside the configured managed root, excluding main and current safety cases.'),
+          flag('-a, --all', 'Include external worktrees labeled `LINKED` in `yggtree list`, excluding main and current safety cases.'),
+          flag('-y, --yes', 'Confirm deletion without prompts. Required for non-interactive deletion.'),
+          flag('Examples', '`yggtree delete my-feature --yes`; `yggtree delete external-feature --all --yes`.'),
         ],
       },
       {

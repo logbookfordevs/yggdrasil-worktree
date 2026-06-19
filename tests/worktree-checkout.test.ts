@@ -266,6 +266,7 @@ describe('worktree checkout CLI', () => {
             const repo = await createBranchCandidateRepo(tmp);
             const home = path.join(tmp, 'home');
             await mkdir(home);
+            const realHome = await realpath(home);
 
             await exec(
                 'node',
@@ -285,19 +286,79 @@ describe('worktree checkout CLI', () => {
                     env: {
                         ...process.env,
                         CI: 'true',
-                        HOME: home,
+                        HOME: realHome,
                     },
                     timeout: 15_000,
                 },
             );
 
-            const worktreePath = path.join(home, '.yggtree', 'repo', 'remote-only-checkout');
+            const worktreePath = path.join(realHome, '.yggtree', 'repo', 'remote-only-checkout');
             const { stdout } = await exec('git', ['branch', '--show-current'], { cwd: worktreePath });
             expect(stdout.trim()).toBe('remote-only');
         } finally {
             await rm(tmp, { recursive: true, force: true });
         }
     });
+
+    it('can delete a named worktree non-interactively', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-delete-cli-'));
+
+        try {
+            const repo = await createBranchCandidateRepo(tmp);
+            const home = path.join(tmp, 'home');
+            await mkdir(home);
+            const realHome = await realpath(home);
+
+            await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'wc',
+                    '--ref',
+                    'remote-only',
+                    '--name',
+                    'remote-only-checkout',
+                    '--no-open',
+                    '--no-enter',
+                    '--no-bootstrap',
+                ],
+                {
+                    cwd: repo,
+                    env: {
+                        ...process.env,
+                        CI: 'true',
+                        HOME: realHome,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            const worktreePath = path.join(realHome, '.yggtree', 'repo', 'remote-only-checkout');
+            await exec(
+                'node',
+                [
+                    path.resolve('dist/index.js'),
+                    'delete',
+                    'remote-only-checkout',
+                    '--yes',
+                ],
+                {
+                    cwd: repo,
+                    env: {
+                        ...process.env,
+                        CI: 'true',
+                        HOME: realHome,
+                    },
+                    timeout: 15_000,
+                },
+            );
+
+            const { stdout } = await exec('git', ['worktree', 'list', '--porcelain'], { cwd: repo });
+            expect(stdout).not.toContain(worktreePath);
+        } finally {
+            await rm(tmp, { recursive: true, force: true });
+        }
+    }, 15_000);
 
     it('reports occupied worktree slug paths before git worktree add runs', async () => {
         const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-wc-path-collision-cli-'));

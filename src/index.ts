@@ -13,6 +13,7 @@ import {
     createHelp,
     createMultiHelp,
     createSandboxHelp,
+    deleteHelp,
     handoffHelp,
     intentRouterHelp,
     openHelp,
@@ -154,11 +155,13 @@ function registerWorktreeCommands(parent: Command) {
     registerWorktreeCheckout('worktree-checkout', 'Create a checkout-style worktree from an existing branch');
     registerWorktreeCheckout('wc', 'Alias for worktree-checkout');
 
-    parent.command('delete')
+    parent.command('delete [worktrees...]')
         .description('Delete managed worktrees')
-        .option('-a, --all', 'Include repo-linked worktrees outside the managed root (except main/current)')
-        .action(async (options) => {
-            await deleteCommand(options);
+        .option('-a, --all', 'Include external LINKED worktrees outside the managed root (except main/current)')
+        .option('-y, --yes', 'Confirm deletion without prompts')
+        .addHelpText('after', deleteHelp)
+        .action(async (worktrees, options) => {
+            await deleteCommand(worktrees, options);
         });
 
     parent.command('open [worktree]')

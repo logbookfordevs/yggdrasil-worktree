@@ -57,6 +57,9 @@ only the reference file for that path.
 - Prefer `open` for IDE-style opening that returns by default; add `--enter`
   only when editor/app launch should continue into a worktree shell.
 - Prefer `exec` for simple non-interactive process launch inside a chosen realm.
+- For non-interactive deletion, pass explicit targets and `--yes`; add `--all`
+  only when deleting an external worktree that appears as `LINKED` in
+  `yggtree list`.
 - Expect interactive creation flows to offer opt-in local `.env` file copying
   before bootstrap; skip or disable it for scripted/non-interactive runs unless
   the user explicitly asks to carry local environment files.
@@ -82,6 +85,8 @@ yggtree open my-feature --tool codex
 yggtree open my-feature --tool codex-app
 yggtree list --open
 yggtree exec my-feature codex --approval-mode auto
+yggtree delete my-feature --yes
+yggtree delete external-feature --all --yes
 yggtree config use claude
 yggtree config use codex
 yggtree create feat/agent-native --base main --source remote --config claude

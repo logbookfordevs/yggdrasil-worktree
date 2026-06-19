@@ -23,12 +23,24 @@ describe('terminal UI', () => {
     });
 
     it('renders a route intro before the main menu question', () => {
-        const intro = renderMainMenuIntro({ isInSandbox: false });
+        const intro = renderMainMenuIntro({ context: 'main' });
 
         expect(intro).toContain('Choose the next realm action.');
         expect(intro).toContain('route 01');
         expect(intro).toContain('Realm');
         expect(intro).toContain('Create, enter, inspect, or tend your worktrees.');
+    });
+
+    it('renders a sandbox-specific intro when sandbox actions are available', () => {
+        const intro = renderMainMenuIntro({ context: 'sandbox' });
+
+        expect(intro).toContain('Sandbox tools appear first');
+    });
+
+    it('renders a worktree-specific intro for regular worktrees', () => {
+        const intro = renderMainMenuIntro({ context: 'worktree' });
+
+        expect(intro).toContain('Current-realm tools appear alongside the usual routes');
     });
 
     it('formats menu choices with a glyph rail, label, and detail', () => {

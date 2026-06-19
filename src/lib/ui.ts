@@ -21,7 +21,7 @@ interface WelcomeOptions {
 }
 
 interface MainMenuIntroOptions {
-    isInSandbox: boolean;
+    context: 'main' | 'worktree' | 'sandbox';
 }
 
 interface MainMenuChoiceOptions {
@@ -65,9 +65,17 @@ export const welcome = async (options: WelcomeOptions = {}) => {
 };
 
 export function renderMainMenuIntro(options: MainMenuIntroOptions): string {
-    const detail = options.isInSandbox
-        ? 'Sandbox tools appear first because this realm can apply or undo grafted changes.'
-        : 'Create, enter, inspect, or tend your worktrees.';
+    const detail = (() => {
+        if (options.context === 'sandbox') {
+            return 'Sandbox tools appear first because this realm can apply or undo grafted changes.';
+        }
+
+        if (options.context === 'worktree') {
+            return 'Current-realm tools appear alongside the usual routes for this worktree.';
+        }
+
+        return 'Create, enter, inspect, or tend your worktrees.';
+    })();
 
     return [
         'Choose the next realm action.',

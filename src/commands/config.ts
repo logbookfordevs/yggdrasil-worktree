@@ -26,7 +26,7 @@ export async function configUseCommand(preset: string) {
     const presetConfig = getPresetConfig(preset);
     if (!presetConfig) {
         log.error(`Unknown config preset "${preset}".`);
-        log.dim('Available presets: default, yggtree, codex');
+        log.dim('Available presets: default, yggtree, codex, claude');
         return;
     }
 
@@ -47,9 +47,9 @@ export async function configSetWorktreesRootCommand(root: string) {
 }
 
 export async function configSetWorktreeLayoutCommand(layout: WorktreeLayout) {
-    if (layout !== 'yggtree' && layout !== 'codex') {
+    if (layout !== 'yggtree' && layout !== 'codex' && layout !== 'claude') {
         log.error(`Unknown worktree layout "${layout}".`);
-        log.dim('Available layouts: yggtree, codex');
+        log.dim('Available layouts: yggtree, codex, claude');
         return;
     }
 

@@ -286,6 +286,18 @@ That preset creates new managed worktrees like:
 ~/.codex/worktrees/<worktree-slug>/<repo-name>
 ```
 
+Use the Claude Code layout when you want Yggtree-created worktrees to match Claude's native repo-local worktree directory:
+
+```bash
+yggtree config use claude
+```
+
+That preset creates new managed worktrees like:
+
+```bash
+<repo-root>/.claude/worktrees/<worktree-slug>
+```
+
 Set a custom managed root while keeping the Yggtree layout:
 
 ```bash
@@ -298,7 +310,14 @@ Return to defaults:
 yggtree config reset
 ```
 
-Claude and Cursor do not currently have a confirmed native worktree directory pattern in Yggtree. Until that is explicit, use `set-worktrees-root` with the directory you want rather than relying on an unverified preset.
+Use a path preset for one worktree without changing the saved global config:
+
+```bash
+yggtree create feat/agent-native --config claude
+yggtree wc --ref main --name fresh-main --config yggtree
+```
+
+Cursor does not currently have a confirmed native worktree directory pattern in Yggtree. Until that is explicit, use `set-worktrees-root` with the directory you want rather than relying on an unverified preset.
 
 ---
 
@@ -323,6 +342,7 @@ Options:
 * `--open / --no-open`
 * `--enter / --no-enter`
 * `--exec "<command>"`
+* `--config <preset>`: use `yggtree`, `codex`, or `claude` path settings for this run only
 
 Interactive flow:
 
@@ -364,6 +384,7 @@ Options:
 * `--tool <command>`: open a specific editor, app, or terminal target and skip the open prompt (`cursor`, `code`, `codex-app`, `cmux`, `tmux`)
 * `--no-enter`: finish after create/open and return to the caller
 * `--exec "<command>"`
+* `--config <preset>`: use `yggtree`, `codex`, or `claude` path settings for this run only
 
 Interactive flow:
 
@@ -401,6 +422,7 @@ Options:
 *   `--no-bootstrap`
 *   `--open / --no-open`
 *   `--exec "<command>"`
+*   `--config <preset>`: use `yggtree`, `codex`, or `claude` path settings for this run only
 
 Interactive flow:
 
@@ -420,6 +442,7 @@ Options:
 *   `--no-bootstrap`
 *   `--open / --no-open`
 *   `--exec "<command>"`
+*   `--config <preset>`: use `yggtree`, `codex`, or `claude` path settings for this run only
 
 This is the continuation-focused semantic path for dirty work. It uses sandbox metadata and apply/unapply behavior, but defaults to carrying staged, unstaged, and untracked files.
 
@@ -453,6 +476,7 @@ Options:
 * `--base <ref>`
 * `--source local|remote`
 * `--no-bootstrap`
+* `--config <preset>`: use `yggtree`, `codex`, or `claude` path settings for this run only
 
 <details>
 <summary>Example</summary>
@@ -550,20 +574,31 @@ Re‑run bootstrap commands for a worktree.
 
 ---
 
-### `yggtree delete`
+### `yggtree delete [worktrees...]`
 
-Interactively delete worktrees.
+Delete worktrees interactively or by explicit name.
 
 Behavior:
 
 * Default flow targets managed worktrees.
 * In interactive mode, yggtree asks whether to include external linked worktrees.
-* In direct CLI usage, `--all` includes external linked worktrees (main/current are still excluded for safety).
+* In direct CLI usage, `--all` includes external worktrees labeled `LINKED` in `yggtree list` (main/current are still excluded for safety).
+* Non-interactive deletion requires explicit targets or `--all`, plus `--yes`.
 * The delete selector shows 6 items per page.
 
 Optional:
 
-* `--all` includes linked worktrees outside the configured managed root (main/current worktree is excluded for safety)
+* `--all` includes external worktrees outside the configured managed root (main/current worktree is excluded for safety)
+* `-y, --yes` confirms deletion without prompts
+
+Examples:
+
+```bash
+yggtree delete my-feature --yes
+yggtree delete my-feature other-feature --yes
+yggtree delete external-feature --all --yes
+yggtree delete --all --yes
+```
 
 ---
 

@@ -22,6 +22,7 @@ interface SandboxCreateOptions {
     enter?: boolean;
     exec?: string;
     carry?: boolean;
+    config?: string;
 }
 
 export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
@@ -161,7 +162,7 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
 
         // 5. Create worktree
         const repoName = await getRepoName();
-        const worktreePathConfig = await getWorktreePathConfig();
+        const worktreePathConfig = await getWorktreePathConfig(repoRoot, options.config);
         const wtPath = buildManagedWorktreePath(repoName, sandboxName, worktreePathConfig);
 
         const spinner = createSpinner('Creating sandbox worktree...').start();

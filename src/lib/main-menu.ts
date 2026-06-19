@@ -16,6 +16,7 @@ export type MainMenuAction =
     | 'unapply'
     | 'bifrost'
     | 'thor'
+    | 'docs'
     | 'exit';
 
 export type MainMenuContext = 'main' | 'worktree' | 'sandbox';
@@ -54,6 +55,7 @@ export function buildMainMenuEntries(context: MainMenuContext): MainMenuEntry[] 
     const loreChoices = actions([
         'bifrost',
         'thor',
+        'docs',
         'exit',
     ]);
 

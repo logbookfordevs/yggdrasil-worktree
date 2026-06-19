@@ -6,6 +6,7 @@ interface HandoffOptions {
     open?: boolean;
     enter?: boolean;
     exec?: string;
+    config?: string;
 }
 
 export async function handoffCommand(options: HandoffOptions = {}) {

@@ -72,8 +72,15 @@ export async function writeGlobalConfig(config: GlobalConfig): Promise<void> {
     await fs.writeJSON(CONFIG_PATH, config, { spaces: 2 });
 }
 
-export async function getWorktreePathConfig(repoRoot?: string): Promise<WorktreePathConfig> {
-    const config = await readGlobalConfig();
+export async function getWorktreePathConfig(repoRoot?: string, presetOverride?: string): Promise<WorktreePathConfig> {
+    const config = presetOverride === undefined
+        ? await readGlobalConfig()
+        : getPresetConfig(presetOverride);
+
+    if (!config) {
+        throw new Error(`Unknown config preset "${presetOverride}". Available presets: default, yggtree, codex, claude.`);
+    }
+
     const layout = normalizeLayout(config.worktreeLayout);
     return {
         root: normalizeRoot(config.worktreesRoot, layout, repoRoot),

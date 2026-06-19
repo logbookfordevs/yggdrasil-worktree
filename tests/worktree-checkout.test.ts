@@ -11,7 +11,7 @@ import {
     listBranchCandidates,
 } from '../src/commands/wt/create.js';
 import { parseWorktreeList } from '../src/lib/git.js';
-import { buildManagedWorktreePath, getWorktreePathConfig, writeGlobalConfig } from '../src/lib/global-config.js';
+import { buildManagedWorktreePath, getWorktreePathConfig, readGlobalConfig, writeGlobalConfig } from '../src/lib/global-config.js';
 import { isManagedWorktreePath } from '../src/lib/worktree.js';
 
 const exec = promisify(execFile);
@@ -149,6 +149,24 @@ describe('managed worktree path config', () => {
                 root: path.join(tmp, '.claude', 'worktrees'),
                 layout: 'claude',
             });
+        } finally {
+            await writeGlobalConfig({});
+            await rm(tmp, { recursive: true, force: true });
+        }
+    });
+
+    it('uses a one-time path preset without changing saved config', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-one-time-config-'));
+
+        try {
+            await writeGlobalConfig({ worktreeLayout: 'claude' });
+            const config = await getWorktreePathConfig(tmp, 'codex');
+
+            expect(config).toEqual({
+                root: path.join(os.homedir(), '.codex', 'worktrees'),
+                layout: 'codex',
+            });
+            expect(await readGlobalConfig()).toEqual({ worktreeLayout: 'claude' });
         } finally {
             await writeGlobalConfig({});
             await rm(tmp, { recursive: true, force: true });

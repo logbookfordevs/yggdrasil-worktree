@@ -123,6 +123,11 @@ const creationExamples = [
     detail: 'Useful for automation or when you want to inspect the worktree path before installing dependencies.',
   },
   {
+    title: 'Use an agent-native path once',
+    command: 'yggtree create feat/agent-native --config claude',
+    detail: '`--config` changes the path preset for this run only; it does not update the saved global config.',
+  },
+  {
     title: 'Run an explicit startup command',
     command: 'yggtree create feat/ui-polish --exec "code ."',
     detail: '`--exec` is the advanced escape hatch when the normal editor picker is not specific enough.',
@@ -139,6 +144,11 @@ const checkoutExamples = [
     title: 'Checkout a known ref non-interactively',
     command: 'yggtree wc hotfix-auth main --no-open --no-enter',
     detail: 'Good for scripts: create or reuse the checkout, skip tools, and return to the caller.',
+  },
+  {
+    title: 'Override the active path preset once',
+    command: 'yggtree wc fresh-main main --config yggtree --no-open --no-enter',
+    detail: 'Useful when the global preset is Claude or Codex but this checkout should use the classic Yggtree root.',
   },
   {
     title: 'Open a terminal target after checkout',
@@ -223,6 +233,7 @@ const commandGroups = [
           flag('--open / --no-open', 'Choose whether to open an editor after creation.'),
           flag('--enter / --no-enter', 'Choose whether to enter the worktree shell after creation.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
+          flag('--config <preset>', 'Use `yggtree`, `codex`, or `claude` path settings for this run only.'),
         ],
       },
       {
@@ -240,6 +251,7 @@ const commandGroups = [
           ),
           flag('--no-enter', 'Do not enter the worktree shell after checkout.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
+          flag('--config <preset>', 'Use `yggtree`, `codex`, or `claude` path settings for this run only.'),
         ],
       },
       {
@@ -255,6 +267,7 @@ const commandGroups = [
           flag('--base <ref>', 'Base ref.'),
           flag('--source <type>', 'Local or remote.'),
           flag('--no-bootstrap', 'Skip setup commands.'),
+          flag('--config <preset>', 'Use `yggtree`, `codex`, or `claude` path settings for this run only.'),
         ],
       },
     ],
@@ -334,6 +347,7 @@ const commandGroups = [
           flag('--no-bootstrap', 'Skip setup commands.'),
           flag('--open / --no-open', 'Choose whether to open an editor after creation.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
+          flag('--config <preset>', 'Use `yggtree`, `codex`, or `claude` path settings for this run only.'),
         ],
       },
       {
@@ -345,6 +359,7 @@ const commandGroups = [
           flag('--no-bootstrap', 'Skip setup commands.'),
           flag('--open / --no-open', 'Choose whether to open an editor after creation.'),
           flag('--exec <command>', 'Run an explicit command after creation.'),
+          flag('--config <preset>', 'Use `yggtree`, `codex`, or `claude` path settings for this run only.'),
         ],
       },
       {
@@ -767,6 +782,7 @@ export default function DocsPage() {
                     </p>
                     <CommandBlock command="yggtree config set-worktrees-root ~/Worktrees" />
                     <CommandBlock command="yggtree config set-worktree-layout codex" />
+                    <CommandBlock command="yggtree create feat/agent-native --config claude" />
                     <CommandBlock command="yggtree config reset" />
                   </div>
                   <p className={`mt-4 ${noteClass}`}>

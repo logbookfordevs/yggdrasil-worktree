@@ -23,6 +23,7 @@ interface NewCreateOptions {
     enter?: boolean;
     source?: 'local' | 'remote';
     exec?: string;
+    config?: string;
 }
 
 export function shouldEnterCreatedWorktree(options: Pick<NewCreateOptions, 'enter'>): boolean {
@@ -109,7 +110,7 @@ export async function createCommandNew(options: NewCreateOptions) {
         // e.g. feat/new-button -> feat-new-button
         const slug = branchName.replace(/[\/\\]/g, '-').replace(/\s+/g, '-');
         const repoName = await getRepoName();
-        const worktreePathConfig = await getWorktreePathConfig(repoRoot);
+        const worktreePathConfig = await getWorktreePathConfig(repoRoot, options.config);
         const wtPath = buildManagedWorktreePath(repoName, slug, worktreePathConfig);
 
         // 2. Validation

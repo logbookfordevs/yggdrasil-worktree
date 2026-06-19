@@ -108,6 +108,7 @@ function registerWorktreeCommands(parent: Command) {
         .option('--enter', 'Enter the worktree sub-shell after creation')
         .option('--no-enter', 'Do not enter the worktree sub-shell after creation')
         .option('--exec <command>', 'Command to execute after creation')
+        .option('--config <preset>', 'Use a path preset for this run only (yggtree, codex, claude)')
         .addHelpText('after', createHelp)
         .action(async (branch, options) => {
             await createCommandNew({
@@ -121,6 +122,7 @@ function registerWorktreeCommands(parent: Command) {
         .option('--base <ref>', 'Base ref (e.g. main)')
         .option('--source <type>', 'Base source (local or remote)')
         .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .option('--config <preset>', 'Use a path preset for this run only (yggtree, codex, claude)')
         .addHelpText('after', createMultiHelp)
         .action(async (options) => {
             await createCommandMulti(options);
@@ -138,6 +140,7 @@ function registerWorktreeCommands(parent: Command) {
             .addOption(new Option('--enter', 'Enter the worktree sub-shell after checkout/opening').hideHelp())
             .option('--no-enter', 'Do not enter the worktree sub-shell after checkout/opening')
             .option('--exec <command>', 'Command to execute after creation')
+            .option('--config <preset>', 'Use a path preset for this run only (yggtree, codex, claude)')
             .addHelpText('after', checkoutHelp)
             .action(async (name, ref, options) => {
                 await createCommand({
@@ -201,6 +204,7 @@ function registerWorktreeCommands(parent: Command) {
         .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
         .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
         .option('--exec <command>', 'Command to execute after creation')
+        .option('--config <preset>', 'Use a path preset for this run only (yggtree, codex, claude)')
         .addHelpText('after', createSandboxHelp)
         .action(async (options) => {
             await createSandboxCommand(options);
@@ -215,6 +219,7 @@ function registerWorktreeCommands(parent: Command) {
         .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
         .addOption(new Option('--no-enter', 'Deprecated alias for --no-open').hideHelp())
         .option('--exec <command>', 'Command to execute after creation')
+        .option('--config <preset>', 'Use a path preset for this run only (yggtree, codex, claude)')
         .addHelpText('after', handoffHelp)
         .action(async (options) => {
             await handoffCommand(options);

@@ -310,6 +310,13 @@ Return to defaults:
 yggtree config reset
 ```
 
+Use a path preset for one worktree without changing the saved global config:
+
+```bash
+yggtree create feat/agent-native --config claude
+yggtree wc --ref main --name fresh-main --config yggtree
+```
+
 Cursor does not currently have a confirmed native worktree directory pattern in Yggtree. Until that is explicit, use `set-worktrees-root` with the directory you want rather than relying on an unverified preset.
 
 ---
@@ -335,6 +342,7 @@ Options:
 * `--open / --no-open`
 * `--enter / --no-enter`
 * `--exec "<command>"`
+* `--config <preset>`: use `yggtree`, `codex`, or `claude` path settings for this run only
 
 Interactive flow:
 
@@ -376,6 +384,7 @@ Options:
 * `--tool <command>`: open a specific editor, app, or terminal target and skip the open prompt (`cursor`, `code`, `codex-app`, `cmux`, `tmux`)
 * `--no-enter`: finish after create/open and return to the caller
 * `--exec "<command>"`
+* `--config <preset>`: use `yggtree`, `codex`, or `claude` path settings for this run only
 
 Interactive flow:
 
@@ -413,6 +422,7 @@ Options:
 *   `--no-bootstrap`
 *   `--open / --no-open`
 *   `--exec "<command>"`
+*   `--config <preset>`: use `yggtree`, `codex`, or `claude` path settings for this run only
 
 Interactive flow:
 
@@ -432,6 +442,7 @@ Options:
 *   `--no-bootstrap`
 *   `--open / --no-open`
 *   `--exec "<command>"`
+*   `--config <preset>`: use `yggtree`, `codex`, or `claude` path settings for this run only
 
 This is the continuation-focused semantic path for dirty work. It uses sandbox metadata and apply/unapply behavior, but defaults to carrying staged, unstaged, and untracked files.
 
@@ -465,6 +476,7 @@ Options:
 * `--base <ref>`
 * `--source local|remote`
 * `--no-bootstrap`
+* `--config <preset>`: use `yggtree`, `codex`, or `claude` path settings for this run only
 
 <details>
 <summary>Example</summary>

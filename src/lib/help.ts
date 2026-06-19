@@ -19,6 +19,7 @@ Behavior:
 Examples:
   yggtree create feat/new-flow --base main --source remote
   yggtree create feat/background-task --base main --source remote --no-open --no-enter
+  yggtree create feat/claude-layout --base main --source remote --config claude
 `;
 
 export const createMultiHelp = `
@@ -28,6 +29,7 @@ Behavior:
 
 Example:
   yggtree create-multi --base main --source remote
+  yggtree create-multi --base main --source remote --config codex
 `;
 
 export const checkoutHelp = `
@@ -39,6 +41,7 @@ Behavior:
 Examples:
   yggtree wc --ref hotfix/payment-timeout
   yggtree wc --ref main --name fresh-main --no-open --no-enter
+  yggtree wc --ref main --name fresh-main --config yggtree
 `;
 
 export const openHelp = `
@@ -60,6 +63,7 @@ Behavior:
 Examples:
   yggtree create-sandbox
   yggtree create-sandbox --name ui-option-a --no-open
+  yggtree create-sandbox --name claude-scratch --config claude
 
 Related:
   handoff carries current dirty work into a named sandbox.
@@ -73,6 +77,7 @@ Behavior:
 
 Example:
   yggtree handoff --name continue-auth-refactor
+  yggtree handoff --name continue-auth-refactor --config codex
 
 Related:
   create-sandbox starts a disposable local experiment.

@@ -35,6 +35,9 @@ only the reference file for that path.
   Yggtree worktrees should live in Claude Code's repo-local
   `.claude/worktrees/<slug>` layout, or `yggtree config use codex` for
   `~/.codex/worktrees/<slug>/<repo>` paths.
+- **One-time path override:** add `--config claude`, `--config codex`, or
+  `--config yggtree` to create-style commands when only that run should use a
+  different path preset. This does not change `yggtree config get`.
 
 ## Default Decision Rules
 
@@ -81,6 +84,8 @@ yggtree list --open
 yggtree exec my-feature codex --approval-mode auto
 yggtree config use claude
 yggtree config use codex
+yggtree create feat/agent-native --base main --source remote --config claude
+yggtree wc --ref main --name fresh-main --config yggtree
 ```
 
 ## Common Mistakes

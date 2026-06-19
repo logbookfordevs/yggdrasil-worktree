@@ -1,6 +1,7 @@
 import { Command, Option } from 'commander';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
+import { execa } from 'execa';
 import {
     formatMainMenuChoice,
     renderMainMenuIntro,
@@ -49,6 +50,7 @@ import { thorCommand } from './commands/thor.js';
 
 const program = new Command();
 const argv = process.argv.map((arg) => arg === '-v' || arg === '—version' ? '--version' : arg);
+const DOCS_URL = 'https://yggtree.logbookfordevs.com/docs';
 
 type MainMenuAction =
     | 'create-smart'
@@ -67,6 +69,7 @@ type MainMenuAction =
     | 'unapply'
     | 'bifrost'
     | 'thor'
+    | 'docs'
     | 'exit';
 
 function mainMenuChoice(
@@ -84,6 +87,25 @@ function mainMenuChoice(
 
 function mainMenuSeparator(label: string) {
     return new inquirer.Separator(chalk.dim(`  · ${label}`));
+}
+
+async function openDocs() {
+    const command = process.platform === 'darwin'
+        ? 'open'
+        : process.platform === 'win32'
+            ? 'cmd'
+            : 'xdg-open';
+    const args = process.platform === 'win32'
+        ? ['/c', 'start', '', DOCS_URL]
+        : [DOCS_URL];
+
+    try {
+        await execa(command, args, { stdio: 'ignore' });
+        log.success(`Opened docs: ${DOCS_URL}`);
+    } catch {
+        log.warning('Could not open the docs in your browser.');
+        log.info(DOCS_URL);
+    }
 }
 
 function registerWorktreeCommands(parent: Command) {
@@ -292,6 +314,7 @@ program
         const loreChoices = [
             mainMenuChoice('bifrost', '✺', 'Summon the Bifrost', 'open the long way around', 'lore'),
             mainMenuChoice('thor', 'ϟ', 'Consult Thor', 'ask the thunder route', 'lore'),
+            mainMenuChoice('docs', '?', 'Open docs', 'read the Yggtree documentation', 'tending'),
             mainMenuChoice('exit', '·', 'Leave Yggdrasil', 'exit without changing anything', 'exit'),
         ];
 
@@ -379,6 +402,9 @@ program
                 break;
             case 'thor':
                 await thorCommand();
+                break;
+            case 'docs':
+                await openDocs();
                 break;
             case 'exit':
                 log.info('Bye! 👋');

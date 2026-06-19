@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import { listWorktrees, removeWorktree, getRepoRoot, getLastActivity } from '../../lib/git.js';
+import { GitWorktree, listWorktrees, removeWorktree, getRepoRoot, getLastActivity } from '../../lib/git.js';
 import { getManagedWorktreesRoot } from '../../lib/global-config.js';
 import { log, createSpinner, timeAgo } from '../../lib/ui.js';
 import {
@@ -28,6 +28,40 @@ function matchesDeleteTarget(wtPath: string, branchName: string, displayPath: st
         displayPath,
         wtPath.split('/').pop() || '',
     ].some(value => normalizeTarget(value) === normalizedTarget);
+}
+
+interface ResolveDeleteWorktreesOptions {
+    includeAll: boolean;
+    currentWorktreePath: string;
+    mainWorktreePath?: string;
+    managedRoot: string;
+}
+
+function resolveDeleteWorktrees(
+    worktrees: GitWorktree[],
+    targets: string[],
+    options: ResolveDeleteWorktreesOptions,
+): GitWorktree[] {
+    const eligibleWts = worktrees.filter(wt => {
+        const isMainWorktree = wt.path === options.mainWorktreePath;
+        const isCurrentWorktree = wt.path === options.currentWorktreePath;
+        if (isMainWorktree || isCurrentWorktree) return false;
+
+        if (options.includeAll) {
+            return true;
+        }
+        return isManagedWorktreePath(wt.path, options.managedRoot);
+    });
+
+    if (targets.length === 0) {
+        return eligibleWts;
+    }
+
+    return eligibleWts.filter(wt => {
+        const branchName = getWorktreeBranchName(wt);
+        const displayPath = formatWorktreeDisplayPath(wt.path, options.managedRoot);
+        return targets.some(target => matchesDeleteTarget(wt.path, branchName, displayPath, target));
+    });
 }
 
 export async function deleteCommand(targets: string[] = [], options: DeleteOptions = {}) {
@@ -60,24 +94,12 @@ export async function deleteCommand(targets: string[] = [], options: DeleteOptio
         const includeAll = Boolean(showAll);
         const mainWorktreePath = worktrees[0]?.path;
 
-        const eligibleWts = worktrees.filter(wt => {
-            const isMainWorktree = wt.path === mainWorktreePath;
-            const isCurrentWorktree = wt.path === currentWorktreePath;
-            if (isMainWorktree || isCurrentWorktree) return false;
-
-            if (includeAll) {
-                return true;
-            }
-            return isManagedWorktreePath(wt.path, managedRoot);
+        const deletableWts = resolveDeleteWorktrees(worktrees, targets, {
+            includeAll,
+            currentWorktreePath,
+            mainWorktreePath,
+            managedRoot,
         });
-
-        const deletableWts = hasExplicitTargets
-            ? eligibleWts.filter(wt => {
-                const branchName = getWorktreeBranchName(wt);
-                const displayPath = formatWorktreeDisplayPath(wt.path, managedRoot);
-                return targets.some(target => matchesDeleteTarget(wt.path, branchName, displayPath, target));
-            })
-            : eligibleWts;
 
         if (deletableWts.length === 0) {
             if (hasExplicitTargets) {

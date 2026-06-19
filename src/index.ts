@@ -1,6 +1,7 @@
 import { Command, Option } from 'commander';
 import inquirer from 'inquirer';
 import chalk from 'chalk';
+import path from 'path';
 import { execa } from 'execa';
 import {
     formatMainMenuChoice,
@@ -35,6 +36,7 @@ import { openCommand } from './commands/wt/open.js';
 import { applyCommand } from './commands/wt/apply.js';
 import { unapplyCommand } from './commands/wt/unapply.js';
 import { handoffCommand } from './commands/wt/handoff.js';
+import { copyEnvCommand } from './commands/wt/copy-env.js';
 import {
     configGetCommand,
     configResetCommand,
@@ -47,30 +49,16 @@ import { checkForUpdate } from './lib/update-check.js';
 import { findSandboxRoot } from './lib/sandbox.js';
 import { bifrostCommand } from './commands/bifrost.js';
 import { thorCommand } from './commands/thor.js';
+import {
+    buildMainMenuEntries,
+    MainMenuAction,
+    MainMenuContext,
+} from './lib/main-menu.js';
+import { getRepoRoot, listWorktrees } from './lib/git.js';
 
 const program = new Command();
 const argv = process.argv.map((arg) => arg === '-v' || arg === '—version' ? '--version' : arg);
 const DOCS_URL = 'https://yggtree.logbookfordevs.com/docs';
-
-type MainMenuAction =
-    | 'create-smart'
-    | 'worktree-checkout'
-    | 'create-multi'
-    | 'handoff'
-    | 'create-sandbox'
-    | 'list'
-    | 'open'
-    | 'delete'
-    | 'bootstrap'
-    | 'prune'
-    | 'exec'
-    | 'path'
-    | 'apply'
-    | 'unapply'
-    | 'bifrost'
-    | 'thor'
-    | 'docs'
-    | 'exit';
 
 function mainMenuChoice(
     value: MainMenuAction,
@@ -87,6 +75,48 @@ function mainMenuChoice(
 
 function mainMenuSeparator(label: string) {
     return new inquirer.Separator(chalk.dim(`  · ${label}`));
+}
+
+const mainMenuChoices: Record<MainMenuAction, ReturnType<typeof mainMenuChoice>> = {
+    'create-smart': mainMenuChoice('create-smart', '◆', 'Grow new realm', 'create a branch-backed worktree', 'growth'),
+    'worktree-checkout': mainMenuChoice('worktree-checkout', '⇄', 'Check out branch', 'open an existing ref in a new realm', 'travel'),
+    handoff: mainMenuChoice('handoff', '✦', 'Hand off current work', 'carry dirty work into a named sandbox', 'sandbox'),
+    open: mainMenuChoice('open', '◇', 'Open realm', 'jump into an existing worktree', 'travel'),
+    list: mainMenuChoice('list', '○', 'Survey realms', 'scan active worktrees and PR state', 'tending'),
+    'create-multi': mainMenuChoice('create-multi', '✧', 'Grow many realms', 'create multiple branch worktrees', 'growth'),
+    'create-sandbox': mainMenuChoice('create-sandbox', '△', 'Forge sandbox', 'create a local experiment realm', 'sandbox'),
+    bootstrap: mainMenuChoice('bootstrap', '↳', 'Bootstrap realm', 'install dependencies and submodules', 'tending'),
+    exec: mainMenuChoice('exec', '⌁', 'Cast command', 'run a command inside a worktree', 'tending'),
+    path: mainMenuChoice('path', '⌖', 'Reveal path', 'print a worktree cd command', 'tending'),
+    'copy-env': mainMenuChoice('copy-env', '≋', 'Bring env files', 'copy local env files from main realm', 'tending'),
+    delete: mainMenuChoice('delete', '×', 'Fell realm', 'delete managed worktrees', 'danger'),
+    prune: mainMenuChoice('prune', '⌫', 'Prune stale realms', 'remove stale worktree metadata', 'danger'),
+    apply: mainMenuChoice('apply', '◆', 'Graft sandbox changes', 'apply sandbox changes to origin', 'sandbox'),
+    unapply: mainMenuChoice('unapply', '↶', 'Undo sandbox graft', 'restore origin from sandbox backups', 'sandbox'),
+    bifrost: mainMenuChoice('bifrost', '✺', 'Summon the Bifrost', 'open the long way around', 'lore'),
+    thor: mainMenuChoice('thor', 'ϟ', 'Consult Thor', 'ask the thunder route', 'lore'),
+    docs: mainMenuChoice('docs', '?', 'Open docs', 'read the Yggtree documentation', 'tending'),
+    exit: mainMenuChoice('exit', '·', 'Leave Yggdrasil', 'exit without changing anything', 'exit'),
+};
+
+async function detectMainMenuContext(): Promise<MainMenuContext> {
+    if (await findSandboxRoot(process.cwd())) {
+        return 'sandbox';
+    }
+
+    try {
+        const repoRoot = await getRepoRoot();
+        const worktrees = await listWorktrees();
+        const mainWorktreePath = worktrees[0]?.path;
+
+        if (mainWorktreePath && path.resolve(repoRoot) !== path.resolve(mainWorktreePath)) {
+            return 'worktree';
+        }
+    } catch {
+        return 'main';
+    }
+
+    return 'main';
 }
 
 async function openDocs() {
@@ -218,6 +248,10 @@ function registerWorktreeCommands(parent: Command) {
             await pathCommand(worktree);
         });
 
+    parent.command('copy-env')
+        .description('Copy local env files from the main worktree to the current worktree')
+        .action(copyEnvCommand);
+
     parent.command('create-sandbox')
         .description('Create a local-only disposable experiment sandbox')
         .option('-n, --name <name>', 'Optional sandbox name (auto-generated when omitted)')
@@ -283,66 +317,16 @@ program
     .action(async () => {
         const update = await checkForUpdate();
         await welcome({ update });
-        const isInSandbox = Boolean(await findSandboxRoot(process.cwd()));
+        const menuContext = await detectMainMenuContext();
+        const choices = buildMainMenuEntries(menuContext).map((entry) => {
+            if (entry.type === 'separator') {
+                return mainMenuSeparator(entry.label);
+            }
 
-        const dailyChoices = [
-            mainMenuChoice('create-smart', '◆', 'Grow new realm', 'create a branch-backed worktree', 'growth'),
-            mainMenuChoice('worktree-checkout', '⇄', 'Check out branch', 'open an existing ref in a new realm', 'travel'),
-            mainMenuChoice('handoff', '✦', 'Hand off current work', 'carry dirty work into a named sandbox', 'sandbox'),
-            mainMenuChoice('open', '◇', 'Open realm', 'jump into an existing worktree', 'travel'),
-            mainMenuChoice('list', '○', 'Survey realms', 'scan active worktrees and PR state', 'tending'),
-        ];
+            return mainMenuChoices[entry.value];
+        });
 
-        const growthChoices = [
-            mainMenuChoice('create-multi', '✧', 'Grow many realms', 'create multiple branch worktrees', 'growth'),
-            mainMenuChoice('create-sandbox', '△', 'Forge sandbox', 'create a local experiment realm', 'sandbox'),
-        ];
-
-        const tendingChoices = [
-            mainMenuChoice('bootstrap', '↳', 'Bootstrap realm', 'install dependencies and submodules', 'tending'),
-            mainMenuChoice('exec', '⌁', 'Cast command', 'run a command inside a worktree', 'tending'),
-            mainMenuChoice('path', '⌖', 'Reveal path', 'print a worktree cd command', 'tending'),
-            mainMenuChoice('delete', '×', 'Fell realm', 'delete managed worktrees', 'danger'),
-            mainMenuChoice('prune', '⌫', 'Prune stale realms', 'remove stale worktree metadata', 'danger'),
-        ];
-
-        const sandboxChoices = [
-            mainMenuChoice('apply', '◆', 'Graft sandbox changes', 'apply sandbox changes to origin', 'sandbox'),
-            mainMenuChoice('unapply', '↶', 'Undo sandbox graft', 'restore origin from sandbox backups', 'sandbox'),
-        ];
-
-        const loreChoices = [
-            mainMenuChoice('bifrost', '✺', 'Summon the Bifrost', 'open the long way around', 'lore'),
-            mainMenuChoice('thor', 'ϟ', 'Consult Thor', 'ask the thunder route', 'lore'),
-            mainMenuChoice('docs', '?', 'Open docs', 'read the Yggtree documentation', 'tending'),
-            mainMenuChoice('exit', '·', 'Leave Yggdrasil', 'exit without changing anything', 'exit'),
-        ];
-
-        const choices = isInSandbox
-            ? [
-                ...sandboxChoices,
-                mainMenuSeparator('Daily routes'),
-                ...dailyChoices,
-                mainMenuSeparator('Growth and experiments'),
-                ...growthChoices,
-                mainMenuSeparator('Tend realms'),
-                ...tendingChoices,
-                mainMenuSeparator('Lore'),
-                ...loreChoices,
-            ]
-            : [
-                ...dailyChoices,
-                mainMenuSeparator('Growth and experiments'),
-                ...growthChoices,
-                mainMenuSeparator('Tend realms'),
-                ...tendingChoices,
-                mainMenuSeparator('Sandbox grafts'),
-                ...sandboxChoices,
-                mainMenuSeparator('Lore'),
-                ...loreChoices,
-            ];
-
-        console.log(renderMainMenuIntro({ isInSandbox }));
+        console.log(renderMainMenuIntro({ context: menuContext }));
         const { action } = await inquirer.prompt([
             {
                 type: 'list',
@@ -384,6 +368,9 @@ program
                 break;
             case 'path':
                 await pathCommand();
+                break;
+            case 'copy-env':
+                await copyEnvCommand();
                 break;
             case 'apply':
                 await applyCommand();

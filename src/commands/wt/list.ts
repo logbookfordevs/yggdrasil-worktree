@@ -12,10 +12,10 @@ import {
 
 export async function listCommand() {
     try {
-        await getRepoRoot(); // Verify we are in a git repo
+        const repoRoot = await getRepoRoot(); // Verify we are in a git repo
         const worktrees = await listWorktrees();
         const mainWorktreePath = worktrees[0]?.path || '';
-        const managedRoot = await getManagedWorktreesRoot();
+        const managedRoot = await getManagedWorktreesRoot(repoRoot);
         
         if (worktrees.length === 0) {
             log.info('No worktrees found.');

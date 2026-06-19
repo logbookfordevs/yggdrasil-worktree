@@ -11,9 +11,9 @@ export async function execCommand(wtName?: string, commandArgs?: string[]) {
     let args: string[] = [];
 
     try {
-        await getRepoRoot();
+        const repoRoot = await getRepoRoot();
         const worktrees = await listWorktrees();
-        const managedRoot = await getManagedWorktreesRoot();
+        const managedRoot = await getManagedWorktreesRoot(repoRoot);
 
         if (worktrees.length === 0) {
             log.info('No worktrees found.');

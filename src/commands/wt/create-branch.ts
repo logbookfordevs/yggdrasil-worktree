@@ -109,7 +109,7 @@ export async function createCommandNew(options: NewCreateOptions) {
         // e.g. feat/new-button -> feat-new-button
         const slug = branchName.replace(/[\/\\]/g, '-').replace(/\s+/g, '-');
         const repoName = await getRepoName();
-        const worktreePathConfig = await getWorktreePathConfig();
+        const worktreePathConfig = await getWorktreePathConfig(repoRoot);
         const wtPath = buildManagedWorktreePath(repoName, slug, worktreePathConfig);
 
         // 2. Validation

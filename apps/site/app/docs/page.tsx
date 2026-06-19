@@ -373,8 +373,8 @@ const commandGroups = [
       {
         command: 'yggtree config use <preset>',
         description:
-          'Apply a bundled path preset. `codex` sets both the worktree root and Codex-style path layout; `default` and `yggtree` reset to the normal Yggtree layout.',
-        flags: [flag('Presets', 'Available presets: `default`, `yggtree`, and `codex`.')],
+          "Apply a bundled path preset. `claude` uses Claude Code's repo-local worktree directory, `codex` uses Codex's global worktree root, and `default` or `yggtree` reset to the normal Yggtree layout.",
+        flags: [flag('Presets', 'Available presets: `default`, `yggtree`, `codex`, and `claude`.')],
       },
       {
         command: 'yggtree config set-worktrees-root <path>',
@@ -385,8 +385,8 @@ const commandGroups = [
       {
         command: 'yggtree config set-worktree-layout <layout>',
         description:
-          'Change only the path shape. Use this when you want a custom root with either Yggtree or Codex-style nesting.',
-        flags: [flag('Layouts', '`yggtree` uses `<root>/<repo>/<slug>`; `codex` uses `<root>/<slug>/<repo>`.')],
+          'Change only the path shape. Use this when you want a custom root with Yggtree, Codex, or Claude-style nesting.',
+        flags: [flag('Layouts', '`yggtree` uses `<root>/<repo>/<slug>`; `codex` uses `<root>/<slug>/<repo>`; `claude` uses `<root>/<slug>`.')],
       },
       {
         command: 'yggtree config reset',
@@ -750,6 +750,14 @@ export default function DocsPage() {
                       </p>
                       <CommandBlock command="yggtree config use codex" className="mt-4" />
                     </div>
+                    <div>
+                      <h3 className={exampleTitleClass}>Claude-style layout</h3>
+                      <p className={`mt-2 ${noteClass}`}>
+                        Use the Claude preset when you want new Yggtree worktrees in Claude Code&apos;s repo-local
+                        directory: `&lt;repo-root&gt;/.claude/worktrees/&lt;worktree-slug&gt;`.
+                      </p>
+                      <CommandBlock command="yggtree config use claude" className="mt-4" />
+                    </div>
                   </div>
 
                   <div className="mt-5 grid gap-3 rounded-md border border-gold-rune/10 bg-deep-forest/45 p-4">
@@ -762,8 +770,8 @@ export default function DocsPage() {
                     <CommandBlock command="yggtree config reset" />
                   </div>
                   <p className={`mt-4 ${noteClass}`}>
-                    Claude and Cursor presets are intentionally not listed until their native worktree directory pattern
-                    is confirmed. Use `set-worktrees-root` for those tools when you already know the directory you want.
+                    Cursor presets are intentionally not listed until their native worktree directory pattern is
+                    confirmed. Use `set-worktrees-root` when you already know the directory you want.
                   </p>
                 </div>
               </div>

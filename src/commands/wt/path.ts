@@ -6,9 +6,9 @@ import { findWorktreeByName, formatWorktreeDisplayPath, getWorktreeBranchName } 
 
 export async function pathCommand(wtName?: string) {
     try {
-        await getRepoRoot();
+        const repoRoot = await getRepoRoot();
         const worktrees = await listWorktrees();
-        const managedRoot = await getManagedWorktreesRoot();
+        const managedRoot = await getManagedWorktreesRoot(repoRoot);
 
         if (worktrees.length === 0) {
             log.info('No worktrees found.');

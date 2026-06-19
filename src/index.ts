@@ -398,13 +398,13 @@ config.command('get')
     .description('Show resolved global settings')
     .action(configGetCommand);
 config.command('use <preset>')
-    .description('Use a global worktree path preset (default, yggtree, codex)')
+    .description('Use a global worktree path preset (default, yggtree, codex, claude)')
     .action(configUseCommand);
 config.command('set-worktrees-root <path>')
     .description('Set the global managed worktrees root')
     .action(configSetWorktreesRootCommand);
 config.command('set-worktree-layout <layout>')
-    .description('Set the managed worktree path layout (yggtree or codex)')
+    .description('Set the managed worktree path layout (yggtree, codex, or claude)')
     .action(configSetWorktreeLayoutCommand);
 config.command('reset')
     .description('Reset global settings to defaults')

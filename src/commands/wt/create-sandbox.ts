@@ -161,7 +161,7 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
 
         // 5. Create worktree
         const repoName = await getRepoName();
-        const worktreePathConfig = await getWorktreePathConfig();
+        const worktreePathConfig = await getWorktreePathConfig(repoRoot);
         const wtPath = buildManagedWorktreePath(repoName, sandboxName, worktreePathConfig);
 
         const spinner = createSpinner('Creating sandbox worktree...').start();

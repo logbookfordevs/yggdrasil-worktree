@@ -11,7 +11,7 @@ import {
     listBranchCandidates,
 } from '../src/commands/wt/create.js';
 import { parseWorktreeList } from '../src/lib/git.js';
-import { buildManagedWorktreePath } from '../src/lib/global-config.js';
+import { buildManagedWorktreePath, getWorktreePathConfig, writeGlobalConfig } from '../src/lib/global-config.js';
 import { isManagedWorktreePath } from '../src/lib/worktree.js';
 
 const exec = promisify(execFile);
@@ -116,7 +116,7 @@ describe('create command shell entry', () => {
 });
 
 describe('managed worktree path config', () => {
-    it('builds default and Codex-style managed worktree paths', () => {
+    it('builds default, Codex-style, and Claude-style managed worktree paths', () => {
         expect(buildManagedWorktreePath('repo', 'feature-login', {
             root: '/tmp/.yggtree',
             layout: 'yggtree',
@@ -126,11 +126,33 @@ describe('managed worktree path config', () => {
             root: '/tmp/.codex/worktrees',
             layout: 'codex',
         })).toBe(path.join('/tmp/.codex/worktrees', 'feature-login', 'repo'));
+
+        expect(buildManagedWorktreePath('repo', 'feature-login', {
+            root: '/tmp/repo/.claude/worktrees',
+            layout: 'claude',
+        })).toBe(path.join('/tmp/repo/.claude/worktrees', 'feature-login'));
     });
 
     it('matches managed roots on path boundaries only', () => {
         expect(isManagedWorktreePath('/tmp/ygg/repo/feature-login', '/tmp/ygg')).toBe(true);
         expect(isManagedWorktreePath('/tmp/ygg-old/repo/feature-login', '/tmp/ygg')).toBe(false);
+    });
+
+    it('resolves the Claude preset root inside the current repo', async () => {
+        const tmp = await mkdtemp(path.join(os.tmpdir(), 'yggtree-claude-config-'));
+
+        try {
+            await writeGlobalConfig({ worktreeLayout: 'claude' });
+            const config = await getWorktreePathConfig(tmp);
+
+            expect(config).toEqual({
+                root: path.join(tmp, '.claude', 'worktrees'),
+                layout: 'claude',
+            });
+        } finally {
+            await writeGlobalConfig({});
+            await rm(tmp, { recursive: true, force: true });
+        }
     });
 });
 

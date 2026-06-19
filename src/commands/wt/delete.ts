@@ -15,7 +15,7 @@ export async function deleteCommand(options: { all?: boolean } = {}) {
     try {
         const currentWorktreePath = await getRepoRoot();
         const worktrees = await listWorktrees();
-        const managedRoot = await getManagedWorktreesRoot();
+        const managedRoot = await getManagedWorktreesRoot(currentWorktreePath);
         let showAll = options.all;
         if (showAll === undefined) {
             const { includeExternal } = await inquirer.prompt([

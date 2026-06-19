@@ -286,6 +286,18 @@ That preset creates new managed worktrees like:
 ~/.codex/worktrees/<worktree-slug>/<repo-name>
 ```
 
+Use the Claude Code layout when you want Yggtree-created worktrees to match Claude's native repo-local worktree directory:
+
+```bash
+yggtree config use claude
+```
+
+That preset creates new managed worktrees like:
+
+```bash
+<repo-root>/.claude/worktrees/<worktree-slug>
+```
+
 Set a custom managed root while keeping the Yggtree layout:
 
 ```bash
@@ -298,7 +310,7 @@ Return to defaults:
 yggtree config reset
 ```
 
-Claude and Cursor do not currently have a confirmed native worktree directory pattern in Yggtree. Until that is explicit, use `set-worktrees-root` with the directory you want rather than relying on an unverified preset.
+Cursor does not currently have a confirmed native worktree directory pattern in Yggtree. Until that is explicit, use `set-worktrees-root` with the directory you want rather than relying on an unverified preset.
 
 ---
 

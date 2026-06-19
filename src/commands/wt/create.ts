@@ -275,7 +275,7 @@ export async function createCommand(options: CreateOptions) {
         // 3. Gather remaining inputs
         const defaultSlug = toSlug(selectedBranch.branchName);
         const repoName = await getRepoName();
-        const worktreePathConfig = await getWorktreePathConfig();
+        const worktreePathConfig = await getWorktreePathConfig(repoRoot);
         const resolveWorktreePath = (name: string) =>
             buildManagedWorktreePath(repoName, toSlug(name), worktreePathConfig);
 

@@ -6,6 +6,7 @@ Choose by intent:
   Disposable local experiment   yggtree create-sandbox
   Copy sandbox files to origin  yggtree apply   # from inside sandbox, not a Git merge
   Bulk official worktrees       yggtree create-multi
+  Agent-native path layout      yggtree config use claude   # or codex
 
 More detail: run yggtree help <command>, for example yggtree help handoff.
 `;

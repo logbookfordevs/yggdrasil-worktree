@@ -9,9 +9,9 @@ import { isManagedWorktreePath } from '../../lib/worktree.js';
 
 export async function bootstrapCommand() {
     try {
-        const _ = await getRepoRoot();
+        const repoRoot = await getRepoRoot();
         const worktrees = await listWorktrees();
-        const managedRoot = await getManagedWorktreesRoot();
+        const managedRoot = await getManagedWorktreesRoot(repoRoot);
 
         // 1. Select Worktree
         // Filter managed or just show all? The prompt said "managed", let's prioritize managed but maybe allow all if needed?
@@ -41,8 +41,6 @@ export async function bootstrapCommand() {
         ]);
 
         const wtPath = selectedPath;
-        const repoRoot = await getRepoRoot();
-        
         await runBootstrap(wtPath, repoRoot);
 
         log.success('Bootstrap completed!');

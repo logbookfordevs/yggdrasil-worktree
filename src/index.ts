@@ -37,6 +37,7 @@ import { applyCommand } from './commands/wt/apply.js';
 import { unapplyCommand } from './commands/wt/unapply.js';
 import { handoffCommand } from './commands/wt/handoff.js';
 import { copyEnvCommand } from './commands/wt/copy-env.js';
+import { updateCommand } from './commands/update.js';
 import {
     configGetCommand,
     configResetCommand,
@@ -405,6 +406,10 @@ wt.addHelpText('after', intentRouterHelp);
 registerWorktreeCommands(program);
 registerWorktreeCommands(wt);
 program.addHelpCommand(true);
+
+program.command('update')
+    .description('Install the latest Yggtree release')
+    .action(updateCommand);
 
 program.command('bifrost')
     .description('Summon the Bifrost (Easter Egg)')

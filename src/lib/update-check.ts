@@ -69,5 +69,5 @@ export async function notifyIfUpdateAvailable(): Promise<void> {
     if (!result?.updateAvailable) return;
 
     log.warning(`A newer yggtree is available: ${chalk.dim(`v${result.currentVersion}`)} -> ${chalk.green(`v${result.latestVersion}`)}`);
-    log.dim('Update with: npm install -g yggtree');
+    log.dim('Update with: yggtree update');
 }

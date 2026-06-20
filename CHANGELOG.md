@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release - TBD
 
+### Added
+- `yggtree update` now installs the latest CLI release through the public release installer.
+
+### Changed
+- Update notices now point to `yggtree update` instead of the npm global install command.
+
 ## [v1.4.7] - 2026-06-19
 
 ### Changed

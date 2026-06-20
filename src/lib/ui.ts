@@ -99,7 +99,7 @@ function renderUpdateNotice(update: WelcomeOptions['update']): string[] {
     return [
         '',
         `${yggWarn('Update available')} ${yggMuted(`yggtree ${update.currentVersion} -> ${update.latestVersion}`)}`,
-        yggMuted('Run: npm install -g yggtree'),
+        yggMuted('Run: yggtree update'),
     ];
 }
 

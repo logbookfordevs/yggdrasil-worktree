@@ -19,7 +19,7 @@ describe('terminal UI', () => {
         expect(banner).toContain('The World Tree Worktree Assistant');
         expect(banner).toContain('Update available');
         expect(banner).toContain('yggtree 1.4.4 -> 1.5.0');
-        expect(banner).toContain('Run: npm install -g yggtree');
+        expect(banner).toContain('Run: yggtree update');
     });
 
     it('renders a route intro before the main menu question', () => {

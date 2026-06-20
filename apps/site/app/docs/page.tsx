@@ -476,7 +476,7 @@ export default function DocsPage() {
                     Install the CLI, then choose the workflow that matches what you need to protect.
                   </p>
                   <div className="mt-8 grid max-w-3xl gap-4">
-                    <CommandBlock command="npm install -g yggtree" output="Install the CLI globally once." />
+                    <CommandBlock command="curl -fsSL https://yggtree.logbookfordevs.com/install.sh | bash" output="Install the latest CLI release." />
                     <CommandBlock
                       command="yggtree"
                       output="Open the guided menu from any Git repository. If your global install is behind npm, the menu points you to the update command."
@@ -484,7 +484,11 @@ export default function DocsPage() {
                     <p className={noteClass}>
                       Prefer a one-off run? Use{' '}
                       <code className={`${monoFaceClass} text-[0.875rem] text-gold-rune`}>npx yggtree</code> without
-                      installing.
+                      installing. Prefer npm globals?{' '}
+                      <code className={`${monoFaceClass} text-[0.875rem] text-gold-rune`}>
+                        npm install -g yggtree
+                      </code>{' '}
+                      still works.
                     </p>
                   </div>
                 </div>

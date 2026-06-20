@@ -16,11 +16,13 @@ For guided workflows, command examples, and safety notes, read the full docs:
 
 ### Installation
 
-Install globally:
+Install the latest release:
 
 ```bash
-npm install -g yggtree
+curl -fsSL https://yggtree.logbookfordevs.com/install.sh | bash
 ```
+
+Prefer npm globals? `npm install -g yggtree` still works.
 
 Or try it without installing:
 

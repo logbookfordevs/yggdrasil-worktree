@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release - TBD
 
+### Changed
+- Website and README install docs now keep `npm install -g yggtree` visible as a quiet package-manager option alongside the release installer.
+
 ## [v1.4.6] - 2026-06-19
 
 ### Added

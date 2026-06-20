@@ -75,16 +75,19 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-6"
+          className="mx-auto flex w-full max-w-[27rem] flex-col items-stretch justify-center gap-2 sm:flex-row"
         >
-          <div className="flex items-center gap-6 bg-mist-green/50 backdrop-blur-sm border border-gold-rune/30 rounded-lg px-6 py-4">
-            <code className="font-mono text-frost-white text-lg">npx yggtree</code>
-            <CopyButton text="npx yggtree" />
+          <div className="flex min-h-12 flex-1 items-center justify-between gap-3 rounded-lg border border-gold-rune/30 bg-mist-green/50 px-4 text-left backdrop-blur-sm">
+            <code className="min-w-0 font-mono text-base text-frost-white sm:text-lg">npx yggtree</code>
+            <CopyButton
+              text="npx yggtree"
+              className="shrink-0 rounded-md border-0 bg-transparent px-2.5 text-parchment/75 hover:bg-gold-rune/10 hover:text-gold-rune"
+            />
           </div>
 
           <a
             href="/docs"
-            className="group px-8 py-4 bg-transparent border-2 border-gold-rune text-gold-rune rounded-lg font-semibold hover:bg-gold-rune hover:text-deep-forest transition-all duration-300"
+            className="group inline-flex min-h-12 items-center justify-center rounded-lg border border-gold-rune/55 bg-gold-rune/5 px-5 font-semibold text-gold-rune transition-all duration-300 hover:bg-gold-rune hover:text-deep-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-rune/55"
           >
             Read the docs
             <span className="inline-block ml-2 group-hover:translate-x-1 transition-transform">→</span>

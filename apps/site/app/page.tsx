@@ -105,8 +105,11 @@ export default function Home() {
             <h3 className="text-2xl font-display font-semibold text-frost-white mb-4">Installation</h3>
             <div className="space-y-4">
               <div>
-                <p className="text-parchment/70 mb-2">Install globally:</p>
-                <CommandBlock command="npm install -g yggtree" />
+                <p className="text-parchment/70 mb-2">Install the latest release:</p>
+                <CommandBlock command="curl -fsSL https://yggtree.logbookfordevs.com/install.sh | bash" />
+                <p className="mt-2 text-sm text-parchment/55">
+                  Prefer npm globals? <code className="text-gold-rune">npm install -g yggtree</code> still works.
+                </p>
               </div>
               <div>
                 <p className="text-parchment/70 mb-2">Or try it without installing:</p>

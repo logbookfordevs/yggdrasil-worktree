@@ -6,8 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - `yggtree update` now installs the latest CLI release through the public release installer.
+- `yggtree config bootstrap` now creates or clears local worktree setup commands in `.yggtree/worktree-setup.json`.
+- The first interactive worktree create flow in a repo now offers to create `.yggtree/worktree-setup.json`.
 
 ### Changed
+- Worktree bootstrap now skips setup when no repo or worktree bootstrap config exists instead of assuming `npm install` and submodule commands.
 - Update notices now point to `yggtree update` instead of the npm global install command.
 
 ## [v1.4.7] - 2026-06-19

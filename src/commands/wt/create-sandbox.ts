@@ -80,7 +80,7 @@ export async function createSandboxCommand(options: SandboxCreateOptions = {}) {
             {
                 type: 'confirm',
                 name: 'bootstrap',
-                message: 'Run bootstrap? (npm install + submodules)',
+                message: 'Run configured bootstrap commands?',
                 default: true,
                 when: options.bootstrap === undefined,
             },

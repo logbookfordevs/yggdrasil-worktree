@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { realpath } from 'fs/promises';
 import path from 'path';
 import { YGG_ROOT } from './paths.js';
 
@@ -94,4 +95,21 @@ export async function getValidRegisteredRepos(): Promise<Record<string, string>>
     }
 
     return valid;
+}
+
+async function normalizeRepoPath(repoPath: string): Promise<string> {
+    try {
+        return await realpath(repoPath);
+    } catch {
+        return path.resolve(repoPath);
+    }
+}
+
+export async function hasRegisteredRepoPath(repoRoot: string, registry: Registry): Promise<boolean> {
+    const targetPath = await normalizeRepoPath(repoRoot);
+    const registeredPaths = await Promise.all(
+        Object.values(registry.repos).map(normalizeRepoPath)
+    );
+
+    return registeredPaths.includes(targetPath);
 }

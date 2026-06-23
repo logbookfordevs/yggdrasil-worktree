@@ -3,11 +3,13 @@ import inquirer from 'inquirer';
 import path from 'path';
 import { GitWorktree, getRepoName, createWorktree, fetchAll, listWorktrees } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
+import { maybeOfferBootstrapSetupConfig } from '../../lib/bootstrap-setup-onboarding.js';
 import { buildManagedWorktreePath, getWorktreePathConfig } from '../../lib/global-config.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { ensureAutocompletePrompt } from '../../lib/prompt.js';
 import { promptAndCopyEnvFiles } from '../../lib/env-files.js';
 import { ensureRepoContext } from '../../lib/repo-context.js';
+import { readRegistry } from '../../lib/registry.js';
 import { enterCommand } from './enter.js';
 import {
     detectInstalledOpenTools,
@@ -153,8 +155,15 @@ export function getWorktreePathCollisionMessage(
 
 export async function createCommand(options: CreateOptions) {
     try {
+        const registeredReposBefore = await readRegistry();
         const repoRoot = await ensureRepoContext();
         log.info(`Repo: ${chalk.dim(repoRoot)}`);
+        const isInteractiveCreate = !options.ref || !options.name;
+        const bootstrapSetupOnboarding = await maybeOfferBootstrapSetupConfig({
+            interactive: isInteractiveCreate,
+            registeredReposBefore,
+            repoRoot,
+        });
 
         // 1. Load branches
         const loadingSpinner = createSpinner('Fetching branches...').start();
@@ -296,7 +305,7 @@ export async function createCommand(options: CreateOptions) {
             {
                 type: 'confirm',
                 name: 'bootstrap',
-                message: 'Run bootstrap? (npm install + submodules)',
+                message: 'Run configured bootstrap commands?',
                 default: true,
                 when: options.bootstrap !== false && options.bootstrap !== true,
             },
@@ -328,7 +337,9 @@ export async function createCommand(options: CreateOptions) {
             return;
         }
 
-        const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
+        const shouldBootstrap = bootstrapSetupOnboarding.skipBootstrap
+            ? false
+            : options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
         const shouldOpenTool = options.tool
             ? true
             : options.open !== undefined

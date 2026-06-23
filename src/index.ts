@@ -39,6 +39,7 @@ import { handoffCommand } from './commands/wt/handoff.js';
 import { copyEnvCommand } from './commands/wt/copy-env.js';
 import { updateCommand } from './commands/update.js';
 import {
+    configBootstrapCommand,
     configGetCommand,
     configResetCommand,
     configSetWorktreeLayoutCommand,
@@ -86,7 +87,7 @@ const mainMenuChoices: Record<MainMenuAction, ReturnType<typeof mainMenuChoice>>
     list: mainMenuChoice('list', '○', 'Survey realms', 'scan active worktrees and PR state', 'tending'),
     'create-multi': mainMenuChoice('create-multi', '✧', 'Grow many realms', 'create multiple branch worktrees', 'growth'),
     'create-sandbox': mainMenuChoice('create-sandbox', '△', 'Forge sandbox', 'create a local experiment realm', 'sandbox'),
-    bootstrap: mainMenuChoice('bootstrap', '↳', 'Bootstrap realm', 'install dependencies and submodules', 'tending'),
+    bootstrap: mainMenuChoice('bootstrap', '↳', 'Bootstrap realm', 'run configured setup commands', 'tending'),
     exec: mainMenuChoice('exec', '⌁', 'Cast command', 'run a command inside a worktree', 'tending'),
     path: mainMenuChoice('path', '⌖', 'Reveal path', 'print a worktree cd command', 'tending'),
     'copy-env': mainMenuChoice('copy-env', '≋', 'Bring env files', 'copy local env files from main realm', 'tending'),
@@ -156,7 +157,7 @@ function registerWorktreeCommands(parent: Command) {
         .option('-b, --branch <name>', 'Branch name (e.g. feat/new-ui)')
         .option('--base <ref>', 'Base ref (e.g. main)')
         .option('--source <type>', 'Base source (local or remote)')
-        .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .option('--no-bootstrap', 'Skip configured bootstrap commands')
         .option('--open', 'Open an editor after creation')
         .option('--no-open', 'Skip opening an editor after creation')
         .option('--enter', 'Enter the worktree sub-shell after creation')
@@ -175,7 +176,7 @@ function registerWorktreeCommands(parent: Command) {
         .description('Bulk-create official branch-backed worktrees')
         .option('--base <ref>', 'Base ref (e.g. main)')
         .option('--source <type>', 'Base source (local or remote)')
-        .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .option('--no-bootstrap', 'Skip configured bootstrap commands')
         .option('--config <preset>', 'Use a path preset for this run only (yggtree, codex, claude)')
         .addHelpText('after', createMultiHelp)
         .action(async (options) => {
@@ -187,7 +188,7 @@ function registerWorktreeCommands(parent: Command) {
             .description(description)
             .option('-n, --name <slug>', 'Worktree name (slug)')
             .option('-r, --ref <ref>', 'Existing branch or ref')
-            .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+            .option('--no-bootstrap', 'Skip configured bootstrap commands')
             .option('--open', 'Open editors or run a startup command before entering')
             .option('--no-open', 'Skip opening editors or startup commands before entering')
             .option('--tool <command>', 'Editor, app, or terminal command to open after checkout (skips open prompt)')
@@ -258,7 +259,7 @@ function registerWorktreeCommands(parent: Command) {
         .option('-n, --name <name>', 'Optional sandbox name (auto-generated when omitted)')
         .option('--carry', 'Copy uncommitted changes to sandbox')
         .option('--no-carry', 'Do not copy uncommitted changes')
-        .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .option('--no-bootstrap', 'Skip configured bootstrap commands')
         .option('--open', 'Open an editor after creation')
         .option('--no-open', 'Skip opening an editor after creation')
         .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
@@ -273,7 +274,7 @@ function registerWorktreeCommands(parent: Command) {
     parent.command('handoff')
         .description('Carry dirty current work into a named sandbox')
         .option('-n, --name <name>', 'Optional handoff name (prompted when omitted)')
-        .option('--no-bootstrap', 'Skip bootstrap (npm install + submodules)')
+        .option('--no-bootstrap', 'Skip configured bootstrap commands')
         .option('--open', 'Open an editor after creation')
         .option('--no-open', 'Skip opening an editor after creation')
         .addOption(new Option('--enter', 'Deprecated alias for --open').hideHelp())
@@ -432,6 +433,13 @@ config.command('set-worktrees-root <path>')
 config.command('set-worktree-layout <layout>')
     .description('Set the managed worktree path layout (yggtree, codex, or claude)')
     .action(configSetWorktreeLayoutCommand);
+config.command('bootstrap')
+    .description('Set local worktree bootstrap commands in the current directory')
+    .option('-c, --command <command>', 'Add a bootstrap command; repeat for multiple commands', (value, previous: string[] | undefined) => {
+        return [...(previous ?? []), value];
+    })
+    .option('--clear', 'Remove local bootstrap commands from the current directory')
+    .action(configBootstrapCommand);
 config.command('reset')
     .description('Reset global settings to defaults')
     .action(configResetCommand);

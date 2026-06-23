@@ -274,7 +274,7 @@ const commandGroups = [
         flags: [
           flag(
             'Config source',
-            'Reads `.yggtree/worktree-setup.json` when present, then falls back to default setup behavior.'
+            'Reads repo/worktree setup config; if none exists, setup is skipped.'
           ),
         ],
       },
@@ -339,7 +339,7 @@ const commandGroups = [
     ],
   },
   {
-    title: 'Configure paths',
+    title: 'Configure paths and setup',
     commands: [
       {
         command: 'yggtree config get',
@@ -363,6 +363,14 @@ const commandGroups = [
         description:
           'Change only the path shape. Use this when you want a custom root with Yggtree, Codex, or Claude-style nesting.',
         flags: [flag('Layouts', '`yggtree` uses `<root>/<repo>/<slug>`; `codex` uses `<root>/<slug>/<repo>`; `claude` uses `<root>/<slug>`.')],
+      },
+      {
+        command: 'yggtree config bootstrap',
+        description: 'Set local bootstrap commands in `.yggtree/worktree-setup.json` under the current directory.',
+        flags: [
+          flag('--command <command>', 'Add a command non-interactively; repeat the flag for multiple commands.'),
+          flag('--clear', 'Remove the local setup file from the current directory.'),
+        ],
       },
       {
         command: 'yggtree config reset',
@@ -685,9 +693,9 @@ export default function DocsPage() {
             <section id="configuration" className={sectionClass}>
               <h2 className={sectionTitleClass}>Configuration</h2>
               <p className={sectionIntroClass}>
-                Yggtree has two kinds of configuration: repository setup commands, which prepare each new worktree, and
-                global path settings, which decide where managed worktrees are created. Keep setup close to the repo.
-                Use global path settings when you want Yggtree to follow a different workspace layout.
+                Yggtree has repository setup commands and global path settings. Keep setup close to the repo when a
+                project needs its own ritual, and use path settings when Yggtree should follow a different workspace
+                layout.
               </p>
               <div className="mt-6 grid gap-5">
                 <div className={referenceShellClass}>
@@ -705,9 +713,10 @@ export default function DocsPage() {
                   </pre>
                   <p className={`mt-4 ${noteClass}`}>
                     Bootstrap runs after worktree creation unless you pass `--no-bootstrap`. The same config is used by
-                    `create`, `worktree-checkout`, `wc`, `create-multi`, and `create-sandbox`. When local env files such
-                    as `.env` or `.env.local` exist, interactive creation flows offer to copy them. Example and template
-                    env files are skipped, and CI or other non-interactive runs skip the prompt entirely.
+                    `create`, `worktree-checkout`, `wc`, `create-multi`, and `create-sandbox`. If no repo or worktree
+                    setup file exists, Yggtree skips setup. Use `yggtree config bootstrap --command "pnpm install"` to
+                    create `.yggtree/worktree-setup.json` in the current directory. The first interactive create flow
+                    in a repo offers to create that file; declining skips the offer on later runs.
                   </p>
                 </div>
 

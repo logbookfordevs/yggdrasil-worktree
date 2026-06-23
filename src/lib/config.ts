@@ -7,52 +7,71 @@ export interface YggtreeConfig {
     'setup-worktree'?: string[];
 }
 
-export async function getBootstrapCommands(repoRoot: string, wtPath?: string): Promise<string[] | null> {
+export function getWorktreeSetupConfigPath(root: string): string {
+    return path.join(root, '.yggtree', 'worktree-setup.json');
+}
+
+async function readBootstrapCommands(configPath: string): Promise<string[] | null> {
+    try {
+        const config: YggtreeConfig = await fs.readJSON(configPath);
+        if (config['setup-worktree'] && Array.isArray(config['setup-worktree'])) {
+            return config['setup-worktree'];
+        }
+    } catch {
+        log.warning(`Failed to parse ${configPath}.`);
+    }
+
+    return null;
+}
+
+export async function getBootstrapCommands(
+    repoRoot: string,
+    wtPath?: string
+): Promise<string[] | null> {
     // repoRoot first (source of truth — where yggtree is run from)
     // wtPath second (per-worktree override if needed)
     const searchPaths = [repoRoot];
     if (wtPath && wtPath !== repoRoot) searchPaths.push(wtPath);
 
     for (const searchPath of searchPaths) {
-        const yggtreeConfigPath = path.join(searchPath, '.yggtree', 'worktree-setup.json');
+        const yggtreeConfigPath = getWorktreeSetupConfigPath(searchPath);
         const configPath = path.join(searchPath, 'yggtree-worktree.json');
         const cursorConfigPath = path.join(searchPath, '.cursor', 'worktrees.json');
 
         if (await fs.pathExists(yggtreeConfigPath)) {
-            try {
-                const config: YggtreeConfig = await fs.readJSON(yggtreeConfigPath);
-                if (config['setup-worktree'] && Array.isArray(config['setup-worktree'])) {
-                    return config['setup-worktree'];
-                }
-            } catch (e) {
-                log.warning(`Failed to parse ${yggtreeConfigPath}.`);
-            }
+            const commands = await readBootstrapCommands(yggtreeConfigPath);
+            if (commands) return commands;
         }
 
         if (await fs.pathExists(configPath)) {
-            try {
-                const config: YggtreeConfig = await fs.readJSON(configPath);
-                if (config['setup-worktree'] && Array.isArray(config['setup-worktree'])) {
-                    return config['setup-worktree'];
-                }
-            } catch (e) {
-                log.warning(`Failed to parse ${configPath}.`);
-            }
+            const commands = await readBootstrapCommands(configPath);
+            if (commands) return commands;
         }
 
         if (await fs.pathExists(cursorConfigPath)) {
-            try {
-                const config: YggtreeConfig = await fs.readJSON(cursorConfigPath);
-                if (config['setup-worktree'] && Array.isArray(config['setup-worktree'])) {
-                    return config['setup-worktree'];
-                }
-            } catch (e) {
-                log.warning(`Failed to parse ${cursorConfigPath}.`);
-            }
+            const commands = await readBootstrapCommands(cursorConfigPath);
+            if (commands) return commands;
         }
     }
 
     return null;
+}
+
+export async function writeBootstrapCommands(root: string, commands: string[]): Promise<string> {
+    const configPath = getWorktreeSetupConfigPath(root);
+    await fs.ensureDir(path.dirname(configPath));
+    await fs.writeJSON(
+        configPath,
+        { 'setup-worktree': commands },
+        { spaces: 2 }
+    );
+    return configPath;
+}
+
+export async function clearBootstrapCommands(root: string): Promise<string> {
+    const configPath = getWorktreeSetupConfigPath(root);
+    await fs.remove(configPath);
+    return configPath;
 }
 
 export async function runBootstrap(wtPath: string, repoRoot: string) {
@@ -74,48 +93,9 @@ export async function runBootstrap(wtPath: string, repoRoot: string) {
                 ]);
             }
         }
-    } else {
-        // Fallback to default behavior
-        log.info('Running default bootstrap (npm install + submodules)...');
-        
-        // npm install
-        try {
-            await execa('npm', ['--version']);
-            const installSpinner = createSpinner('Running npm install...').start();
-            try {
-                await execa('npm', ['install'], { cwd: wtPath });
-                installSpinner.succeed('Dependencies installed.');
-            } catch (e: any) {
-                installSpinner.fail('npm install failed.');
-                log.actionableError(e.message, 'npm install', wtPath, [
-                    `cd ${wtPath} && npm install`,
-                    'Check your network connection and package-lock.json'
-                ]);
-            }
-        } catch {
-            log.warning('npm not found, skipping install.');
-        }
-
-        // Submodules
-        const subSpinner = createSpinner('Syncing submodules...').start();
-        try {
-            await execa('git', ['submodule', 'sync', '--recursive'], { cwd: wtPath });
-            await execa('git', ['submodule', 'update', '--init', '--recursive'], { cwd: wtPath });
-            subSpinner.succeed('Submodules synced.');
-        } catch (e: any) {
-            subSpinner.fail('Submodule sync failed.');
-            const isAuthError = /permission denied|authentication|publickey/i.test(e.message);
-            const steps = [
-                'git submodule sync --recursive',
-                'git submodule update --init --recursive'
-            ];
-            if (isAuthError) {
-                steps.unshift(
-                    'ssh -T git@github.com',
-                    'ssh-add --apple-use-keychain ~/.ssh/id_ed25519'
-                );
-            }
-            log.actionableError(e.message, 'git submodule update --init --recursive', wtPath, steps);
-        }
+        return;
     }
+
+    log.info('No bootstrap commands configured. Skipping setup.');
+    log.dim('Tip: run yggtree config bootstrap --command "pnpm install" to create .yggtree/worktree-setup.json.');
 }

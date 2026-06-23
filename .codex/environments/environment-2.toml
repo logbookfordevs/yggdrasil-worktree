@@ -9,8 +9,3 @@ pnpm install
 cd hub-frontend && yarn install && cd ..
 cd hub-backend && pnpm install && cd ..
 '''
-
-[[actions]]
-name = "Run Page"
-icon = "run"
-command = "pnpm run full:dev"

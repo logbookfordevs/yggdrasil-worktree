@@ -157,8 +157,8 @@ Started in your main checkout? Carry staged, unstaged, and untracked work into a
 🤖 **AI-friendly isolation**
 One worktree per agent, per experiment, per idea. No shared state, no collisions.
 
-⚡ **Automatic bootstrapping**
-Run installs, submodules, and setup scripts automatically for each worktree.
+⚡ **Configurable bootstrapping**
+Run project setup commands for each worktree when configured.
 
 🚪 **Enter, exec, and exit with ease**
 Enter worktrees, execute commands, or run tasks without changing directories.
@@ -183,7 +183,7 @@ Each command creates:
 
 * A clean folder
 * A dedicated branch
-* A bootstrapped environment
+* Optional bootstrap setup when configured
 
 No stash juggling.
 No branch confusion.
@@ -235,7 +235,8 @@ yggtree handoff --name auth-refactor
 
 ## ⚡ Bootstrapping & Configuration
 
-Yggdrasil automatically prepares each worktree.
+Yggdrasil can prepare each worktree with configured setup commands. If no bootstrap config is found, it skips setup and prints a small tip.
+The first interactive create flow in a repo offers to create `.yggtree/worktree-setup.json`; declining skips the offer on later runs.
 
 Resolution order:
 
@@ -245,19 +246,37 @@ Resolution order:
 4. `.yggtree/worktree-setup.json` inside the worktree (per-worktree fallback)
 5. `yggtree-worktree.json` inside the worktree (legacy fallback)
 6. `.cursor/worktrees.json` inside the worktree (legacy fallback)
-7. Fallback: `npm install` + submodules
+7. No setup commands
 
 ### Example configuration
 
 ```json
 {
   "setup-worktree": [
-    "npm install",
+    "pnpm install",
     "git submodule sync --recursive",
     "git submodule update --init --recursive",
-    "echo \"🌳 Realm ready\""
+    "echo \"Realm ready\""
   ]
 }
+```
+
+Create local setup config in the current directory interactively:
+
+```bash
+yggtree config bootstrap
+```
+
+Or create it non-interactively:
+
+```bash
+yggtree config bootstrap --command "pnpm install" --command "pnpm test"
+```
+
+Clear local setup config from the current directory:
+
+```bash
+yggtree config bootstrap --clear
 ```
 
 ---
@@ -573,6 +592,12 @@ Useful for scripting and shell aliases.
 ### `yggtree bootstrap`
 
 Re‑run bootstrap commands for a worktree.
+
+---
+
+### `yggtree config bootstrap`
+
+Set local bootstrap commands in `.yggtree/worktree-setup.json` under the current directory.
 
 ---
 

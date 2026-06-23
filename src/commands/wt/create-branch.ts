@@ -3,9 +3,11 @@ import inquirer from 'inquirer';
 import path from 'path';
 import { getRepoRoot, getRepoName, verifyRef, fetchAll, getCurrentBranch, ensureCorrectUpstream, publishBranch } from '../../lib/git.js';
 import { runBootstrap } from '../../lib/config.js';
+import { maybeOfferBootstrapSetupConfig } from '../../lib/bootstrap-setup-onboarding.js';
 import { buildManagedWorktreePath, getWorktreePathConfig } from '../../lib/global-config.js';
 import { log, ui, createSpinner } from '../../lib/ui.js';
 import { promptAndCopyEnvFiles } from '../../lib/env-files.js';
+import { readRegistry } from '../../lib/registry.js';
 import {
     detectInstalledOpenTools,
     launchOpenTool,
@@ -32,12 +34,19 @@ export function shouldEnterCreatedWorktree(options: Pick<NewCreateOptions, 'ente
 
 export async function createCommandNew(options: NewCreateOptions) {
     try {
+        const registeredReposBefore = await readRegistry();
         const repoRoot = await getRepoRoot();
         log.info(`Repo: ${chalk.dim(repoRoot)}`);
         const shouldEnterShell = shouldEnterCreatedWorktree(options);
+        const isInteractiveCreate = !options.branch || !options.base || (!options.base && !options.source);
 
         // 1. Gather inputs
         const currentBranch = await getCurrentBranch();
+        const bootstrapSetupOnboarding = await maybeOfferBootstrapSetupConfig({
+            interactive: isInteractiveCreate,
+            registeredReposBefore,
+            repoRoot,
+        });
         
         const answers = await inquirer.prompt([
             {
@@ -71,7 +80,7 @@ export async function createCommandNew(options: NewCreateOptions) {
             {
                 type: 'confirm',
                 name: 'bootstrap',
-                message: 'Run bootstrap? (npm install + submodules)',
+                message: 'Run configured bootstrap commands?',
                 default: true,
                 when: options.bootstrap !== false && options.bootstrap !== true,
             },
@@ -87,7 +96,9 @@ export async function createCommandNew(options: NewCreateOptions) {
         const branchName = options.branch || answers.branch;
         let baseRef = options.base || answers.base;
         const source = options.source || answers.source;
-        const shouldBootstrap = options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
+        const shouldBootstrap = bootstrapSetupOnboarding.skipBootstrap
+            ? false
+            : options.bootstrap !== undefined ? options.bootstrap : answers.bootstrap;
         const shouldOpenTool = options.open !== undefined
             ? options.open
             : Boolean(answers.shouldOpenTool);

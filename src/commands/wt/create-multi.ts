@@ -54,7 +54,7 @@ export async function createCommandMulti(options: MultiCreateOptions) {
             {
                 type: 'confirm',
                 name: 'bootstrap',
-                message: 'Run bootstrap for all worktrees? (npm install + submodules)',
+                message: 'Run configured bootstrap commands for all worktrees?',
                 default: true,
                 when: options.bootstrap !== false && options.bootstrap !== true,
             }

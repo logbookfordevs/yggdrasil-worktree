@@ -2,27 +2,33 @@
 
 import { motion } from 'motion/react';
 import { useState } from 'react';
+import { HomepageIcon } from '@/app/components/HomepageIcon';
+import { CoffeeIcon } from '@/components/icons/coffee';
+import { CookingPotIcon } from '@/components/icons/cooking-pot';
+import { ConciergeBellIcon } from '@/components/icons/concierge-bell';
+import { SparklesIcon } from '@/components/icons/sparkles';
 
 export function BuyMeACoffee() {
   const [hoveredAmount, setHoveredAmount] = useState<string | null>(null);
+  const [focusedAmount, setFocusedAmount] = useState<string | null>(null);
 
   const suggestions = [
     { 
       amount: 5, 
       label: 'Buy me a coffee', 
-      icon: '☕',
+      icon: CoffeeIcon,
       description: 'A quick boost'
     },
     { 
       amount: 15, 
       label: 'Buy me lunch', 
-      icon: '🍜',
+      icon: CookingPotIcon,
       description: 'Keep me fueled'
     },
     { 
       amount: 30, 
       label: 'Buy me dinner', 
-      icon: '🍱',
+      icon: ConciergeBellIcon,
       description: 'A hearty meal'
     },
   ];
@@ -67,6 +73,8 @@ export function BuyMeACoffee() {
               rel="noopener noreferrer"
               onMouseEnter={() => setHoveredAmount(suggestion.label)}
               onMouseLeave={() => setHoveredAmount(null)}
+              onFocus={() => setFocusedAmount(suggestion.label)}
+              onBlur={() => setFocusedAmount(null)}
               whileHover={{ scale: 1.05, y: -5 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               className="relative group"
@@ -86,7 +94,14 @@ export function BuyMeACoffee() {
                 <div className="absolute inset-0 bg-linear-to-br from-gold-rune/0 via-gold-rune/5 to-gold-rune/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 <div className="relative z-10 text-center">
-                  <div className="text-4xl mb-3">{suggestion.icon}</div>
+                  <div className="text-gold-rune mb-3">
+                    <HomepageIcon
+                      icon={suggestion.icon}
+                      size={36}
+                      active={hoveredAmount === suggestion.label || focusedAmount === suggestion.label}
+                      className="align-middle"
+                    />
+                  </div>
                   <div className="text-2xl font-display font-bold text-gold-rune mb-2">
                     {suggestion.amount}
                   </div>
@@ -186,7 +201,7 @@ export function BuyMeACoffee() {
           className="text-center mt-8"
         >
           <p className="text-parchment/50 text-sm italic">
-            ✨ Every contribution helps nurture the tree and grow new branches ✨
+            <HomepageIcon icon={SparklesIcon} size={16} /> Every contribution helps nurture the tree and grow new branches
           </p>
         </motion.div>
       </div>

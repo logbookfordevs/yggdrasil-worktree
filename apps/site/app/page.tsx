@@ -1,6 +1,14 @@
 'use client';
 
 import Image from 'next/image';
+import { HomepageIcon } from '@/app/components/HomepageIcon';
+import { BotIcon } from '@/components/icons/bot';
+import { FlaskIcon } from '@/components/icons/flask';
+import { GitCompareIcon } from '@/components/icons/git-compare';
+import { RocketIcon } from '@/components/icons/rocket';
+import { FilePenLineIcon } from '@/components/icons/file-pen-line';
+import { LeafIcon } from '@/components/icons/leaf';
+
 import { Hero } from './components/Hero';
 import { Section } from './components/Section';
 import { FeatureCard } from './components/FeatureCard';
@@ -357,7 +365,7 @@ export default function Home() {
             {/* AI Workflow Sub-section */}
             <div className="bg-mist-green/20 backdrop-blur-sm border border-cosmic-purple/30 rounded-xl p-8">
               <h3 className="text-2xl font-display font-semibold text-frost-white mb-4">
-                🤖 Even Better with AI Agents
+                <HomepageIcon icon={BotIcon} size={24} /> Even Better with AI Agents
               </h3>
               <p className="text-parchment/80 mb-6">
                 Assign each agent its own worktree. Different tasks, different agents, all in parallel — no collisions.
@@ -401,7 +409,9 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 bg-cosmic-purple/15 border border-cosmic-purple/30 rounded-full px-5 py-2 mb-6">
             <span className="text-cosmic-purple text-sm font-semibold tracking-wide uppercase">Extra Mode</span>
           </div>
-          <h2 className="font-display text-4xl font-bold text-frost-white mb-6">🧪 Sandbox Mode</h2>
+          <h2 className="font-display text-4xl font-bold text-frost-white mb-6">
+            <HomepageIcon icon={FlaskIcon} size={32} /> Sandbox Mode
+          </h2>
           <p className="text-parchment/80 text-lg max-w-3xl mx-auto">
             Not every worktree needs to be a live task with its own remote branch. Sometimes you just need a{' '}
             <strong className="text-frost-white">local playground</strong> — a temporary, disposable space to experiment
@@ -431,28 +441,36 @@ export default function Home() {
             {/* Use Cases — expanded */}
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-mist-green/30 border border-cosmic-purple/30 rounded-lg p-5">
-                <div className="text-cosmic-purple font-semibold mb-2">🔬 A/B Testing Approaches</div>
+                <div className="text-cosmic-purple font-semibold mb-2">
+                  <HomepageIcon icon={GitCompareIcon} size={20} /> A/B Testing Approaches
+                </div>
                 <div className="text-parchment/70 text-sm">
                   Create 3 sandboxes. Try 3 completely different architectures for the same problem. Keep the winner,
                   discard the rest. No branches left behind.
                 </div>
               </div>
               <div className="bg-mist-green/30 border border-cosmic-purple/30 rounded-lg p-5">
-                <div className="text-cosmic-purple font-semibold mb-2">🚀 Risky Refactors</div>
+                <div className="text-cosmic-purple font-semibold mb-2">
+                  <HomepageIcon icon={RocketIcon} size={20} /> Risky Refactors
+                </div>
                 <div className="text-parchment/70 text-sm">
                   That massive refactor you&apos;re not sure about? Do it in a sandbox. If it breaks everything, just
                   delete it — your main code is untouched.
                 </div>
               </div>
               <div className="bg-mist-green/30 border border-cosmic-purple/30 rounded-lg p-5">
-                <div className="text-cosmic-purple font-semibold mb-2">🤖 Multi-Agent Experiments</div>
+                <div className="text-cosmic-purple font-semibold mb-2">
+                  <HomepageIcon icon={BotIcon} size={20} /> Multi-Agent Experiments
+                </div>
                 <div className="text-parchment/70 text-sm">
                   Give the same task to <em>different AI agents</em> — Cursor in one sandbox, Codex in another, Aider in
                   a third. Compare the results side by side. Pick the best one.
                 </div>
               </div>
               <div className="bg-mist-green/30 border border-cosmic-purple/30 rounded-lg p-5">
-                <div className="text-cosmic-purple font-semibold mb-2">📝 Multi-Prompt Testing</div>
+                <div className="text-cosmic-purple font-semibold mb-2">
+                  <HomepageIcon icon={FilePenLineIcon} size={20} /> Multi-Prompt Testing
+                </div>
                 <div className="text-parchment/70 text-sm">
                   Same agent, <em>different prompts</em>. Spin up sandboxes to test how different instructions produce
                   different outcomes for the very same task. Iterate faster.
@@ -607,7 +625,7 @@ export default function Home() {
     "npm install",
     "git submodule sync --recursive",
     "git submodule update --init --recursive",
-    "echo \\"🌳 Realm ready\\""
+    "echo \\"Realm ready\\""
   ]
 }`}
                     </code>
@@ -691,7 +709,7 @@ export default function Home() {
               </div>
             </div>
             <p className="text-parchment/50 text-sm text-center mt-4 italic">
-              🌳 The core idea — how growing parallel worlds changes the way you develop.
+              <HomepageIcon icon={LeafIcon} size={18} /> The core idea — how growing parallel worlds changes the way you develop.
             </p>
           </motion.div>
         </div>

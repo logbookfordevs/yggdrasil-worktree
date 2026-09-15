@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release - TBD
 
+### Changed
+- Homepage emojis now use consistent outline icons that animate once on entering view and again on hover or support-card focus, respecting reduced-motion preferences.
+
 ## [v1.5.1] - 2026-08-09
 
 ### Fixed

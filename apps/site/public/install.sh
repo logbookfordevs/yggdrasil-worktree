@@ -258,8 +258,15 @@ require_node
 
 if [[ "$VERSION" = "latest" ]]; then
   info "fetching latest release"
-  VERSION="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n 1)"
-  [[ -n "$VERSION" ]] || fail "could not resolve latest release for $REPO"
+  release_url="$(curl -fsSLI --connect-timeout 10 --max-time 30 -o /dev/null -w '%{url_effective}' "https://github.com/$REPO/releases/latest")" \
+    || fail "could not resolve latest release for $REPO; try again or specify --version"
+  tag_prefix="https://github.com/$REPO/releases/tag/"
+  case "$release_url" in
+    "$tag_prefix"*) VERSION="${release_url#"$tag_prefix"}" ;;
+    *) fail "could not resolve latest release for $REPO; unexpected release redirect" ;;
+  esac
+  [[ -n "$VERSION" && "$VERSION" != */* && "$VERSION" != *\?* && "$VERSION" != *\#* ]] \
+    || fail "could not resolve latest release for $REPO; invalid release tag"
 fi
 
 case "$VERSION" in

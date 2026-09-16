@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Next Release - TBD
 
+### Fixed
+- Installation and updates now resolve the latest release without consuming GitHub API quota, avoiding failures when the shared IP rate limit is exhausted.
+
 ### Changed
 - Homepage emojis now use consistent outline icons that animate once on entering view and again on hover or support-card focus, respecting reduced-motion preferences.
 
